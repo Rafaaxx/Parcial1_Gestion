@@ -40,4 +40,13 @@ logs/
 # Agent Skills (large, many files, some with long paths causing Windows issues)
 .agents/skills/
 .kiro/
-skills-lock.json
+
+# Openspec temporary artifacts
+openspec/changes/*/.openspec.yaml.tmp
+
+# Database specific (if using SQLite for tests)
+*.sqlite3
+*.db-journal
+
+# Python builds
+build/

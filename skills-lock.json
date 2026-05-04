@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "skills": {
+    "architecture-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "8cc99372e77a37fa40096bf8ae0895f2a8355916fad8b8cc34f74bb68c40b76b"
+    },
+    "fastapi-templates": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "1a5fe66bd2683afd1db9afdf37a25cd8b9195c369c98489333badf0406fc91b3"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "computedHash": "9e1c8b3103f92fa8092568a44fe64858de7c5c9dc65ce4bea8f168080e889cfd"
+    },
+    "openapi-specification-v2": {
+      "source": "hairyf/skills",
+      "sourceType": "github",
+      "computedHash": "f8ec7ce079af5f00423e584d4dfbf7436588491851b5454376d87b6145f61602"
+    },
+    "python-code-review": {
+      "source": "existential-birds/beagle",
+      "sourceType": "github",
+      "computedHash": "72999ff1d0c20658a8387bdac3138c52d6431f7fee38cc40e8a0e975bfc3494c"
+    },
+    "python-expert-best-practices-code-review": {
+      "source": "wispbit-ai/skills",
+      "sourceType": "github",
+      "computedHash": "67a70fe8a0eaee189bbbd4daf5a9c9afc623bf9eedd70d619e59d37826833f97"
+    },
+    "sqlalchemy-alembic-expert-best-practices-code-review": {
+      "source": "wispbit-ai/skills",
+      "sourceType": "github",
+      "computedHash": "222668fee09abd99945cc57b9be37eb105470ea0428548e7e4f2e7284bd1d8e2"
+    }
+  }
+}
