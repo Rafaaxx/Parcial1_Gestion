@@ -208,6 +208,112 @@ backend/
 
 ## Common Tasks
 
+### CORS Configuration
+
+CORS (Cross-Origin Resource Sharing) allows the frontend to make requests to the API from different domains.
+
+**Configure CORS origins** in `.env`:
+
+```env
+# Comma-separated list of allowed origins
+CORS_ORIGINS=http://localhost:3000,http://localhost:5173,https://foodstore.com
+CORS_ALLOW_CREDENTIALS=true
+```
+
+- `CORS_ORIGINS`: Comma-separated list of allowed frontend URLs
+- `CORS_ALLOW_CREDENTIALS`: Allow cookies and Authorization headers (default: true)
+
+**Exposed Headers**: The API exposes these headers for client consumption:
+- `X-RateLimit-Limit`: Max requests allowed in the window
+- `X-RateLimit-Remaining`: Requests remaining in current window
+- `X-RateLimit-Reset`: Unix timestamp when limit resets
+- `X-Total-Count`: Total items in a paginated response
+- `X-Page-Number`: Current page number
+
+**Warning**: 
+- In production, NEVER use `CORS_ORIGINS=*` (wildcard). Always specify explicit origins.
+- Empty `CORS_ORIGINS` in production will log a warning.
+
+### Rate Limiting
+
+Rate limiting protects the API from abuse and brute-force attacks by restricting the number of requests per IP address in a time window.
+
+**Configure rate limiting** in `.env`:
+
+```env
+# Enable/disable rate limiting globally
+RATE_LIMIT_ENABLED=true
+
+# Rate limit tiers (format: requests/time_window)
+RATE_LIMIT_GENERAL_LIMIT=10/10 seconds    # General API endpoints
+RATE_LIMIT_AUTH_LIMIT=5/15 minutes        # Auth endpoints (login, register)
+RATE_LIMIT_REFRESH_LIMIT=10/1 minute      # Token refresh endpoint
+
+# Storage backend (currently: memory, future: redis)
+RATE_LIMIT_STORAGE=memory
+```
+
+**Default Limits**:
+- **General API**: 10 requests per 10 seconds (per IP)
+- **Auth endpoints**: 5 requests per 15 minutes (per IP)
+- **Token refresh**: 10 requests per 1 minute (per IP)
+
+**How it works**:
+1. Each request increments a counter per IP address
+2. When the limit is reached, the API returns HTTP 429 (Too Many Requests)
+3. The response includes `Retry-After` header with seconds to wait
+4. Window resets after the specified time period
+
+**429 Response Example**:
+
+```json
+{
+  "type": "https://api.foodstore.com/errors/rate-limit-exceeded",
+  "title": "Too Many Requests",
+  "status": 429,
+  "detail": "Rate limit exceeded. Retry after 900 seconds.",
+  "timestamp": "2026-03-31T10:15:30Z",
+  "instance": "/api/v1/auth/login",
+  "retry_after": 900
+}
+```
+
+**Response Headers**:
+- `Retry-After: 900` — Wait 900 seconds before retrying
+- `X-RateLimit-Limit: 5` — Max requests in window
+- `X-RateLimit-Remaining: 0` — Requests left
+- `X-RateLimit-Reset: 1640000000` — Unix timestamp of reset
+
+**Using Rate Limits in Code**:
+
+When creating new endpoints, apply rate limit decorators:
+
+```python
+from app.middleware.rate_limiter import limiter
+
+@router.post("/api/v1/auth/login")
+@limiter.limit("5/15 minutes")  # 5 requests per 15 minutes
+async def login(credentials: LoginSchema, request: Request):
+    # Login logic here
+    return {"token": "..."}
+
+@router.get("/api/v1/productos")
+@limiter.limit("10/10 seconds")  # 10 requests per 10 seconds (general API)
+async def list_products(request: Request):
+    # List logic here
+    return [...]
+```
+
+**Disable Rate Limiting** (for testing):
+
+```env
+RATE_LIMIT_ENABLED=false
+```
+
+**For Load Balancers**:
+
+If behind a load balancer, configure `X-Forwarded-For` header handling to ensure rate limits work correctly with multiple server IPs.
+
 ### Create a New API Endpoint
 
 1. Define model in `app/models/<feature>.py`
@@ -216,6 +322,7 @@ backend/
 4. Implement business logic in `app/services/<feature>.py`
 5. Create routes in `app/routes/<feature>.py`
 6. Register routes in `app/main.py`
+7. **Apply rate limiting decorators** if needed
 
 ### Run Tests
 
@@ -231,6 +338,10 @@ pytest tests/integration/test_health.py -v
 
 # Run with asyncio output
 pytest tests/ -v -s
+
+# Run middleware tests specifically
+pytest tests/unit/middleware/ -v
+pytest tests/integration/test_cors_rate_limiting.py -v
 ```
 
 ### Generate Database Migration
@@ -269,11 +380,18 @@ alembic downgrade -1
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | ✅ | 30 | Access token expiry in minutes |
 | `REFRESH_TOKEN_EXPIRE_DAYS` | ✅ | 7 | Refresh token expiry in days |
 | `DEBUG` | ✅ | False | Enable FastAPI debug mode |
-| `ENVIRONMENT` | ✅ | development | Environment name |
-| `CORS_ORIGINS` | ✅ | [] | JSON list of allowed CORS origins |
+| `ENVIRONMENT` | ✅ | development | Environment name (development, production) |
+| `CORS_ORIGINS` | ✅ | http://localhost:3000 | Comma-separated CORS allowed origins |
+| `CORS_ALLOW_CREDENTIALS` | ❌ | true | Allow credentials (cookies, auth headers) |
+| `RATE_LIMIT_ENABLED` | ❌ | true | Enable global rate limiting |
+| `RATE_LIMIT_GENERAL_LIMIT` | ❌ | 10/10 seconds | General API rate limit |
+| `RATE_LIMIT_AUTH_LIMIT` | ❌ | 5/15 minutes | Auth endpoints rate limit |
+| `RATE_LIMIT_REFRESH_LIMIT` | ❌ | 10/1 minute | Token refresh rate limit |
+| `RATE_LIMIT_STORAGE` | ❌ | memory | Rate limit storage backend (memory, redis) |
 | `MP_ACCESS_TOKEN` | ✅ | - | Mercado Pago access token |
 | `MP_PUBLIC_KEY` | ✅ | - | Mercado Pago public key |
 | `LOG_LEVEL` | ❌ | INFO | Logging level (DEBUG, INFO, WARNING, ERROR) |
+| `LOG_FILE` | ❌ | logs/app.log | Path to log file |
 
 ## Troubleshooting
 
