@@ -9,6 +9,7 @@ from app.main import app
 from app.database import Base, get_db
 from app.config import settings
 from app.dependencies import get_uow
+from tests.models import TestModel, UoWTestModel
 
 
 @pytest.fixture(scope="session")

@@ -7,15 +7,15 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     AsyncEngine,
 )
-from sqlalchemy.orm import declarative_base
+from sqlmodel import SQLModel
 from sqlalchemy.pool import NullPool
 
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Create declarative base for all models
-Base = declarative_base()
+# Use SQLModel as base — SQLModel.metadata is shared across all models
+Base = SQLModel
 
 
 # Create async engine
