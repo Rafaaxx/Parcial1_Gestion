@@ -1,0 +1,8 @@
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
+import { Button } from './Button';
+export const Modal = ({ isOpen, onClose, title, actions, children, }) => {
+    if (!isOpen)
+        return null;
+    return (_jsxs(_Fragment, { children: [_jsx("div", { className: "fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity", onClick: onClose }), _jsx("div", { className: "fixed inset-0 z-50 flex items-center justify-center p-4", children: _jsxs("div", { className: "bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-auto", onClick: (e) => e.stopPropagation(), children: [title && (_jsxs("div", { className: "flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700", children: [_jsx("h2", { className: "text-lg font-semibold", children: title }), _jsx("button", { onClick: onClose, className: "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300", children: _jsx("svg", { className: "w-6 h-6", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24", children: _jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M6 18L18 6M6 6l12 12" }) }) })] })), _jsx("div", { className: "p-6", children: children }), actions && actions.length > 0 && (_jsx("div", { className: "flex gap-3 p-6 border-t border-gray-200 dark:border-gray-700 justify-end", children: actions.map((action) => (_jsx(Button, { variant: action.variant || 'secondary', onClick: action.onClick, children: action.label }, action.label))) }))] }) })] }));
+};
+//# sourceMappingURL=Modal.js.map
