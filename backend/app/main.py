@@ -11,6 +11,7 @@ from app.database import engine, Base
 from app.exceptions import AppException, app_exception_to_http_exception
 from app.middleware.cors import setup_cors_middleware
 from app.middleware.rate_limiter import limiter, rate_limit_error_handler
+from app.modules.auth.router import router as auth_router
 
 # Configure logging
 logging.basicConfig(level=settings.log_level)
@@ -105,6 +106,10 @@ async def root():
         "documentation": "/docs"
     }
 
+
+# ── Auth Router ──────────────────────────────────────────────────────────────
+
+app.include_router(auth_router)
 
 if __name__ == "__main__":
     import uvicorn

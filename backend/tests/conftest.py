@@ -3,12 +3,18 @@
 import asyncio
 import pytest
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
+
+# Disable rate limiting for tests
+from app.config import settings
+settings.rate_limit_enabled = False
 
 from app.main import app
 from app.database import Base, get_db
-from app.config import settings
 from app.dependencies import get_uow
+from app.middleware.rate_limiter import limiter
+limiter.enabled = False
+
 from tests.models import TestModel, UoWTestModel
 
 
@@ -72,8 +78,9 @@ def override_get_db(test_db_session):
 async def client(override_get_db):
     """Create test client with overridden dependencies"""
     app.dependency_overrides[get_db] = override_get_db
+    transport = ASGITransport(app=app)
     
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     
     # Cleanup

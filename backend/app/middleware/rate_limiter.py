@@ -4,6 +4,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi import Request, HTTPException
+from fastapi.responses import JSONResponse
 from datetime import datetime, timezone
 import logging
 
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 limiter = Limiter(key_func=get_remote_address, default_limits=["10/10 seconds"])
 
 
-async def rate_limit_error_handler(request: Request, exc: RateLimitExceeded) -> HTTPException:
+async def rate_limit_error_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
     """
     Custom exception handler for rate limit exceeded errors.
     Returns RFC 7807 formatted error response with 429 status.
@@ -42,9 +43,9 @@ async def rate_limit_error_handler(request: Request, exc: RateLimitExceeded) -> 
     
     logger.warning(f"Rate limit exceeded for {get_remote_address(request)}")
     
-    return HTTPException(
+    return JSONResponse(
         status_code=429,
-        detail=error_detail,
+        content=error_detail,
         headers={
             "Retry-After": str(retry_after),
             "X-RateLimit-Limit": exc.detail.split()[0] if exc.detail else "unknown",

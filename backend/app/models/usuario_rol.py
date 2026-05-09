@@ -1,8 +1,11 @@
 """UsuarioRol model — M:N user-role pivot with audit trail"""
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from sqlalchemy import Column, BigInteger, ForeignKey, String
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 from app.models.mixins import TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.usuario import Usuario
 
 
 class UsuarioRol(TimestampMixin, SQLModel, table=True):
@@ -29,4 +32,12 @@ class UsuarioRol(TimestampMixin, SQLModel, table=True):
             ForeignKey("usuarios.id", ondelete="SET NULL"),
             nullable=True,
         )
+    )
+
+    # ── Relationships ─────────────────────────────────────────────────────────
+    usuario: Optional["Usuario"] = Relationship(
+        back_populates="usuario_roles",
+        sa_relationship_kwargs={
+            "foreign_keys": "UsuarioRol.usuario_id",
+        },
     )
