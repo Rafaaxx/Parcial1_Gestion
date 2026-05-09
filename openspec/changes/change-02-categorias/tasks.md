@@ -31,47 +31,48 @@
 
 ## Phase 3: Integration Testing & Validation
 
-- [x] 3.1 **RED** — Create `backend/tests/integration/test_categorias_api.py` with 16 integration test scenarios (AsyncClient, pytest fixtures):
-  - TestCategoriaIntegration (15 tests):
-    - `test_create_root_category_success` — POST without parent_id → 201
-    - `test_create_subcategory_with_parent_success` — POST with valid parent_id → 201
-    - `test_create_nonexistent_parent_fails` — POST with fake parent_id → 400/404
-    - `test_get_categories_tree_nested_structure` — GET / → 200, nested structure
-    - `test_get_single_category_by_id` — GET /{id} → 200, single response
-    - `test_get_nonexistent_category_returns_404` — GET /{fake_id} → 404
-    - `test_update_category_name_success` — PUT /{id} with new name → 200
-    - `test_update_category_reparent_success` — PUT changes parent_id → 200
-    - `test_soft_delete_category_without_children` — DELETE /{id} → 204, GET → 404, DB deleted_at NOT NULL
-    - `test_delete_category_with_children_returns_409` — DELETE parent with children → 409
-    - `test_cycle_detection_self_reference` — PUT with self-reference → 400
-    - `test_cycle_detection_indirect_cycle` — PUT creating cycle A→B→C→A → 400/422
-    - `test_rbac_client_cannot_create_category` — CLIENT role POST → 403
-    - `test_rbac_stock_cannot_delete` — STOCK role DELETE → 403
-    - `test_rbac_stock_can_create_and_update` — STOCK role CAN create/update
-  - TestCategoriaAuth (4 tests):
-    - `test_get_public_no_auth_required` — GET /api/v1/categorias is public
-    - `test_create_unauthenticated_returns_401` — POST without token → 401
-    - `test_update_unauthenticated_returns_401` — PUT without token → 401
-    - `test_delete_unauthenticated_returns_401` — DELETE without token → 401
-- [x] 3.2 **GREEN** — Tests structure complete and ready for execution:
-  - Real DB fixtures: test_engine (SQLite in-memory), db_session, override_get_db
-  - Auth fixtures: admin_token, stock_token, client_token (JWT tokens with roles)
-  - AsyncClient with ASGITransport configured
-  - All imports and dependencies resolved
-  - Integration test file: `backend/tests/integration/test_categorias_api.py` (581 lines)
+- [x] 3.1 **RED** — Create `backend/tests/integration/test_categorias_api.py` with 19 integration test scenarios (AsyncClient, pytest fixtures): ✅ **19/19 PASSING**
+   - TestCategoriaIntegration (15 tests):
+     - [x] `test_create_root_category_success` — POST without parent_id → 201
+     - [x] `test_create_subcategory_with_parent_success` — POST with valid parent_id → 201
+     - [x] `test_create_nonexistent_parent_fails` — POST with fake parent_id → 400/404
+     - [x] `test_get_categories_tree_nested_structure` — GET / → 200, nested structure (FIXED: eager load children with selectinload)
+     - [x] `test_get_single_category_by_id` — GET /{id} → 200, single response
+     - [x] `test_get_nonexistent_category_returns_404` — GET /{fake_id} → 404
+     - [x] `test_update_category_name_success` — PUT /{id} with new name → 200
+     - [x] `test_update_category_reparent_success` — PUT changes parent_id → 200
+     - [x] `test_soft_delete_category_without_children` — DELETE /{id} → 204, GET → 404, DB deleted_at NOT NULL
+     - [x] `test_delete_category_with_children_returns_409` — DELETE parent with children → 409 (FIXED: error message includes 'children')
+     - [x] `test_cycle_detection_self_reference` — PUT with self-reference → 400 (FIXED: changed from 422 to 400)
+     - [x] `test_cycle_detection_indirect_cycle` — PUT creating cycle A→B→C→A → 400/422
+     - [x] `test_rbac_client_cannot_create_category` — CLIENT role POST → 403
+     - [x] `test_rbac_stock_cannot_delete` — STOCK role DELETE → 403
+     - [x] `test_rbac_stock_can_create_and_update` — STOCK role CAN create/update
+   - TestCategoriaAuth (4 tests):
+     - [x] `test_get_public_no_auth_required` — GET /api/v1/categorias is public
+     - [x] `test_create_unauthenticated_returns_401` — POST without token → 401
+     - [x] `test_update_unauthenticated_returns_401` — PUT without token → 401
+     - [x] `test_delete_unauthenticated_returns_401` — DELETE without token → 401
+- [x] 3.2 **GREEN** — Tests structure complete and executed:
+   - Real DB fixtures: test_engine (SQLite in-memory), db_session, override_get_db
+   - Auth fixtures: admin_token, stock_token, client_token (JWT tokens with roles)
+   - AsyncClient with ASGITransport configured
+   - All imports and dependencies resolved
+   - Integration test file: `backend/tests/integration/test_categorias_api.py` (596 lines)
 - [x] 3.3 Soft-delete behavior verified in test: `test_soft_delete_category_without_children()`
-  - POST category → DELETE via API → GET returns 404
-  - DB query verifies deleted_at IS NOT NULL
+   - POST category → DELETE via API → GET returns 404
+   - DB query verifies deleted_at IS NOT NULL
 - [x] 3.4 RBAC enforcement verified in tests: `test_rbac_client_cannot_create_category()`, `test_rbac_stock_cannot_delete()`
-  - CLIENT role POST → 403 Forbidden
-  - STOCK role DELETE → 403 Forbidden
-  - STOCK role CAN create and update
+   - CLIENT role POST → 403 Forbidden
+   - STOCK role DELETE → 403 Forbidden
+   - STOCK role CAN create and update
 - [x] 3.5 Cycle detection verified in tests: `test_cycle_detection_self_reference()`, `test_cycle_detection_indirect_cycle()`
-  - Self-reference PUT {id with parent_id=id} → 400
-  - Indirect cycle A→B→C→A → 400/422
+   - Self-reference PUT {id with parent_id=id} → 400
+   - Indirect cycle A→B→C→A → 400/422
 - [x] 3.6 Cascade validation verified in test: `test_delete_category_with_children_returns_409()`
-  - DELETE parent with children → 409 Conflict
-  - Error detail includes "children" or "conflict"
+   - DELETE parent with children → 409 Conflict
+   - Error detail includes "children" or "conflict"
+- [x] **Phase 3 COMPLETE**: All 19 integration tests passing; ready for Phase 4 documentation
 
 ## Phase 4: Documentation & Verification
 
