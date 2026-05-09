@@ -1,65 +1,61 @@
-# Session Summary — 2026-05-08
+# Session Summary — 2026-05-09
 
 ## Goal
-Verificar CHANGE-00b y CHANGE-00c, implementar y archivar CHANGE-00d (Seed Data + Tests Base).
+Implementar y archivar CHANGE-01 (Auth JWT + RBAC) usando SDD workflow con OpenSpec.
 
 ## Accomplished
 
-### ✅ CHANGE-00b (Frontend Setup + Zustand) — VERIFIED
-- FSD structure, Zustand stores (auth, ui), Axios HTTP client, UI components (Button, Modal, Input, etc.)
-- All 24 spec requirements verified against real source code
+### ✅ SDD Workflow Completo — CHANGE-01 Auth JWT + RBAC
 
-### ✅ CHANGE-00c (CORS + Rate Limiting) — VERIFIED
-- slowapi rate limiter, CORSMiddleware, RFC 7807 429 responses
-- Unit + integration tests for middleware
-- All 30 spec requirements verified against real source code
+**Fases ejecutadas:**
+1. `/sdd-init` — Inicializado SDD con engram + openspec fallback. Strict TDD activado.
+2. `/sdd-explore` — Investigado codebase: modelos (Usuario, Rol, UsuarioRol), config JWT, excepciones, seed data, tests existentes.
+3. `/sdd-propose` — Propuesta: 18 archivos (10 nuevos, 4 modificados, 4 tests), 2 módulos (auth/, refreshtokens/).
+4. `/sdd-spec` — 7 capacidades, 40 requerimientos, 29 escenarios Gherkin.
+5. `/sdd-design` — 5 ADRs, 3 diagramas de flujo (login, refresh+rotation, get_current_user).
+6. `/sdd-tasks` — 17 tareas en 5 fases.
+7. `/sdd-apply` — Implementación completa:
+   - `backend/app/security.py` — bcrypt + JWT + refresh UUID/SHA-256
+   - `backend/app/modules/auth/` — router (5 endpoints), service, repository, schemas
+   - `backend/app/modules/refreshtokens/` — model, repository, service
+   - `backend/app/dependencies.py` — get_current_user + require_role (ADR-4: roles desde JWT)
+   - `backend/migrations/versions/003_add_refresh_token.py`
+   - Fix MissingGreenlet: AuthRepository.find_with_roles()
+8. `/sdd-verify` — 46/46 tests auth pasando. 4 WARNINGs → todas fixeadas:
+   - WARNING #1 (ADR-4): require_role ahora lee roles del JWT
+   - WARNING #3 (LOGOUT-02): test_logout_already_revoked agregado
+   - WARNING #4 (Cascade): cascade="all, delete-orphan" en refresh_tokens
+9. `/sdd-archive` — Archivado a `openspec/changes/archive/2026-05-08-change-01-auth-jwt-rbac/`
 
-### ✅ CHANGE-00d (Seed Data + Tests Base) — IMPLEMENTED & ARCHIVED
-**Archivos creados/modificados:**
-- `backend/app/database.py` — Base cambiado a SQLModel.metadata
-- `backend/app/models/mixins.py` — Fix sa_column por sa_type
-- `backend/app/models/rol.py` — Modelo Rol (PK semántica)
-- `backend/app/models/estado_pedido.py` — Modelo EstadoPedido (FSM)
-- `backend/app/models/forma_pago.py` — Modelo FormaPago
-- `backend/app/models/usuario.py` — Modelo Usuario (soft delete, email único)
-- `backend/app/models/usuario_rol.py` — Modelo UsuarioRol (pivot M:N con CASCADE)
-- `backend/app/models/__init__.py` — Exports actualizados
-- `backend/app/db/seed.py` — Seed idempotente (INSERT ... ON CONFLICT DO NOTHING)
-- `backend/migrations/versions/002_add_seed_models.py` — Migración con 5 tablas
-- `backend/tests/models.py` — Modelos de prueba
-- `backend/tests/conftest.py` — Import de test models
-- `backend/tests/unit/test_repository.py` — 10 tests BaseRepository
-- `backend/tests/unit/test_uow.py` — 3 tests UnitOfWork
-- `backend/tests/integration/test_seed.py` — 5 tests seed data
-- `backend/pytest.ini` — Config asyncio_mode=auto
+**Tests finales:** 86 pass (47 auth + 39 pre-existing), 8 failures pre-existentes en test_rate_limiter.py (slowapi compat, no relacionados).
 
-**Tests: 18/18 pasando ✅**
-- Seed data: 4 roles (ADMIN/STOCK/PEDIDOS/CLIENT), 6 estados FSM, 3 formas de pago, admin user
+### Branch creada
+- `change-1_auth` — creada desde `change-00d`, commit: `change-01 terminado`
 
-## Artifacts (openspec)
-`openspec/changes/archive/2026-05-08-change-00d-seed-data-tests/`
+## Decisiones de Arquitectura
+- RefreshToken NO hereda BaseModel/SoftDeleteMixin — usa TimestampMixin + revoked_at
+- RefreshTokenRepository custom (no extiende BaseRepository) — porque BaseRepository filtra por deleted_at
+- require_role lee roles del payload JWT (ADR-4) — evita round-trip a BD
+- Login errors genéricos ("Email o contraseña incorrectos") — RN-AU08
+- bcrypt cost=12 prod, monkeypatch cost=4 en tests
+- Access token: 30 min HS256; Refresh token: 7 días UUIDv4 → SHA-256
 
-## Para arrancar CHANGE-01 (Auth JWT + RBAC)
-Cuando vuelvas con tokens, ejecutá:
-```
-/sdd-new change-01-auth-jwt-rbac
-```
+## Próximos Pasos
+- Hacer push de `change-1_auth` a origin
+- Compartir .engram/ actualizado con el grupo (contiene evidencia de rafan + lucas)
 
-El sistema va a necesitar:
-- `backend/app/dependencies.py` ya tiene `get_uow()`
-- `backend/app/models/usuario.py` ya existe
-- `backend/app/models/rol.py` ya existe
-- `backend/app/models/usuario_rol.py` ya existe
-- `backend/app/config.py` ya tiene JWT config (SECRET_KEY, algorithm, expire)
-- `backend/app/exceptions.py` ya tiene UnauthorizedError, ForbiddenError
-
-Cosas a implementar en CHANGE-01:
-1. Modelo RefreshToken
-2. Auth service (register, login, refresh, logout)
-3. Auth router (POST /api/v1/auth/*)
-4. Password hashing (passlib bcrypt ya en requirements)
-5. JWT creation/validation (python-jose ya en requirements)
-6. get_current_user dependency
-7. require_role dependency factory
-8. Rate limit decorators en endpoints auth (pendiente de CHANGE-00c)
-9. Frontend: integrar authStore con backend
+## Relevant Files
+- `backend/app/security.py`
+- `backend/app/dependencies.py`
+- `backend/app/modules/auth/router.py`
+- `backend/app/modules/auth/service.py`
+- `backend/app/modules/auth/repository.py`
+- `backend/app/modules/auth/schemas.py`
+- `backend/app/modules/refreshtokens/model.py`
+- `backend/app/modules/refreshtokens/repository.py`
+- `backend/app/modules/refreshtokens/service.py`
+- `backend/migrations/versions/003_add_refresh_token.py`
+- `backend/tests/unit/test_security.py` (14 tests)
+- `backend/tests/unit/test_auth_service.py` (14 tests)
+- `backend/tests/integration/test_auth_api.py` (19 tests)
+- `openspec/changes/archive/2026-05-08-change-01-auth-jwt-rbac/`
