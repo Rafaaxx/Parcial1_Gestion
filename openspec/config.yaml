@@ -1,20 +1,65 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  **Project**: Food Store — Sistema de Gestión de Pedidos de Comida (v5.0)
+  **Domain**: Full-stack e-commerce platform with order management, payment integration, and admin panel
+  **Methodology**: Spec-Driven Development (SDD)
+  
+  **Tech Stack**:
+  - **Backend**: FastAPI 0.111 · SQLModel 0.0.16 · PostgreSQL 15+ · Alembic 1.13 · JWT/RBAC · MercadoPago SDK 2.3 · slowapi rate limiting
+  - **Frontend**: React 19 · TypeScript 5.3 · Vite 5 · TanStack Query 5 · Zustand 4 · Tailwind CSS 3 · Axios 1.6
+  - **Testing**: pytest 7.4 (backend) with asyncio support, httpx AsyncClient, SQLite in-memory, conftest fixtures
+  - **Quality**: flake8 · mypy · black · isort (backend); ESLint 9 · Prettier 3 · TypeScript tsc (frontend)
+  
+  **Architecture**:
+  - Backend: Router → Service → UoW → Repository → Model (strict layering, unidirectional imports)
+  - Frontend: Feature-Sliced Design (Pages → Features → Hooks/Stores → API → Types)
+  - Database: 3FN, soft delete (deleted_at TIMESTAMPTZ), snapshot pattern, audit trail append-only
+  - State Management: Zustand for client state (cart, session, UI), TanStack Query for server state
+  
+  **Key Files**:
+  - `docs/Integrador.txt`: Technical spec v5.0 (ERD, architecture, feature-first modules, US-000 through US-076)
+  - `docs/Descripcion.txt`: Project overview and actors
+  - `docs/Historias_de_usuario.txt`: User stories with acceptance criteria
+  - `agents.md`: Project conventions, skill router, MCP protocol (Postgres → food_store_db)
+  
+  **Conventions**:
+  - Conventional commits: `feat(module): desc`, `fix(module): desc`, `test(module): desc`
+  - SDD artifacts saved in `openspec/` and persisted to Engram
+  - Database queries validated against `Integrador.txt` before finalization
+  - MCP Postgres: exclusive focus on `food_store_db`
+  - Strict TDD enabled (test runner available)
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+strict_tdd: true
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Identify affected modules/packages
+    - Reference relevant user stories from docs/Historias_de_usuario.txt
+  specs:
+    - Use Given/When/Then format for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+    - Document FSM state transitions for complex domains
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+    - Respect unidirectional import flow (Router → Service → UoW → Repository → Model)
+    - Maintain Feature-Sliced Design for frontend modules
+  tasks:
+    - Group tasks by phase (infrastructure, implementation, testing)
+    - Use hierarchical numbering (1.1, 1.2, etc.)
+    - Keep tasks small enough to complete in one session
+    - Backend tasks should include model changes, migrations, and tests
+  apply:
+    - Follow existing code patterns and conventions
+    - Load relevant coding skills from .atl/skill-registry.md
+    - Pre-validate DB changes against Integrador.txt
+    - Run pytest for backend changes
+  verify:
+    - Run pytest if test infrastructure exists
+    - Compare implementation against every spec scenario
+    - Validate FSM state transitions against design
+  archive:
+    - Warn before merging destructive deltas (large removals)
+    - Update main specs in openspec/specs/ after verification

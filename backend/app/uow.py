@@ -5,6 +5,7 @@ from typing import Type, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories.base import BaseRepository
+from app.repositories.categoria_repository import CategoriaRepository
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ class UnitOfWork:
         """
         self.session = session
         self._repositories: dict[Type, BaseRepository] = {}
+        self._categorias: Optional[CategoriaRepository] = None
         self.logger = logging.getLogger(f"{__name__}.UnitOfWork")
     
     def get_repository(self, model: Type) -> BaseRepository:
@@ -39,6 +41,18 @@ class UnitOfWork:
         if model not in self._repositories:
             self._repositories[model] = BaseRepository(self.session, model)
         return self._repositories[model]
+    
+    @property
+    def categorias(self) -> CategoriaRepository:
+        """
+        Get or create CategoriaRepository instance.
+        
+        Returns:
+            CategoriaRepository for managing categories
+        """
+        if self._categorias is None:
+            self._categorias = CategoriaRepository(self.session)
+        return self._categorias
     
     async def commit(self):
         """Commit all changes in the current transaction"""
