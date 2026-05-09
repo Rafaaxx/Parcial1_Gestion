@@ -3,12 +3,15 @@
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.database import engine, Base
 from app.exceptions import AppException, app_exception_to_http_exception
+from app.middleware.cors import setup_cors_middleware
+from app.middleware.rate_limiter import limiter, rate_limit_error_handler
+from app.modules.auth.router import router as auth_router
 
 # Configure logging
 logging.basicConfig(level=settings.log_level)
@@ -23,6 +26,18 @@ async def lifespan(app: FastAPI):
     logger.info(f"🚀 {settings.app_name} v{settings.app_version} starting...")
     logger.info(f"📊 Environment: {settings.environment}")
     logger.info(f"🔍 Debug mode: {settings.debug}")
+    
+    # Log CORS configuration
+    logger.info(f"🔐 CORS origins: {settings.cors_origins}")
+    
+    # Log rate limiting configuration
+    if settings.rate_limit_enabled:
+        logger.info(f"⏱️  Rate limiting ENABLED")
+        logger.info(f"   - General limit: {settings.rate_limit_general_limit}")
+        logger.info(f"   - Auth limit: {settings.rate_limit_auth_limit}")
+        logger.info(f"   - Refresh limit: {settings.rate_limit_refresh_limit}")
+    else:
+        logger.info(f"⏱️  Rate limiting DISABLED")
     
     yield
     
@@ -43,14 +58,14 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Register rate limiter with FastAPI (for dependency injection)
+app.state.limiter = limiter
+
+# Setup CORS middleware (must be first in the stack to handle preflight)
+setup_cors_middleware(app, settings)
+
+# Register rate limit exception handler
+app.add_exception_handler(RateLimitExceeded, rate_limit_error_handler)
 
 
 # Register exception handlers
@@ -91,6 +106,10 @@ async def root():
         "documentation": "/docs"
     }
 
+
+# ── Auth Router ──────────────────────────────────────────────────────────────
+
+app.include_router(auth_router)
 
 if __name__ == "__main__":
     import uvicorn
