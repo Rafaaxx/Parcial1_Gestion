@@ -20,7 +20,14 @@ class Categoria(BaseModel, table=True):
     __tablename__ = "categorias"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    nombre: str = Field(max_length=100, nullable=False, index=True, unique=True)
+    nombre: str = Field(
+        max_length=100,
+        nullable=False,
+        index=True,
+        # NOTE: unique=True removed — replaced with partial index (uq_categorias_nombre_not_deleted)
+        # Partial index allows reusing names after soft-delete: WHERE deleted_at IS NULL
+        # Migration 005 handles the database constraint
+    )
     descripcion: Optional[str] = Field(default=None, description="Descripción de la categoría")
     parent_id: Optional[int] = Field(
         default=None,

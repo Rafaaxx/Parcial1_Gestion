@@ -34,36 +34,64 @@ class CategoriaRepository(BaseRepository[Categoria]):
         """
         Fetch all root categories (parent_id IS NULL) with their complete tree.
         
-        Uses the ORM relationships for traversal with eager loading.
-        selectinload recursively loads all children via nested ORM relationships.
+        Uses PostgreSQL WITH RECURSIVE CTE to fetch the entire hierarchical tree
+        in a single query, then reconstructs relationships in-memory via ORM.
         
         Args:
-            depth_limit: Maximum tree depth (unused here, for API compatibility)
+            depth_limit: Maximum tree depth (prevents infinite recursion)
             
         Returns:
             List of root Categoria objects with children populated
         """
-        # Fetch root categories with eager-loaded children
-        # selectinload(Categoria.children).selectinload(...) chains for deep nesting
-        stmt = select(Categoria).where(
-            and_(
-                Categoria.parent_id.is_(None),
-                Categoria.deleted_at.is_(None)
+        # Use CTE to fetch entire tree structure (all non-deleted categories)
+        query = text("""
+            WITH RECURSIVE category_tree AS (
+                -- Anchor: root categories (parent_id IS NULL)
+                SELECT id, nombre, descripcion, parent_id, created_at, updated_at, deleted_at, 1 as depth
+                FROM categorias
+                WHERE parent_id IS NULL AND deleted_at IS NULL
+                
+                UNION ALL
+                
+                -- Recursive: children of categories already in tree
+                SELECT c.id, c.nombre, c.descripcion, c.parent_id, c.created_at, c.updated_at, c.deleted_at, ct.depth + 1
+                FROM categorias c
+                INNER JOIN category_tree ct ON c.parent_id = ct.id
+                WHERE c.deleted_at IS NULL AND ct.depth < :depth_limit
             )
-        ).order_by(Categoria.nombre)
+            SELECT id, nombre, descripcion, parent_id, created_at, updated_at, deleted_at
+            FROM category_tree
+            ORDER BY parent_id, nombre
+        """)
         
-        # Apply nested selectinload for children relationships
-        # This loads children at multiple levels to support deep hierarchies
-        stmt = stmt.options(
-            selectinload(Categoria.children)
-            .selectinload(Categoria.children)
-            .selectinload(Categoria.children)
-            .selectinload(Categoria.children)
-            .selectinload(Categoria.children)
-        )
+        result = await self.session.execute(query, {"depth_limit": depth_limit})
+        rows = result.fetchall()
         
-        result = await self.session.execute(stmt)
-        return result.scalars().all()
+        # Reconstruct ORM objects from raw rows
+        categories_by_id = {}
+        for row in rows:
+            cat = Categoria(
+                id=row[0],
+                nombre=row[1],
+                descripcion=row[2],
+                parent_id=row[3],
+                created_at=row[4],
+                updated_at=row[5],
+                deleted_at=row[6]
+            )
+            categories_by_id[cat.id] = cat
+        
+        # Build parent-child relationships
+        for cat_id, cat in categories_by_id.items():
+            if cat.parent_id and cat.parent_id in categories_by_id:
+                parent = categories_by_id[cat.parent_id]
+                if not hasattr(parent, 'children') or parent.children is None:
+                    parent.children = []
+                parent.children.append(cat)
+        
+        # Return only root categories
+        roots = [cat for cat in categories_by_id.values() if cat.parent_id is None]
+        return sorted(roots, key=lambda c: c.nombre)
     
     async def validate_no_cycle(
         self, categoria_id: int, new_parent_id: int, depth_limit: int = 20
@@ -220,31 +248,31 @@ class CategoriaRepository(BaseRepository[Categoria]):
         count = await self.count_descendants(categoria_id)
         return count > 0
     
-    async def get_all_descendants_ids(self, categoria_id: int) -> List[int]:
+    async def count_products_in_category(self, categoria_id: int) -> int:
         """
-        Get all descendant IDs (recursive) for a category.
+        Count products in a category (via categoria_id foreign key).
+        
+        Prepared for when the Producto table is created.
+        Currently returns 0 if table doesn't exist (safe during incremental feature development).
         
         Args:
             categoria_id: Category ID
             
         Returns:
-            List of all descendant IDs
+            Number of products in category (0 if table doesn't exist)
         """
-        query = text("""
-            WITH RECURSIVE descendants AS (
-                SELECT id
-                FROM categorias
-                WHERE parent_id = :categoria_id AND deleted_at IS NULL
-                
-                UNION ALL
-                
-                SELECT c.id
-                FROM categorias c
-                INNER JOIN descendants d ON c.parent_id = d.id
-                WHERE c.deleted_at IS NULL
-            )
-            SELECT id FROM descendants
-        """)
-        
-        result = await self.session.execute(query, {"categoria_id": categoria_id})
-        return [row[0] for row in result.fetchall()]
+        try:
+            # Try to count products with this categoria_id
+            # This query assumes a 'productos' table with 'categoria_id' column exists
+            query = text("""
+                SELECT COUNT(*) FROM productos
+                WHERE categoria_id = :categoria_id AND deleted_at IS NULL
+            """)
+            result = await self.session.execute(query, {"categoria_id": categoria_id})
+            return result.scalar() or 0
+        except Exception:
+            # Table doesn't exist yet or query failed — return 0 (safe)
+            logger.debug(f"Products table not ready, skipping product count for categoria_id={categoria_id}")
+            return 0
+    
+    

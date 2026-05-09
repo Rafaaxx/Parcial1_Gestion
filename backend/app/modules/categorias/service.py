@@ -260,13 +260,14 @@ class CategoriaService:
     
     async def delete_categoria(self, categoria_id: int) -> None:
         """
-        Soft-delete a category if it has no children.
+        Soft-delete a category if it has no children and no products.
         
         Soft-delete strategy: Sets deleted_at timestamp instead of physically removing.
         Preserves referential integrity and enables audit trails/recovery.
         
         Business rules:
         - Cannot delete if category has children (orphaning would be problematic)
+        - Cannot delete if category has products (data loss prevention)
         - Uses soft-delete pattern (sets deleted_at, not physically removed)
         - Soft-deleted categories excluded from all tree queries
         
@@ -274,20 +275,28 @@ class CategoriaService:
             categoria_id: ID of category to delete
             
         Raises:
-            AppException: If category has children or not found
+            AppException: If category has children, has products, or not found
             
         Example:
-            # Delete a leaf category
+            # Delete a leaf category with no products
             await service.delete_categoria(3)
             
-            # This will fail if category has children:
+            # This will fail if category has children or products:
             # await service.delete_categoria(1)  # raises AppException
         """
         # Check if has children
         child_count = await self.uow.categorias.count_children(categoria_id)
         if child_count > 0:
             raise AppException(
-                message=f"Cannot delete category: it has children",
+                message=f"Cannot delete category: it has {child_count} children",
+                status_code=409
+            )
+        
+        # Check if has products in this category
+        product_count = await self.uow.categorias.count_products_in_category(categoria_id)
+        if product_count > 0:
+            raise AppException(
+                message=f"Cannot delete category: it has {product_count} products",
                 status_code=409
             )
         
