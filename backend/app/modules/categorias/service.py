@@ -68,11 +68,12 @@ class CategoriaService:
             parent_id: The proposed parent ID
             
         Raises:
-            ValidationError: If parent_id == categoria_id
+            AppException: If parent_id == categoria_id (400 Bad Request)
         """
         if categoria_id and parent_id == categoria_id:
-            raise ValidationError(
-                "Cannot set parent_id to self: self-reference not allowed"
+            raise AppException(
+                message="Cannot set parent_id to self: self-reference not allowed",
+                status_code=400
             )
     
     async def _validate_parent_exists(self, parent_id: int) -> None:
@@ -286,7 +287,7 @@ class CategoriaService:
         child_count = await self.uow.categorias.count_children(categoria_id)
         if child_count > 0:
             raise AppException(
-                message=f"Cannot delete category: it has {child_count} child categor{'ies' if child_count != 1 else 'y'}",
+                message=f"Cannot delete category: it has children",
                 status_code=409
             )
         

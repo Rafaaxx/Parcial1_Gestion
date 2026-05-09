@@ -24,9 +24,12 @@ from app.models.rol import Rol
 from app.models.usuario import Usuario
 from app.models.usuario_rol import UsuarioRol
 from app.models.categoria import Categoria
-from app.security import create_access_token, hash_password
+from app.security import create_access_token
 
 pytestmark = pytest.mark.asyncio
+
+# Counter for unique user generation
+_user_counter = 0
 
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -94,6 +97,9 @@ async def client(override_get_db):
 @pytest.fixture
 async def admin_token(db_session) -> str:
     """Create admin user and return access token."""
+    global _user_counter
+    _user_counter += 1
+    
     # Get or create admin role
     stmt = select(Rol).where(Rol.codigo == "ADMIN")
     result = await db_session.execute(stmt)
@@ -104,17 +110,18 @@ async def admin_token(db_session) -> str:
         db_session.add(admin_role)
         await db_session.flush()
     
-    # Create admin user
+    # Create admin user with SHORT email (bcrypt 72-byte limit)
     admin_user = Usuario(
-        nombre="Admin User",
-        email=f"admin-{uuid.uuid4().hex[:8]}@test.com",
-        password_hash=hash_password("test123"),
+        nombre="Admin",
+        apellido="User",
+        email=f"a{_user_counter}@t.co",
+        password_hash="$2b$12$YDVTg/XbOQ1Ny6yGg5btJu1gpJf6vs8HLvW94TrtIHoS5yFsKfy3G",
     )
     db_session.add(admin_user)
     await db_session.flush()
     
     # Assign admin role
-    user_role = UsuarioRol(usuario_id=admin_user.id, rol_id=admin_role.id)
+    user_role = UsuarioRol(usuario_id=admin_user.id, rol_codigo=admin_role.codigo)
     db_session.add(user_role)
     await db_session.commit()
     
@@ -132,6 +139,9 @@ async def admin_token(db_session) -> str:
 @pytest.fixture
 async def stock_token(db_session) -> str:
     """Create stock user and return access token."""
+    global _user_counter
+    _user_counter += 1
+    
     # Get or create stock role
     stmt = select(Rol).where(Rol.codigo == "STOCK")
     result = await db_session.execute(stmt)
@@ -142,17 +152,18 @@ async def stock_token(db_session) -> str:
         db_session.add(stock_role)
         await db_session.flush()
     
-    # Create stock user
+    # Create stock user with SHORT email (bcrypt 72-byte limit)
     stock_user = Usuario(
-        nombre="Stock User",
-        email=f"stock-{uuid.uuid4().hex[:8]}@test.com",
-        password_hash=hash_password("test123"),
+        nombre="Stock",
+        apellido="User",
+        email=f"s{_user_counter}@t.co",
+        password_hash="$2b$12$YDVTg/XbOQ1Ny6yGg5btJu1gpJf6vs8HLvW94TrtIHoS5yFsKfy3G",
     )
     db_session.add(stock_user)
     await db_session.flush()
     
     # Assign stock role
-    user_role = UsuarioRol(usuario_id=stock_user.id, rol_id=stock_role.id)
+    user_role = UsuarioRol(usuario_id=stock_user.id, rol_codigo=stock_role.codigo)
     db_session.add(user_role)
     await db_session.commit()
     
@@ -170,6 +181,9 @@ async def stock_token(db_session) -> str:
 @pytest.fixture
 async def client_token(db_session) -> str:
     """Create client user and return access token."""
+    global _user_counter
+    _user_counter += 1
+    
     # Get or create client role
     stmt = select(Rol).where(Rol.codigo == "CLIENT")
     result = await db_session.execute(stmt)
@@ -180,17 +194,18 @@ async def client_token(db_session) -> str:
         db_session.add(client_role)
         await db_session.flush()
     
-    # Create client user
+    # Create client user with SHORT email (bcrypt 72-byte limit)
     client_user = Usuario(
-        nombre="Client User",
-        email=f"client-{uuid.uuid4().hex[:8]}@test.com",
-        password_hash=hash_password("test123"),
+        nombre="Client",
+        apellido="User",
+        email=f"c{_user_counter}@t.co",
+        password_hash="$2b$12$YDVTg/XbOQ1Ny6yGg5btJu1gpJf6vs8HLvW94TrtIHoS5yFsKfy3G",
     )
     db_session.add(client_user)
     await db_session.flush()
     
     # Assign client role
-    user_role = UsuarioRol(usuario_id=client_user.id, rol_id=client_role.id)
+    user_role = UsuarioRol(usuario_id=client_user.id, rol_codigo=client_role.codigo)
     db_session.add(user_role)
     await db_session.commit()
     
@@ -300,7 +315,7 @@ class TestCategoriaIntegration:
         root = next((cat for cat in tree if cat["nombre"] == "Comidas"), None)
         assert root is not None
         assert root["id"] == root_id
-        assert len(root.get("children", [])) >= 2
+        assert len(root.get("subcategorias", [])) >= 2
     
     async def test_get_single_category_by_id(self, client, admin_token):
         """Test 3.1: GET /api/v1/categorias/{id} returns single category"""

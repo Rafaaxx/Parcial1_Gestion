@@ -2,6 +2,7 @@
 import logging
 from typing import List, Optional
 from sqlalchemy import select, func, text, and_
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.categoria import Categoria
@@ -33,8 +34,8 @@ class CategoriaRepository(BaseRepository[Categoria]):
         """
         Fetch all root categories (parent_id IS NULL) with their complete tree.
         
-        Uses the ORM relationships for traversal (not raw CTE).
-        For deep trees, use get_tree_cte instead.
+        Uses the ORM relationships for traversal with eager loading.
+        selectinload recursively loads all children via nested ORM relationships.
         
         Args:
             depth_limit: Maximum tree depth (unused here, for API compatibility)
@@ -42,13 +43,24 @@ class CategoriaRepository(BaseRepository[Categoria]):
         Returns:
             List of root Categoria objects with children populated
         """
-        # Fetch root categories only (parent_id IS NULL and not soft-deleted)
+        # Fetch root categories with eager-loaded children
+        # selectinload(Categoria.children).selectinload(...) chains for deep nesting
         stmt = select(Categoria).where(
             and_(
                 Categoria.parent_id.is_(None),
                 Categoria.deleted_at.is_(None)
             )
         ).order_by(Categoria.nombre)
+        
+        # Apply nested selectinload for children relationships
+        # This loads children at multiple levels to support deep hierarchies
+        stmt = stmt.options(
+            selectinload(Categoria.children)
+            .selectinload(Categoria.children)
+            .selectinload(Categoria.children)
+            .selectinload(Categoria.children)
+            .selectinload(Categoria.children)
+        )
         
         result = await self.session.execute(stmt)
         return result.scalars().all()

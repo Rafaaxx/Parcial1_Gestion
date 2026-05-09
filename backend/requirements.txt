@@ -1,41 +1,42 @@
 # FastAPI & Web Server
-fastapi==0.111.0
-uvicorn[standard]==0.27.0
+fastapi[standard]
+uvicorn
 
 # Database
-sqlalchemy==2.0.32
-sqlmodel==0.0.16
-asyncpg==0.30.0
-alembic==1.13.0
+sqlalchemy
+sqlmodel
+asyncpg
+aiosqlite
+alembic
 
 # Validation & Settings
-pydantic==2.6.3
-pydantic-settings==2.1.0
-python-dotenv==1.0.0
+pydantic
+pydantic-settings
+python-dotenv
 
 # Authentication & Security
-passlib[bcrypt]==1.7.4
-python-jose[cryptography]==3.3.0
-PyJWT==2.8.1
+passlib[bcrypt]
+python-jose[cryptography]
+PyJWT
 
 # Testing
-pytest==7.4.4
-pytest-asyncio==0.23.3
-httpx==0.26.0
+pytest
+pytest-asyncio
+httpx
 
 # Utilities
-requests==2.31.0
-aiofiles==23.2.1
-email-validator==2.1.0
+requests
+aiofiles
+email-validator
 
 # Mercado Pago
-mercadopago==2.3.0
+mercadopago
 
 # Rate limiting
-slowapi==0.1.9
+slowapi
 
 # Optional but recommended
-black==24.1.1
-flake8==7.0.0
-mypy==1.8.0
-isort==5.13.2
+black
+flake8
+mypy
+isort
