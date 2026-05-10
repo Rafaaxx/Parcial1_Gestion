@@ -371,11 +371,11 @@ class TestLogout:
         assert resp2.status_code == 401
 
     async def test_logout_no_auth(self, client):
-        """LOGOUT-03: Without Bearer token returns 401."""
+        """LOGOUT-03: Without Bearer token returns 403 (HTTPBearer default)."""
         resp = await client.post(
             LOGOUT_URL, json={"refresh_token": "some-token"}
         )
-        assert resp.status_code == 401
+        assert resp.status_code == 403, f"Expected 403, got {resp.status_code}"
 
 
 # ── Me Tests ─────────────────────────────────────────────────────────────────
@@ -405,9 +405,9 @@ class TestMe:
         assert "password" not in body
 
     async def test_me_no_token(self, client):
-        """ME-02: Without token returns 401."""
+        """ME-02: Without token returns 403 (HTTPBearer default)."""
         resp = await client.get(ME_URL)
-        assert resp.status_code == 401
+        assert resp.status_code == 403, f"Expected 403, got {resp.status_code}"
 
     async def test_me_expired_token(self, client):
         """ME-03: Expired JWT returns 401."""

@@ -205,7 +205,37 @@ POST	/api/v1/auth/refresh	{ refresh_token }	200 TokenResponse	No
 POST	/api/v1/auth/logout	{ refresh_token }	204 No Content	Bearer token
 GET	/api/v1/auth/me	—	200 UserResponse	Bearer token
 
-5.2 Módulo Productos
+5.2 Módulo Categorías
+Método	Endpoint	Descripción	Rol requerido	Response
+GET	/api/v1/categorias	Listar categorías como árbol anidado (público, sin auth)	Público	200 List[CategoriaTreeNode]
+GET	/api/v1/categorias/{id}	Obtener categoría individual	Público	200 CategoriaRead
+POST	/api/v1/categorias	Crear categoría raíz o subcategoría	ADMIN, STOCK	201 CategoriaRead
+PUT	/api/v1/categorias/{id}	Actualizar nombre, descripción o parent_id	ADMIN, STOCK	200 CategoriaRead
+DELETE	/api/v1/categorias/{id}	Soft-delete categoría (si no tiene hijos)	ADMIN	204 No Content
+
+Características:
+• Jerarquía recursiva: Categorías pueden tener subcategorías anidadas (self-referential FK).
+• Ciclos prohibidos: Validación mediante CTE recursivo. Profundidad máxima: 20 niveles.
+• Árbol anidado: GET /categorias retorna estructura anidada con field subcategorias.
+• Soft-delete: DELETE marca deleted_at, no borra físicamente. GET filtra WHERE deleted_at IS NULL.
+• Sin dependencias: Categoría con hijos no puede ser eliminada. Retorna 409 Conflict.
+• Self-reference prevención: Un parent_id nunca puede igual al id de la categoría. Retorna 400 Bad Request.
+
+Validaciones por endpoint:
+POST /categorias:
+  ✓ nombre: max 100 caracteres, único
+  ✓ parent_id: Si se proporciona, debe existir y no ser ciclo
+  ✓ Requiere rol ADMIN o STOCK
+PUT /categorias/{id}:
+  ✓ parent_id: Validación de ciclos si se cambia el parent
+  ✓ Self-reference: No puede ser su propio padre
+  ✓ Requiere rol ADMIN o STOCK
+DELETE /categorias/{id}:
+  ✓ Solo si count(children) == 0
+  ✓ Retorna 409 Conflict si tiene hijos
+  ✓ Requiere rol ADMIN (más restrictivo que create/update)
+
+5.3 Módulo Productos
 Método	Endpoint	Descripción	Rol requerido	Response
 GET	/api/v1/productos	Listar (filtro: categoria, disponible, search, page, size)	Público	200 PaginatedProductos
 GET	/api/v1/productos/{id}	Detalle con ingredientes, categorías y stock	Público	200 ProductoDetail
@@ -217,7 +247,7 @@ GET	/api/v1/productos/{id}/ingredientes	Listar ingredientes del producto	Públic
 POST	/api/v1/productos/{id}/ingredientes	Asociar ingrediente a producto	ADMIN	201 ProductoIngredienteRead
 DELETE	/api/v1/productos/{id}/ingredientes/{ing_id}	Quitar ingrediente de producto	ADMIN	204 No Content
 
-5.3 Módulo Pedidos
+5.4 Módulo Pedidos
 Método	Endpoint	Descripción	Rol requerido	Response
 GET	/api/v1/pedidos	Listar propios (CLIENT) o todos (ADMIN/PEDIDOS)	CLIENT/ADMIN/PEDIDOS	200 PaginatedPedidos
 GET	/api/v1/pedidos/{id}	Detalle completo con líneas, trazabilidad y estado de pago	Propietario/ADMIN	200 PedidoDetail
@@ -226,7 +256,7 @@ PATCH	/api/v1/pedidos/{id}/estado	Avanzar estado. Valida FSM. UoW atómico.	ADMI
 GET	/api/v1/pedidos/{id}/historial	Historial completo. ORDER BY created_at ASC.	Propietario/ADMIN	200 List[HistorialRead]
 DELETE	/api/v1/pedidos/{id}	Cancelar propio (solo PENDIENTE o CONFIRMADO).	CLIENT propietario	200 PedidoRead
 
-5.4 Módulo Pagos (MercadoPago) ★
+5.5 Módulo Pagos (MercadoPago) ★
 Método	Endpoint	Descripción	Rol requerido	Response
 POST	/api/v1/pagos/crear	Crea pago con token de tarjeta. Registra en tabla Pago.	CLIENT	201 PagoResponse
 POST	/api/v1/pagos/webhook	Endpoint IPN de MercadoPago. Actualiza estado del pago y del pedido.	Público (validar firma)	200 { status: ok }

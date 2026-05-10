@@ -6,7 +6,7 @@ import uuid
 import hashlib
 from datetime import datetime, timedelta, timezone
 
-from passlib.hash import bcrypt
+import bcrypt
 from jose import jwt, JWTError
 
 from app.config import settings
@@ -21,7 +21,9 @@ def hash_password(password: str) -> str:
     Returns:
         60-character bcrypt hash string.
     """
-    return bcrypt.hash(password)
+    # Use bcrypt directly instead of passlib to avoid version conflicts
+    salt = bcrypt.gensalt(rounds=12)
+    return bcrypt.hashpw(password.encode(), salt).decode()
 
 
 def verify_password(plain: str, hashed: str) -> bool:
@@ -34,7 +36,7 @@ def verify_password(plain: str, hashed: str) -> bool:
     Returns:
         True if the password matches the hash, False otherwise.
     """
-    return bcrypt.verify(plain, hashed)
+    return bcrypt.checkpw(plain.encode(), hashed.encode())
 
 
 def create_access_token(data: dict) -> str:

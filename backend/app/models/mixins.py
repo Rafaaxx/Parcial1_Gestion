@@ -6,23 +6,32 @@ across ALL subclasses, causing ``ArgumentError: Column object '...' already
 assigned to Table '...'`` when multiple models inherit the same mixin.
 Using ``sa_column_kwargs`` lets SQLModel create a fresh Column per subclass.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from sqlalchemy import DateTime, func
 from sqlmodel import SQLModel, Field
+
+
+def _utcnow() -> datetime:
+    """Return current UTC datetime as timezone-aware.
+    
+    Replacement for deprecated datetime.utcnow().
+    Always returns datetime with timezone.utc info.
+    """
+    return datetime.now(timezone.utc)
 
 
 class TimestampMixin(SQLModel):
     """Mixin that adds created_at and updated_at timestamps to models"""
 
     created_at: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=_utcnow,
         sa_type=DateTime(timezone=True),
         sa_column_kwargs={"server_default": func.now(), "nullable": False},
         description="Record creation timestamp (UTC)",
     )
     updated_at: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=_utcnow,
         sa_type=DateTime(timezone=True),
         sa_column_kwargs={
             "server_default": func.now(),
