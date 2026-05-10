@@ -2,7 +2,7 @@
 
 import logging
 from typing import TypeVar, Generic, Optional, List, Type, Any, Dict
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -167,7 +167,7 @@ class BaseRepository(Generic[T]):
         
         # Update timestamp if model has it
         if hasattr(entity, 'updated_at'):
-            entity.updated_at = datetime.utcnow()
+            entity.updated_at = datetime.now(timezone.utc)
         
         self.session.add(entity)
         await self.session.flush()
@@ -211,9 +211,9 @@ class BaseRepository(Generic[T]):
         if not entity:
             return None
         
-        entity.deleted_at = datetime.utcnow()
+        entity.deleted_at = datetime.now(timezone.utc)
         if hasattr(entity, 'updated_at'):
-            entity.updated_at = datetime.utcnow()
+            entity.updated_at = datetime.now(timezone.utc)
         
         self.session.add(entity)
         await self.session.flush()
