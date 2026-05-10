@@ -1,77 +1,37 @@
-# Session Summary — 2026-05-10
+# Session Summary — 2026-05-10 (Final)
 
 ## Goal
-Implementar **Change 02 REAL: Layout + Navigation (Frontend)** — el frontend de Food Store completo con routing, navegación por rol, autenticación real, y manejo global de errores.
-
-## Contexto
-El frontend era un placeholder sin routing, sin layout, sin conexión real al backend de auth. El backend ya estaba completo (auth JWT + RBAC + categorías). Había una confusión previa donde change-02 (categorías) pasó a ser change-03, y el change-02 REAL (Layout + Navigation) nunca se había empezado.
+Completar Change 02 REAL (Layout + Navigation Frontend) para Food Store y corregir bug de persistencia de tokens.
 
 ## Accomplished
 
-### 🏗️ Fase SDD Completa (auto mode, engram store)
-- ✅ **Proposal**: Definido alcance, 10 entregables, riesgos y rollback plan
-- ✅ **Specs**: 19 requirements con 41 escenarios Given/When/Then
-- ✅ **Design**: 6 architecture decisions documentadas con tradeoffs
-- ✅ **Tasks**: 22 tareas desglosadas en 5 fases
-- ✅ **Apply**: Implementación 100% completa (22/22 tasks)
-- ✅ **Verify**: 32/33 checks pass (1 warning no crítico: NavMenu usa items hardcodeados en vez de useCategories)
-- ✅ **Archive**: Archivos en `.engram/` + `openspec/changes/archive/2026-05-10-change-02-layout-navigation/`
+### 🔧 Bugfixes (sesión actual)
 
-### 📦 Implementación (22 tareas, 30+ archivos)
+#### 1. Auth persist: tokens perdidos al refrescar página
+- **Causa raíz**: `restoreSession()` llamaba a `logout()` si `GET /auth/me` fallaba, destruyendo los tokens recién restaurados de localStorage
+- **Fix**: `restoreSession()` ya NO llama a `logout()` en el catch — ignora el error silenciosamente, los tokens se conservan para requests posteriores
+- **Fix adicional**: Movido `restoreSession()` fuera de `onRehydrateStorage` (race condition con HTTP client) a un `useEffect` en `AppLayout.tsx` — corre en ciclo de vida de React post-montaje
 
-#### Foundation
-- Instalados: `react-router-dom` + `@tanstack/react-query`
-- Auth store: persist middleware, `roles[]`, `hasRole()`, `rehydrated` flag
-- ErrorBoundary: class component con "Reintentar"
-- HTTP Interceptor: refresh token con singleton + request queue + toasts de error
+#### 2. LoginPage / RegisterPage: navigate() durante render
+- **Causa**: `navigate('/')` llamado como side-effect durante el render (anti-patrón React)
+- **Fix**: Reemplazado con `<Navigate to="/" replace />` (componente declarativo)
 
-#### Layout Components
-- AppLayout: Header + NavMenu + Breadcrumbs + Suspense/Outlet + Footer
-- NavMenu: role-based filtering, responsive hamburger, active links
-- UserDropdown: avatar, perfil, logout (POST /api/v1/auth/logout)
-- CartBadge: icono con contador, solo CLIENT
-- Breadcrumbs: dinámicos desde la ruta actual
-- Footer: copyright + links
+### ✅ Verificado
+- Login admin: funciona
+- Navegación a /admin/categorias (Change 03): funciona
+- Refrescar página (F5): ✅ mantiene sesión, no redirige a login
+- Build: 0 TypeScript errors, 193 módulos
 
-#### Routing & Pages
-- Router: `createBrowserRouter` con 16 rutas lazy-loaded
-- HomePage: hero con gradiente, feature cards, CTA auth-aware
-- LoginPage: form + `useMutation` + redirect handling
-- RegisterPage: form + validación + confirm password
-- 13 placeholder pages (productos, admin, perfil, etc.)
-- 404 + 403 pages
-
-### 🔧 Build Status
-- ✅ `npm run build` — 0 TypeScript errors, 193 módulos, ~10s
-
-## Problemas Conocidos
-- ⚠️ NavMenu no usa `useCategories` hook — items hardcodeados (no bloqueante, se puede agregar en change futuro)
-- ⚠️ 4 violaciones FSD pragmáticas (shared → features) — estándar aceptado en proyectos reales
-
-## Next Steps
-- Probar manualmente según la lista de verificación adjunta
-- Siguiente change: CHANGE-05 (Direcciones de Entrega), CHANGE-04 (Ingredientes), o CHANGE-07 (Catálogo Público)
-- Considerar migrar del wrapper de BrowserRouter a data router (ya implementado)
+## Estado Final del Proyecto
+- Change 01 (Auth JWT + RBAC): ✅ Completo y archivado
+- Change 02 (Layout + Navigation): ✅ Completo, archivado, bugfixes aplicados
+- Change 03 (Categorías): ✅ Verificado funcional desde frontend
+- Pendiente: commit de todos los cambios y push a GitHub
 
 ## Relevant Files
-- `frontend/src/app/AppLayout.tsx` — Layout shell principal
-- `frontend/src/app/router.tsx` — Configuración de rutas con lazy loading
-- `frontend/src/features/auth/store.ts` — Auth store con persist + hasRole
-- `frontend/src/shared/http/interceptors.ts` — Refresh token + error toasts
-- `frontend/src/shared/ui/NavMenu.tsx` — Navegación por rol responsiva
-- `frontend/src/shared/ui/ProtectedRoute.tsx` — Route guard auth + rol
-- `frontend/src/shared/ui/ErrorBoundary.tsx` — Error boundary global
-- `frontend/src/pages/LoginPage.tsx` — Login funcional con API
-- `frontend/src/pages/RegisterPage.tsx` — Registro funcional con API
-- `frontend/src/features/cart/store.ts` — Cart store completo con persist
-- `frontend/src/shared/ui/Breadcrumbs.tsx` — Breadcrumbs dinámicos
-- `frontend/src/shared/ui/UserDropdown.tsx` — Menú de usuario con logout
-- `frontend/src/shared/ui/CartBadge.tsx` — Badge del carrito
-- `frontend/src/shared/ui/Footer.tsx` — Footer
-- `frontend/src/shared/hooks/useCategories.ts` — Hook para categorías
-- `frontend/src/shared/types/navigation.ts` — Tipos compartidos
-- `frontend/src/pages/HomePage.tsx` — Landing page con hero
-- `openspec/specs/zustand-stores/spec.md` — Spec actualizado
-- `openspec/specs/http-client/spec.md` — Spec actualizado
-- `openspec/specs/ui-system/spec.md` — Spec actualizado
-- `openspec/specs/project-structure/spec.md` — Spec actualizado
+- `frontend/src/features/auth/store.ts` — Persist fix: logout() removido del catch en restoreSession()
+- `frontend/src/app/AppLayout.tsx` — Nuevo useEffect para restoreSession() post-rehydratación
+- `frontend/src/pages/LoginPage.tsx` — navigate() → <Navigate /> fix
+- `frontend/src/pages/RegisterPage.tsx` — navigate() → <Navigate /> fix
+- `frontend/src/shared/ui/ProtectedRoute.tsx` — Auth guard (sin cambios, ya funcionaba)
+- `.engram/SESSION_SUMMARY.md` — Este archivo

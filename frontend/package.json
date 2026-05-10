@@ -11,9 +11,11 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\""
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.100.9",
     "axios": "^1.6.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-router-dom": "^7.15.0",
     "zustand": "^4.4.7"
   },
   "devDependencies": {
