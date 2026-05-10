@@ -4,7 +4,6 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from fastapi.openapi.utils import get_openapi
 from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
@@ -59,30 +58,6 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json",
 )
-
-# Custom OpenAPI schema with Bearer JWT security scheme
-def custom_openapi():
-    if app.openapi_schema:
-        return app.openapi_schema
-    openapi_schema = get_openapi(
-        title=app.title,
-        version=app.version,
-        description=app.description,
-        routes=app.routes,
-    )
-    openapi_schema["components"]["securitySchemes"] = {
-        "BearerAuth": {
-            "type": "http",
-            "scheme": "bearer",
-            "bearerFormat": "JWT",
-            "description": "Ingresá el access_token que obtuviste de POST /api/v1/auth/login"
-        }
-    }
-    openapi_schema["security"] = [{"BearerAuth": []}]
-    app.openapi_schema = openapi_schema
-    return openapi_schema
-
-app.openapi = custom_openapi
 
 # Register rate limiter with FastAPI (for dependency injection)
 app.state.limiter = limiter

@@ -23,7 +23,8 @@ from app.exceptions import AppException, app_exception_to_http_exception
 logger = logging.getLogger(__name__)
 
 # Bearer token scheme for Swagger UI — shows a "Value" field for the token
-oauth2_scheme = HTTPBearer(auto_error=False)
+# auto_error=True auto-registers the security scheme in OpenAPI paths
+oauth2_scheme = HTTPBearer()
 
 
 async def get_uow(session: AsyncSession = Depends(get_db)) -> AsyncGenerator[UnitOfWork, None]:
