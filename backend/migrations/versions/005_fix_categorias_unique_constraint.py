@@ -17,7 +17,7 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision: str = "005_fix_categorias_unique_constraint"
+revision: str = "005_fix_cat_unique_constraint"
 down_revision: Union[str, None] = "004_add_categorias_table"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
