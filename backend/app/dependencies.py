@@ -11,7 +11,7 @@ from typing import AsyncGenerator, Callable, List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.database import async_session_factory, get_db
 from app.uow import UnitOfWork
@@ -22,8 +22,8 @@ from app.exceptions import AppException, app_exception_to_http_exception
 
 logger = logging.getLogger(__name__)
 
-# OAuth2 scheme for Swagger UI — tokenUrl points to our login endpoint
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+# Bearer token scheme for Swagger UI — shows a "Value" field for the token
+oauth2_scheme = HTTPBearer(auto_error=False)
 
 
 async def get_uow(session: AsyncSession = Depends(get_db)) -> AsyncGenerator[UnitOfWork, None]:
@@ -50,7 +50,7 @@ async def get_uow(session: AsyncSession = Depends(get_db)) -> AsyncGenerator[Uni
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(oauth2_scheme),
     uow: UnitOfWork = Depends(get_uow),
 ) -> Usuario:
     """Extract Bearer token, decode JWT, load Usuario from DB.
@@ -61,7 +61,7 @@ async def get_current_user(
       - User exists in DB and is active
 
     Args:
-        token: Bearer token from Authorization header.
+        credentials: Bearer token credentials from Authorization header.
         uow: Active UnitOfWork.
 
     Returns:
@@ -71,8 +71,14 @@ async def get_current_user(
         HTTPException 401: If token is missing, invalid, expired,
             or user not found/disabled.
     """
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"detail": "Token requerido", "code": "UNAUTHORIZED"},
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     try:
-        payload = decode_access_token(token)
+        payload = decode_access_token(credentials.credentials)
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -135,11 +141,17 @@ def require_role(roles: List[str]) -> Callable:
     """
     async def _role_checker(
         current_user: Usuario = Depends(get_current_user),
-        token: str = Depends(oauth2_scheme),
+        credentials: HTTPAuthorizationCredentials | None = Depends(oauth2_scheme),
     ) -> None:
         # Read roles from JWT payload (not from BD) — ADR-4 compliance
+        if credentials is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={"detail": "Token requerido", "code": "UNAUTHORIZED"},
+                headers={"WWW-Authenticate": "Bearer"},
+            )
         try:
-            payload = decode_access_token(token)
+            payload = decode_access_token(credentials.credentials)
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
