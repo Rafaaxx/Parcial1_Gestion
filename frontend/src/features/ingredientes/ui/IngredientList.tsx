@@ -15,11 +15,7 @@ interface IngredientListProps {
   readonly?: boolean;
 }
 
-export function IngredientList({
-  onEdit,
-  onDelete,
-  readonly = false,
-}: IngredientListProps) {
+export function IngredientList({ onEdit, onDelete, readonly = false }: IngredientListProps) {
   const [skip, setSkip] = useState(0);
   const [limit, setLimit] = useState(20);
   const [esAlergeno, setEsAlergeno] = useState<boolean | undefined>(undefined);
@@ -61,9 +57,7 @@ export function IngredientList({
               <tr key={ingrediente.id} className="hover:bg-gray-50">
                 <td className="border border-gray-300 px-4 py-2">{ingrediente.nombre}</td>
                 <td className="border border-gray-300 px-4 py-2 text-center">
-                  {ingrediente.es_alergeno && (
-                    <Badge variant="warning">Alérgeno</Badge>
-                  )}
+                  {ingrediente.es_alergeno && <Badge variant="warning">Alérgeno</Badge>}
                 </td>
                 <td className="border border-gray-300 px-4 py-2 text-sm text-gray-600">
                   {new Date(ingrediente.created_at).toLocaleDateString()}
@@ -71,11 +65,7 @@ export function IngredientList({
                 {!readonly && (
                   <td className="border border-gray-300 px-4 py-2 space-x-2">
                     {onEdit && (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => onEdit(ingrediente.id)}
-                      >
+                      <Button size="sm" variant="secondary" onClick={() => onEdit(ingrediente.id)}>
                         Editar
                       </Button>
                     )}
@@ -102,16 +92,10 @@ export function IngredientList({
           Mostrando {data.items.length} de {data.total} ingredientes
         </div>
         <div className="space-x-2">
-          <Button
-            disabled={skip === 0}
-            onClick={() => setSkip(Math.max(0, skip - limit))}
-          >
+          <Button disabled={skip === 0} onClick={() => setSkip(Math.max(0, skip - limit))}>
             Anterior
           </Button>
-          <Button
-            disabled={skip + limit >= data.total}
-            onClick={() => setSkip(skip + limit)}
-          >
+          <Button disabled={skip + limit >= data.total} onClick={() => setSkip(skip + limit)}>
             Siguiente
           </Button>
         </div>

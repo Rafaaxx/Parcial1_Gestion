@@ -9,6 +9,7 @@ Implements 5 REST endpoints for ingredient operations:
 
 All endpoints use soft-delete pattern and return RFC 7807 error responses.
 """
+
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import Optional
 
@@ -45,13 +46,13 @@ async def create_ingrediente(
 ) -> IngredienteRead:
     """
     Create a new ingredient.
-    
+
     **Requires**: STOCK or ADMIN role
-    
+
     **Parameters**:
     - `nombre` (required): Ingredient name (max 255 chars, unique among active ingredients)
     - `es_alergeno` (optional): Boolean flag indicating allergen status (default: false)
-    
+
     **Responses**:
     - 201: Ingredient created (returns IngredienteRead)
     - 409: Duplicate nombre
@@ -67,7 +68,7 @@ async def create_ingrediente(
         if "already exists" in str(e):
             raise HTTPException(status_code=409, detail=str(e))
         raise HTTPException(status_code=422, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -83,19 +84,21 @@ async def create_ingrediente(
 async def list_ingredientes(
     skip: int = Query(0, ge=0, description="Pagination offset"),
     limit: int = Query(100, ge=1, le=1000, description="Pagination limit"),
-    es_alergeno: Optional[bool] = Query(None, description="Filter by allergen status (optional)"),
+    es_alergeno: Optional[bool] = Query(
+        None, description="Filter by allergen status (optional)"
+    ),
     uow: UnitOfWork = Depends(get_uow),
 ) -> IngredienteListResponse:
     """
     List all active ingredients with pagination and optional allergen filter.
-    
+
     **No authentication required** — allergen information is public metadata.
-    
+
     **Query Parameters**:
     - `skip` (optional): Offset for pagination (default: 0)
     - `limit` (optional): Max items per page (default: 100, max: 1000)
     - `es_alergeno` (optional): Filter by allergen flag (true/false/null)
-    
+
     **Responses**:
     - 200: Returns IngredienteListResponse with items and total count
     """
@@ -106,7 +109,7 @@ async def list_ingredientes(
             limit=limit,
             es_alergeno=es_alergeno,
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -126,12 +129,12 @@ async def get_ingrediente(
 ) -> IngredienteRead:
     """
     Get a single active ingredient by ID.
-    
+
     **No authentication required** — allergen information is public metadata.
-    
+
     **Path Parameters**:
     - `id`: Ingredient ID
-    
+
     **Responses**:
     - 200: Ingredient found (returns IngredienteRead)
     - 404: Ingredient not found or soft-deleted
@@ -141,7 +144,7 @@ async def get_ingrediente(
         return await service.get_ingrediente_by_id(id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -166,16 +169,16 @@ async def update_ingrediente(
 ) -> IngredienteRead:
     """
     Update an active ingredient (STOCK/ADMIN only).
-    
+
     **Requires**: STOCK or ADMIN role
-    
+
     **Path Parameters**:
     - `id`: Ingredient ID
-    
+
     **Request Body** (all fields optional):
     - `nombre` (optional): New ingredient name
     - `es_alergeno` (optional): New allergen flag
-    
+
     **Responses**:
     - 200: Ingredient updated (returns IngredienteRead)
     - 404: Ingredient not found or soft-deleted
@@ -194,7 +197,7 @@ async def update_ingrediente(
         elif "not found" in str(e):
             raise HTTPException(status_code=404, detail=str(e))
         raise HTTPException(status_code=422, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -215,17 +218,17 @@ async def delete_ingrediente(
 ) -> None:
     """
     Soft delete an ingredient (STOCK/ADMIN only).
-    
+
     **Requires**: STOCK or ADMIN role
-    
+
     **Business Logic**:
     - Sets `deleted_at` timestamp instead of physical deletion
     - Ingredient no longer appears in list queries
     - Historical product-ingredient associations are preserved
-    
+
     **Path Parameters**:
     - `id`: Ingredient ID
-    
+
     **Responses**:
     - 204: Ingredient soft-deleted (no response body)
     - 404: Ingredient not found or already deleted
@@ -236,5 +239,5 @@ async def delete_ingrediente(
         await service.delete_ingrediente(id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Internal server error")

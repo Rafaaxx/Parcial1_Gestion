@@ -15,11 +15,7 @@ interface CreateIngredientModalProps {
   onSuccess?: () => void;
 }
 
-export function CreateIngredientModal({
-  isOpen,
-  onClose,
-  onSuccess,
-}: CreateIngredientModalProps) {
+export function CreateIngredientModal({ isOpen, onClose, onSuccess }: CreateIngredientModalProps) {
   const [nombre, setNombre] = useState('');
   const [esAlergeno, setEsAlergeno] = useState(false);
   const [error, setError] = useState<string | null>(null);

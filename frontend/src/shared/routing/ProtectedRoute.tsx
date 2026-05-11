@@ -3,14 +3,14 @@
  * Validates user roles before allowing access to a route
  */
 
-import React from 'react'
-import { Navigate } from 'react-router-dom'
-import { useAuthStore, userHasRole } from '@/features/auth/store'
+import React from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuthStore, userHasRole } from '@/features/auth/store';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode
-  requiredRoles: string[]
-  fallbackPath?: string
+  children: React.ReactNode;
+  requiredRoles: string[];
+  fallbackPath?: string;
 }
 
 /**
@@ -22,23 +22,23 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredRoles,
   fallbackPath = '/login',
 }) => {
-  const { user, isAuthenticated } = useAuthStore()
+  const { user, isAuthenticated } = useAuthStore();
 
   // Not authenticated -> redirect to login
   if (!isAuthenticated || !user) {
-    return <Navigate to={fallbackPath} replace />
+    return <Navigate to={fallbackPath} replace />;
   }
 
   // No required roles specified -> grant access
   if (requiredRoles.length === 0) {
-    return <>{children}</>
+    return <>{children}</>;
   }
 
   // Check if user has any of the required roles
   if (userHasRole(user, requiredRoles)) {
-    return <>{children}</>
+    return <>{children}</>;
   }
 
   // User lacks required roles -> redirect to fallback
-  return <Navigate to={fallbackPath} replace />
-}
+  return <Navigate to={fallbackPath} replace />;
+};

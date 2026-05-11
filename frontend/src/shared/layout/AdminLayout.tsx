@@ -2,19 +2,19 @@
  * AdminLayout: Layout component for admin pages with sidebar navigation
  */
 
-import React from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { useAuthStore, userHasRole } from '@/features/auth/store'
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuthStore, userHasRole } from '@/features/auth/store';
 
 interface AdminLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 interface NavItem {
-  label: string
-  href: string
-  requiredRoles: string[]
-  icon?: string
+  label: string;
+  href: string;
+  requiredRoles: string[];
+  icon?: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -48,18 +48,16 @@ const NAV_ITEMS: NavItem[] = [
     requiredRoles: ['ADMIN'],
     icon: '👥',
   },
-]
+];
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
-  const { user } = useAuthStore()
-  const location = useLocation()
+  const { user } = useAuthStore();
+  const location = useLocation();
 
   // Filter nav items based on user roles
-  const visibleNavItems = NAV_ITEMS.filter(item =>
-    userHasRole(user, item.requiredRoles)
-  )
+  const visibleNavItems = NAV_ITEMS.filter((item) => userHasRole(user, item.requiredRoles));
 
-  const isActive = (href: string) => location.pathname === href
+  const isActive = (href: string) => location.pathname === href;
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
@@ -68,12 +66,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <div className="h-full flex flex-col">
           {/* Header */}
           <div className="p-6 border-b border-gray-200 dark:border-gray-800">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-              Food Store
-            </h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Admin Panel
-            </p>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Food Store</h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Admin Panel</p>
           </div>
 
           {/* User Info */}
@@ -82,11 +76,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                 {user.name}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                {user.email}
-              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
               <div className="mt-2 flex gap-1 flex-wrap">
-                {user.roles.map(role => (
+                {user.roles.map((role) => (
                   <span
                     key={role}
                     className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded"
@@ -100,7 +92,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            {visibleNavItems.map(item => (
+            {visibleNavItems.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
@@ -121,7 +113,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             <button
               onClick={() => {
                 // Logout logic here
-                window.location.href = '/login'
+                window.location.href = '/login';
               }}
               className="w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             >
@@ -133,10 +125,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
-        <div className="bg-white dark:bg-gray-900 min-h-full">
-          {children}
-        </div>
+        <div className="bg-white dark:bg-gray-900 min-h-full">{children}</div>
       </main>
     </div>
-  )
-}
+  );
+};

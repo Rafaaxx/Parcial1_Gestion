@@ -27,9 +27,7 @@ export function EditIngredientModal({
   const [esAlergeno, setEsAlergeno] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { data: ingrediente, isLoading } = useIngredienteDetail(
-    ingredientId || 0
-  );
+  const { data: ingrediente, isLoading } = useIngredienteDetail(ingredientId || 0);
   const updateMutation = useUpdateIngrediente(ingredientId || 0);
 
   useEffect(() => {
