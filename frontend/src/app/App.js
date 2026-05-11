@@ -1,22 +1,7 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-/**
- * Root App component with providers and theme support
- */
-import { useEffect } from 'react';
-import { useTheme } from '@/shared/hooks';
+import { jsx as _jsx } from "react/jsx-runtime";
+import { RouterProvider } from 'react-router-dom';
+import { router } from './router';
 export const App = () => {
-    const { theme, applyTheme } = useTheme();
-    // Apply theme on mount and when it changes
-    useEffect(() => {
-        applyTheme(theme);
-    }, [theme, applyTheme]);
-    return (_jsx("div", { className: `min-h-screen ${theme === 'dark' ? 'dark' : ''}`, children: _jsx("main", { className: "bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-50 min-h-screen", children: _jsxs("div", { className: "container mx-auto px-4 py-8", children: [_jsx("h1", { className: "text-4xl font-bold mb-8", children: "Food Store - Frontend Setup Complete \u2705" }), _jsxs("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-6", children: [_jsxs("div", { className: "bg-gradient-to-br from-sky-50 to-sky-100 dark:from-gray-800 dark:to-gray-900 rounded-lg p-6 border border-sky-200 dark:border-gray-700", children: [_jsx("h2", { className: "text-2xl font-semibold mb-3", children: "Welcome to Food Store" }), _jsx("p", { className: "text-gray-700 dark:text-gray-300 mb-4", children: "This is the foundation of our frontend. All infrastructure is ready for future features." }), _jsxs("div", { className: "flex gap-2", children: [_jsx("span", { className: "px-3 py-1 bg-sky-500 text-white rounded-full text-sm", children: "React 19" }), _jsx("span", { className: "px-3 py-1 bg-sky-500 text-white rounded-full text-sm", children: "TypeScript" }), _jsx("span", { className: "px-3 py-1 bg-sky-500 text-white rounded-full text-sm", children: "Zustand" })] })] }), _jsxs("div", { className: "bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-800 dark:to-gray-900 rounded-lg p-6 border border-green-200 dark:border-gray-700", children: [_jsx("h2", { className: "text-2xl font-semibold mb-3", children: "Tech Stack" }), _jsxs("ul", { className: "space-y-2 text-gray-700 dark:text-gray-300", children: [_jsx("li", { children: "\u2713 Vite for blazing fast builds" }), _jsx("li", { children: "\u2713 Zustand for state management" }), _jsx("li", { children: "\u2713 Tailwind CSS for styling" }), _jsx("li", { children: "\u2713 Axios for API calls" }), _jsx("li", { children: "\u2713 TypeScript for type safety" }), _jsx("li", { children: "\u2713 FSD architecture" })] })] })] }), _jsxs("div", { className: "mt-12", children: [_jsx("h2", { className: "text-2xl font-semibold mb-6", children: "Available Features" }), _jsx("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-4", children: [
-                                    { title: 'Authentication Store', desc: 'User, token management ready' },
-                                    { title: 'UI Store', desc: 'Theme, toast notifications' },
-                                    { title: 'HTTP Client', desc: 'Axios with interceptors' },
-                                    { title: 'UI Components', desc: 'Button, Card, Modal, Input...' },
-                                    { title: 'Custom Hooks', desc: 'useAuth, useTheme, useLocalStorage' },
-                                    { title: 'Utilities', desc: 'Formatters, validators, storage' },
-                                ].map((feature) => (_jsxs("div", { className: "bg-gray-100 dark:bg-gray-800 rounded-lg p-4", children: [_jsx("h3", { className: "font-semibold mb-2", children: feature.title }), _jsx("p", { className: "text-sm text-gray-600 dark:text-gray-400", children: feature.desc })] }, feature.title))) })] }), _jsxs("div", { className: "mt-12 bg-blue-50 dark:bg-gray-800 rounded-lg p-6 border border-blue-200 dark:border-gray-700", children: [_jsx("h2", { className: "text-xl font-semibold mb-4", children: "Next Steps" }), _jsxs("ol", { className: "list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300", children: [_jsx("li", { children: "CHANGE-00c: Add CORS + Rate Limiting to backend" }), _jsx("li", { children: "CHANGE-00d: Add seed data + base tests" }), _jsx("li", { children: "CHANGE-01: Implement Authentication (Login/Register)" }), _jsx("li", { children: "CHANGE-02: Add navigation and layout with role-based UI" }), _jsx("li", { children: "...and 13 more changes to build complete Food Store" })] })] })] }) }) }));
+    return _jsx(RouterProvider, { router: router });
 };
 //# sourceMappingURL=App.js.map

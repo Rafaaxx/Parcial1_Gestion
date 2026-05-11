@@ -58,6 +58,22 @@
       "prompts": 0
     },
     {
+      "id": "sdd-change-02-layout-navigation",
+      "created_by": "orchestrator",
+      "created_at": "2026-05-10T20:00:00Z",
+      "sessions": 1,
+      "memories": 7,
+      "prompts": 22
+    },
+    {
+      "id": "session-2026-05-10-bugfix",
+      "created_by": "lucas",
+      "created_at": "2026-05-10T23:30:00Z",
+      "sessions": 1,
+      "memories": 3,
+      "prompts": 0
+    },
+    {
       "id": "0f210202",
       "created_by": "Lauti Ferreria",
       "created_at": "2026-05-10T23:38:59Z",

@@ -96,3 +96,108 @@ The system SHALL provide a skeleton/loader component for displaying content plac
 #### Scenario: Show loading skeleton
 - **WHEN** data is being fetched
 - **THEN** skeleton appears as gray shimmer placeholders matching the final layout
+
+### Requirement: AppLayout — Main Application Shell
+The system SHALL provide an AppLayout component that serves as the main application shell with Header, Breadcrumbs, content area, and Footer.
+
+#### Scenario: AppLayout renders with all sections
+- **WHEN** any page renders inside the layout
+- **THEN** the layout shows: Header (sticky, top), Breadcrumbs, main content area (Suspense + Outlet), Footer (bottom)
+
+#### Scenario: Header includes navigation and user controls
+- **WHEN** the layout renders
+- **THEN** Header contains: Logo (links to /), NavMenu (desktop), CartBadge, UserDropdown (if authenticated) or Login link (if not), Theme toggle, Mobile hamburger button
+
+#### Scenario: Suspense shows skeleton fallback
+- **WHEN** a lazy-loaded page is loading
+- **THEN** React.Suspense shows skeleton placeholders (Skeleton component) instead of full page flash
+
+### Requirement: NavMenu — Role-Based Navigation
+The system SHALL provide a NavMenu component that displays navigation items filtered by user role.
+
+#### Scenario: Render desktop navigation
+- **WHEN** user is on desktop (> 768px)
+- **THEN** NavMenu displays inline horizontal links with active state highlighting
+
+#### Scenario: Render mobile hamburger menu
+- **WHEN** user is on mobile (< 768px)
+- **THEN** NavMenu receives `isMobile` prop and renders inside a slide-in panel with overlay
+
+#### Scenario: Filter menu items by role
+- **WHEN** user does not have ADMIN role
+- **THEN** admin-only menu items (Dashboard, Products, Categories, Orders, Users, Stock) are hidden
+
+#### Scenario: Active link highlighting
+- **WHEN** a NavLink matches the current route
+- **THEN** it has an active style (primary color, bold or underline)
+
+### Requirement: Breadcrumbs — Navigation Trail
+The system SHALL provide a Breadcrumbs component that shows the current page path as a navigable trail.
+
+#### Scenario: Show breadcrumb trail
+- **WHEN** user navigates to /productos/123
+- **THEN** breadcrumbs show: Inicio > Productos > [Product Name]
+- **THEN** each segment is clickable except the last (current page)
+
+#### Scenario: Breadcrumbs use path matching
+- **WHEN** the route changes
+- **THEN** breadcrumbs automatically derive segments from the current pathname and route metadata
+
+### Requirement: Footer — Application Footer
+The system SHALL provide a Footer component displayed at the bottom of every page.
+
+#### Scenario: Footer renders at page bottom
+- **WHEN** the AppLayout renders
+- **THEN** Footer appears at the bottom with copyright, links, and branding
+
+### Requirement: CartBadge — Cart Icon with Count
+The system SHALL provide a CartBadge component showing the cart icon with current item count.
+
+#### Scenario: Show cart icon with count
+- **WHEN** cart has items
+- **THEN** CartBadge shows a shopping cart icon with a badge overlay displaying the item count
+
+#### Scenario: CartBadge links to cart page
+- **WHEN** user clicks the cart badge
+- **THEN** they are navigated to /carrito
+
+### Requirement: UserDropdown — User Menu
+The system SHALL provide a UserDropdown component for authenticated user actions.
+
+#### Scenario: Show user menu
+- **WHEN** user is authenticated and clicks their name/avatar
+- **THEN** a dropdown menu appears with: Perfil link, Cerrar Sesión button
+
+#### Scenario: Logout clears auth state
+- **WHEN** user clicks Cerrar Sesión
+- **THEN** auth store is cleared and user is redirected to home
+
+### Requirement: ProtectedRoute — Authentication Guard
+The system SHALL provide a ProtectedRoute component that wraps routes requiring authentication.
+
+#### Scenario: Redirect to login when not authenticated
+- **WHEN** an unauthenticated user visits a protected route
+- **THEN** they are redirected to /auth/login?redirect=<original_path>
+
+#### Scenario: Wait for rehydrated before checking auth
+- **WHEN** the auth store has not finished rehydrating
+- **THEN** ProtectedRoute shows a loading skeleton instead of prematurely redirecting
+
+#### Scenario: Show 403 when wrong role
+- **WHEN** an authenticated user lacks the required role
+- **THEN** a ForbiddenAccess message is displayed (not a redirect)
+
+### Requirement: ErrorBoundary — Catch Render Errors
+The system SHALL provide an ErrorBoundary class component that catches JavaScript errors in the component tree.
+
+#### Scenario: Show fallback UI on error
+- **WHEN** a component throws during rendering
+- **THEN** ErrorBoundary shows a fallback UI with error message and "Reintentar" button
+
+#### Scenario: Retry resets error state
+- **WHEN** user clicks "Reintentar"
+- **THEN** ErrorBoundary resets `hasError` state via `setState({ hasError: false })` and re-renders children
+
+#### Scenario: DEV mode shows error details
+- **WHEN** `import.meta.env.DEV` is true
+- **THEN** ErrorBoundary also displays the error stack trace for debugging

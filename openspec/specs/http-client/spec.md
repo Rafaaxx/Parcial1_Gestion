@@ -58,3 +58,39 @@ The system SHALL log HTTP requests and responses for debugging in development mo
 #### Scenario: Log incoming response
 - **WHEN** a response arrives and `VITE_DEBUG=true`
 - **THEN** console logs: `[API] 200 GET /productos duration=45ms`
+
+### Requirement: Refresh Token Request Queue
+The response interceptor SHALL implement a request queue pattern to handle concurrent 401 responses without multiple simultaneous refresh calls.
+
+#### Scenario: Queue concurrent requests during token refresh
+- **WHEN** multiple requests receive 401 simultaneously
+- **THEN** only ONE refresh call is made (singleton `refreshPromise`)
+- **THEN** all other 401 requests are queued via `failedQueue` array
+- **THEN** when refresh succeeds, the queue is processed via `processQueue()` and all queued requests are retried with the new token
+
+#### Scenario: Queue rejection on refresh failure
+- **WHEN** token refresh fails
+- **THEN** all queued requests are rejected with the original error
+- **THEN** the auth store is cleared and user is redirected to login
+
+### Requirement: Error Toast Integration
+The HTTP interceptor SHALL display user-friendly toast notifications for API errors using the UI store.
+
+#### Scenario: Show error toast on 4xx response
+- **WHEN** a response has status 400-499 (excluding 401 which triggers refresh)
+- **THEN** `useUIStore.getState().showToast()` is called with the error message
+
+#### Scenario: Show error toast on 5xx response
+- **WHEN** a response has status 500+
+- **THEN** a generic "Error del servidor" toast is displayed
+
+#### Scenario: getErrorMessage maps status codes
+- **WHEN** an error response is received
+- **THEN** `getErrorMessage(error)` returns a user-friendly message based on status code:
+  - 400: "Solicitud inválida"
+  - 403: "No tienes permisos para realizar esta acción"
+  - 404: "Recurso no encontrado"
+  - 409: "Conflicto — el recurso ya existe o tiene dependencias"
+  - 422: "Datos inválidos"
+  - 500+: "Error del servidor. Intenta de nuevo más tarde."
+  - Otherwise: extracts message from `error.response?.data?.detail` or `error.message`

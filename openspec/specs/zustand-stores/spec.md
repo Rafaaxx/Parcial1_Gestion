@@ -61,3 +61,33 @@ The system MAY provide optional integration with Zustand devtools for debugging 
 #### Scenario: Developer enables devtools
 - **WHEN** developer sets `VITE_DEBUG=true` in .env
 - **THEN** stores register with Zustand devtools for time-travel inspection (optional, not required)
+
+### Requirement: Auth Store Persist Middleware
+The auth store SHALL use Zustand's `persist()` middleware to survive page reloads, with `partialize` limiting persistence to non-sensitive fields only.
+
+#### Scenario: Persist token across page reloads
+- **WHEN** user refreshes the page
+- **THEN** auth store rehydrates `token` and `refreshToken` from localStorage (not user data)
+
+#### Scenario: partialize excludes user data from storage
+- **WHEN** auth state is persisted to localStorage
+- **THEN** only `token` and `refreshToken` are saved — `user` and sensitive fields are excluded
+
+#### Scenario: rehydrated flag prevents flash of unauthenticated state
+- **WHEN** the store finishes rehydrating from localStorage
+- **THEN** `rehydrated` is set to `true` via `onRehydrateStorage` callback
+
+### Requirement: Auth Store hasRole() Method
+The auth store SHALL provide a `hasRole(role)` method that checks if the current user has a specific role.
+
+#### Scenario: Check user role
+- **WHEN** `hasRole('ADMIN')` is called and user has ADMIN role
+- **THEN** it returns `true`
+
+#### Scenario: Check role when not authenticated
+- **WHEN** `hasRole('ADMIN')` is called and user is null
+- **THEN** it returns `false`
+
+#### Scenario: User.roles is typed array
+- **WHEN** auth store initializes user data
+- **THEN** `user.roles` is of type `Role[]` where `Role = 'ADMIN' | 'STOCK' | 'PEDIDOS' | 'CLIENT'`
