@@ -92,7 +92,8 @@ async def seed_all(session_factory=None):
 
     This is idempotent — safe to run multiple times.
     """
-    from passlib.hash import bcrypt
+    #from passlib.hash import bcrypt
+    import bcrypt
 
     if session_factory is None:
         session_factory = async_session_factory
@@ -130,7 +131,9 @@ async def seed_all(session_factory=None):
         logger.info("  ✅  %d formas de pago inserted", len(FORMAS_PAGO))
 
         # 4. Admin user ───────────────────────────────────────────────────────
-        password_hash = bcrypt.hash(ADMIN_PASSWORD)
+        salt = bcrypt.gensalt()
+        password_bytes = ADMIN_PASSWORD.encode('utf-8')
+        password_hash = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
         await session.execute(
             INSERT_ADMIN_USER,
             {
