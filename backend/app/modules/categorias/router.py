@@ -72,6 +72,7 @@ async def create_categoria(
     try:
         service = CategoriaService(uow)
         result = await service.create_categoria(data)
+        await uow.commit()
         return result
     except AppException as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
@@ -230,6 +231,7 @@ async def update_categoria(
     try:
         service = CategoriaService(uow)
         result = await service.update_categoria(categoria_id, data)
+        await uow.commit()
         return result
     except AppException as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
@@ -280,6 +282,7 @@ async def delete_categoria(
     try:
         service = CategoriaService(uow)
         await service.delete_categoria(categoria_id)
+        await uow.commit()
         # 204 No Content — no return value
     except AppException as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
