@@ -42,11 +42,10 @@ export async function fetchIngredientes(
   if (esAlergeno !== undefined) {
     params.es_alergeno = esAlergeno;
   }
-  
-  const response = await axiosInstance.get<IngredienteListResponse>(
-    '/api/v1/ingredientes',
-    { params }
-  );
+
+  const response = await axiosInstance.get<IngredienteListResponse>('/api/v1/ingredientes', {
+    params,
+  });
   return response.data;
 }
 
@@ -54,9 +53,7 @@ export async function fetchIngredientes(
  * Fetch a single ingredient by ID
  */
 export async function fetchIngredienteById(id: number): Promise<IngredienteRead> {
-  const response = await axiosInstance.get<IngredienteRead>(
-    `/api/v1/ingredientes/${id}`
-  );
+  const response = await axiosInstance.get<IngredienteRead>(`/api/v1/ingredientes/${id}`);
   return response.data;
 }
 
@@ -64,13 +61,8 @@ export async function fetchIngredienteById(id: number): Promise<IngredienteRead>
  * Create a new ingredient
  * Requires STOCK or ADMIN role
  */
-export async function createIngrediente(
-  data: IngredienteCreate
-): Promise<IngredienteRead> {
-  const response = await axiosInstance.post<IngredienteRead>(
-    '/api/v1/ingredientes',
-    data
-  );
+export async function createIngrediente(data: IngredienteCreate): Promise<IngredienteRead> {
+  const response = await axiosInstance.post<IngredienteRead>('/api/v1/ingredientes', data);
   return response.data;
 }
 
@@ -82,10 +74,7 @@ export async function updateIngrediente(
   id: number,
   data: IngredienteUpdate
 ): Promise<IngredienteRead> {
-  const response = await axiosInstance.put<IngredienteRead>(
-    `/api/v1/ingredientes/${id}`,
-    data
-  );
+  const response = await axiosInstance.put<IngredienteRead>(`/api/v1/ingredientes/${id}`, data);
   return response.data;
 }
 

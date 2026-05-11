@@ -25,11 +25,7 @@ const createQueryClient = () =>
 
 const renderWithQueryClient = (component: React.ReactElement) => {
   const queryClient = createQueryClient();
-  return render(
-    <QueryClientProvider client={queryClient}>
-      {component}
-    </QueryClientProvider>
-  );
+  return render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
 };
 
 const mockIngredient: IngredienteRead = {
@@ -50,11 +46,7 @@ describe('EditIngredientModal Component', () => {
     const onClose = vi.fn();
 
     renderWithQueryClient(
-      <EditIngredientModal
-        isOpen={true}
-        ingrediente={mockIngredient}
-        onClose={onClose}
-      />
+      <EditIngredientModal isOpen={true} ingrediente={mockIngredient} onClose={onClose} />
     );
 
     const nombreInput = screen.getByDisplayValue('Tomate');
@@ -71,11 +63,7 @@ describe('EditIngredientModal Component', () => {
     });
 
     renderWithQueryClient(
-      <EditIngredientModal
-        isOpen={true}
-        ingrediente={mockIngredient}
-        onClose={onClose}
-      />
+      <EditIngredientModal isOpen={true} ingrediente={mockIngredient} onClose={onClose} />
     );
 
     // Change nombre
@@ -103,11 +91,7 @@ describe('EditIngredientModal Component', () => {
     });
 
     renderWithQueryClient(
-      <EditIngredientModal
-        isOpen={true}
-        ingrediente={mockIngredient}
-        onClose={onClose}
-      />
+      <EditIngredientModal isOpen={true} ingrediente={mockIngredient} onClose={onClose} />
     );
 
     // Change and submit

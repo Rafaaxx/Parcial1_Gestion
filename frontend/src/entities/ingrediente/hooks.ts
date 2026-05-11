@@ -3,12 +3,7 @@
  * Manages server state, caching, and automatic refetching
  */
 
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  QueryKey,
-} from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, QueryKey } from '@tanstack/react-query';
 import type {
   IngredienteRead,
   IngredienteCreate,
@@ -36,11 +31,7 @@ const ingredientesQueryKeys = {
 /**
  * Query hook: Fetch paginated list of ingredients
  */
-export function useIngredientes(
-  skip: number = 0,
-  limit: number = 100,
-  esAlergeno?: boolean
-) {
+export function useIngredientes(skip: number = 0, limit: number = 100, esAlergeno?: boolean) {
   return useQuery<IngredienteListResponse>({
     queryKey: ingredientesQueryKeys.list(skip, limit, esAlergeno),
     queryFn: () => fetchIngredientes(skip, limit, esAlergeno),
@@ -88,10 +79,7 @@ export function useUpdateIngrediente(id: number) {
     mutationFn: (data: IngredienteUpdate) => updateIngrediente(id, data),
     onSuccess: (updatedIngrediente) => {
       // Update the specific ingredient in cache
-      queryClient.setQueryData(
-        ingredientesQueryKeys.detail(id),
-        updatedIngrediente
-      );
+      queryClient.setQueryData(ingredientesQueryKeys.detail(id), updatedIngrediente);
       // Also invalidate list queries to show updates
       queryClient.invalidateQueries({
         queryKey: ingredientesQueryKeys.lists(),

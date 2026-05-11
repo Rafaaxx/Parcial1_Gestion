@@ -24,11 +24,7 @@ const createQueryClient = () =>
 
 const renderWithQueryClient = (component: React.ReactElement) => {
   const queryClient = createQueryClient();
-  return render(
-    <QueryClientProvider client={queryClient}>
-      {component}
-    </QueryClientProvider>
-  );
+  return render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
 };
 
 describe('DeleteConfirmModal Component', () => {
@@ -44,11 +40,7 @@ describe('DeleteConfirmModal Component', () => {
     vi.mocked(api.deleteIngrediente).mockResolvedValueOnce(void 0);
 
     renderWithQueryClient(
-      <DeleteConfirmModal
-        isOpen={true}
-        ingredienteId={ingredienteId}
-        onClose={onClose}
-      />
+      <DeleteConfirmModal isOpen={true} ingredienteId={ingredienteId} onClose={onClose} />
     );
 
     // Click delete button
@@ -69,11 +61,7 @@ describe('DeleteConfirmModal Component', () => {
     vi.mocked(api.deleteIngrediente).mockResolvedValueOnce(void 0);
 
     renderWithQueryClient(
-      <DeleteConfirmModal
-        isOpen={true}
-        ingredienteId={ingredienteId}
-        onClose={onClose}
-      />
+      <DeleteConfirmModal isOpen={true} ingredienteId={ingredienteId} onClose={onClose} />
     );
 
     // Click delete

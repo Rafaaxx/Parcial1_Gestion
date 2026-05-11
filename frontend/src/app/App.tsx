@@ -2,20 +2,20 @@
  * Root App component with providers, theme support, and routing
  */
 
-import React, { useEffect, Suspense } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
-import { useTheme } from '@/shared/hooks'
-import { ProtectedRoute } from '@/shared/routing'
-import { Layout } from '@/shared/components/Navigation'
-import { Skeleton } from '@/shared/ui'
-import { NotFoundPage } from '@/pages/NotFoundPage'
-import { UnauthorizedPage } from '@/pages/UnauthorizedPage'
-import { AdminDashboardPage } from '@/pages/admin/DashboardPage'
-import { IngredientsAdminPage } from '@/pages/admin/IngredientsPage'
+import React, { useEffect, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
+import { useTheme } from '@/shared/hooks';
+import { ProtectedRoute } from '@/shared/routing';
+import { Layout } from '@/shared/components/Navigation';
+import { Skeleton } from '@/shared/ui';
+import { NotFoundPage } from '@/pages/NotFoundPage';
+import { UnauthorizedPage } from '@/pages/UnauthorizedPage';
+import { AdminDashboardPage } from '@/pages/admin/DashboardPage';
+import { IngredientsAdminPage } from '@/pages/admin/IngredientsPage';
 
 // Create QueryClient for React Query
-const queryClient = new QueryClient()
+const queryClient = new QueryClient();
 
 const HomePage: React.FC = () => (
   <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-50">
@@ -31,8 +31,12 @@ const HomePage: React.FC = () => (
           </p>
           <div className="flex gap-2 flex-wrap">
             <span className="px-3 py-1 bg-sky-500 text-white rounded-full text-sm">React 19</span>
-            <span className="px-3 py-1 bg-sky-500 text-white rounded-full text-sm">React Router v6</span>
-            <span className="px-3 py-1 bg-sky-500 text-white rounded-full text-sm">React Query</span>
+            <span className="px-3 py-1 bg-sky-500 text-white rounded-full text-sm">
+              React Router v6
+            </span>
+            <span className="px-3 py-1 bg-sky-500 text-white rounded-full text-sm">
+              React Query
+            </span>
           </div>
         </div>
 
@@ -50,7 +54,7 @@ const HomePage: React.FC = () => (
       </div>
     </div>
   </div>
-)
+);
 
 const PageSkeleton: React.FC = () => (
   <div className="p-8">
@@ -61,10 +65,10 @@ const PageSkeleton: React.FC = () => (
       <Skeleton className="h-6 w-2/3" />
     </div>
   </div>
-)
+);
 
 interface PlaceholderPageProps {
-  title: string
+  title: string;
 }
 
 const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title }) => (
@@ -72,15 +76,15 @@ const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title }) => (
     <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">{title}</h1>
     <p className="text-gray-600 dark:text-gray-400">Coming soon...</p>
   </div>
-)
+);
 
 export const App: React.FC = () => {
-  const { theme, applyTheme } = useTheme()
+  const { theme, applyTheme } = useTheme();
 
   // Apply theme on mount and when it changes
   useEffect(() => {
-    applyTheme(theme)
-  }, [theme, applyTheme])
+    applyTheme(theme);
+  }, [theme, applyTheme]);
 
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
@@ -142,5 +146,5 @@ export const App: React.FC = () => {
         </Router>
       </QueryClientProvider>
     </div>
-  )
-}
+  );
+};

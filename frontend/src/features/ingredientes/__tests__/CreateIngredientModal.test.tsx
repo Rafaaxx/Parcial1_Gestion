@@ -24,11 +24,7 @@ const createQueryClient = () =>
 
 const renderWithQueryClient = (component: React.ReactElement) => {
   const queryClient = createQueryClient();
-  return render(
-    <QueryClientProvider client={queryClient}>
-      {component}
-    </QueryClientProvider>
-  );
+  return render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
 };
 
 describe('CreateIngredientModal Component', () => {
@@ -112,9 +108,7 @@ describe('CreateIngredientModal Component', () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
 
-    vi.mocked(api.createIngrediente).mockRejectedValueOnce(
-      new Error('Duplicate nombre')
-    );
+    vi.mocked(api.createIngrediente).mockRejectedValueOnce(new Error('Duplicate nombre'));
 
     renderWithQueryClient(<CreateIngredientModal isOpen={true} onClose={onClose} />);
 

@@ -2,24 +2,24 @@
  * UI store for managing global UI state: theme, toasts, modals
  */
 
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface Toast {
-  id: string
-  type: 'success' | 'error' | 'warning' | 'info'
-  message: string
-  duration?: number
+  id: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  message: string;
+  duration?: number;
 }
 
 export interface UIState {
-  theme: 'light' | 'dark'
-  toast: Toast | null
-  sidebarOpen: boolean
-  toggleTheme: () => void
-  showToast: (toast: Toast) => void
-  dismissToast: () => void
-  setSidebarOpen: (open: boolean) => void
+  theme: 'light' | 'dark';
+  toast: Toast | null;
+  sidebarOpen: boolean;
+  toggleTheme: () => void;
+  showToast: (toast: Toast) => void;
+  dismissToast: () => void;
+  setSidebarOpen: (open: boolean) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -32,24 +32,24 @@ export const useUIStore = create<UIState>()(
       toggleTheme: () => {
         set((state: UIState) => ({
           theme: state.theme === 'light' ? 'dark' : 'light',
-        }))
+        }));
       },
 
       showToast: (toast: Toast) => {
-        set({ toast })
+        set({ toast });
         if (toast.duration || toast.duration === undefined) {
           setTimeout(() => {
-            set({ toast: null })
-          }, toast.duration || 3000)
+            set({ toast: null });
+          }, toast.duration || 3000);
         }
       },
 
       dismissToast: () => {
-        set({ toast: null })
+        set({ toast: null });
       },
 
       setSidebarOpen: (open: boolean) => {
-        set({ sidebarOpen: open })
+        set({ sidebarOpen: open });
       },
     }),
     {
@@ -59,4 +59,4 @@ export const useUIStore = create<UIState>()(
       }),
     }
   )
-)
+);
