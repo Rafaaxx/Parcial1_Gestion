@@ -8,7 +8,15 @@ export interface User {
   id: string
   email: string
   name: string
-  role: 'ADMIN' | 'STOCK' | 'PEDIDOS' | 'CLIENT'
+  roles: Array<'ADMIN' | 'STOCK' | 'PEDIDOS' | 'CLIENT'>
+}
+
+/**
+ * Check if user has any of the required roles
+ */
+export function userHasRole(user: User | null, requiredRoles: string[]): boolean {
+  if (!user) return false
+  return requiredRoles.some(role => user.roles.includes(role as any))
 }
 
 export interface AuthState {
