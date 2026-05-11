@@ -50,3 +50,6 @@ openspec/changes/*/.openspec.yaml.tmp
 
 # Python builds
 build/
+
+# Engram persistent memory — binary chunks per-user (keep .md tracking files)
+.engram/chunks/

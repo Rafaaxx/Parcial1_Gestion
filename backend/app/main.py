@@ -14,6 +14,7 @@ from app.middleware.rate_limiter import limiter, rate_limit_error_handler
 from app.modules.auth.router import router as auth_router
 from app.modules.categorias.router import router as categorias_router
 from app.modules.ingredientes.router import router as ingredientes_router
+from app.modules.direcciones.router import router as router_direcciones
 
 # Configure logging
 logging.basicConfig(level=settings.log_level)
@@ -122,6 +123,11 @@ app.include_router(categorias_router)
 # ── Ingredientes Router ───────────────────────────────────────────────────────────
 
 app.include_router(ingredientes_router)
+
+
+# ── Direcciones Router ────────────────────────────────────────────────────────────
+
+app.include_router(router_direcciones)
 
 if __name__ == "__main__":
     import uvicorn

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories.base import BaseRepository
 from app.repositories.categoria_repository import CategoriaRepository
+from app.repositories.direccion_repository import DireccionRepository
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ class UnitOfWork:
         self.session = session
         self._repositories: dict[Type, BaseRepository] = {}
         self._categorias: Optional[CategoriaRepository] = None
+        self._direcciones: Optional[DireccionRepository] = None
         self.logger = logging.getLogger(f"{__name__}.UnitOfWork")
     
     def get_repository(self, model: Type) -> BaseRepository:
@@ -53,6 +55,18 @@ class UnitOfWork:
         if self._categorias is None:
             self._categorias = CategoriaRepository(self.session)
         return self._categorias
+
+    @property
+    def direcciones(self) -> DireccionRepository:
+        """
+        Get or create DireccionRepository instance.
+        
+        Returns:
+            DireccionRepository for managing delivery addresses
+        """
+        if self._direcciones is None:
+            self._direcciones = DireccionRepository(self.session)
+        return self._direcciones
     
     async def commit(self):
         """Commit all changes in the current transaction"""
