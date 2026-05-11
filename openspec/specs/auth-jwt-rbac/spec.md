@@ -232,6 +232,8 @@ Dos dependencias FastAPI: `get_current_user()` (decodifica JWT, carga usuario de
 | REQ-RBAC-06 | `require_role` MUST permitir lista de roles (OR lógico) | US-006 |
 | REQ-RBAC-07 | `require_role` MUST leer roles del JWT (no consulta BD) | proposal |
 | REQ-RBAC-08 | MUST exponer `get_current_user` y `require_role` en `app/dependencies.py` | proposal |
+| REQ-RBAC-09 | MUST aplicar `require_role(["CLIENT", "ADMIN"])` en POST/GET/PUT/DELETE /api/v1/direcciones/* | CHANGE-05 |
+| REQ-RBAC-10 | MUST aplicar `require_role(["CLIENT", "ADMIN"])` en PATCH /api/v1/direcciones/{id}/predeterminada | CHANGE-05 |
 
 ### Scenarios
 
@@ -259,6 +261,16 @@ Dos dependencias FastAPI: `get_current_user()` (decodifica JWT, carga usuario de
 - **Given** usuario con rol CLIENT en JWT
 - **When** `require_role(["ADMIN"])` se ejecuta
 - **Then** HTTPException 403, code="FORBIDDEN"
+
+#### RBAC-06: Cliente accede a sus direcciones (CHANGE-05)
+- **Given** usuario con rol CLIENT y JWT válido
+- **When** GET `/api/v1/direcciones`
+- **Then** respuesta 200
+
+#### RBAC-07: Admin accede a sus propias direcciones (CHANGE-05)
+- **Given** usuario con rol ADMIN y JWT válido
+- **When** GET `/api/v1/direcciones`
+- **Then** respuesta 200 (solo sus propias direcciones, mismo ownership)
 
 ---
 
