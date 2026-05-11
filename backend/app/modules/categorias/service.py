@@ -301,6 +301,8 @@ class CategoriaService:
             )
         
         # Check if has products in this category
+        # Note: count_products_in_category catches exceptions internally and returns 0
+        # if the productos table doesn't exist (safe for incremental development)
         product_count = await self.uow.categorias.count_products_in_category(categoria_id)
         if product_count > 0:
             raise AppException(

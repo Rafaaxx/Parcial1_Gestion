@@ -79,7 +79,11 @@ async def create_categoria(
     except ValidationError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        await uow.rollback()
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"POST /categorias failed: {type(e).__name__}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {type(e).__name__}")
 
 
 @router.get(
@@ -238,6 +242,7 @@ async def update_categoria(
     except ValidationError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
+        await uow.rollback()
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"PUT /categorias/{categoria_id} failed: {type(e).__name__}: {str(e)}")
@@ -292,6 +297,7 @@ async def delete_categoria(
     except ValidationError as e:
         raise HTTPException(status_code=409, detail=str(e))
     except Exception as e:
+        await uow.rollback()
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"DELETE /categorias/{categoria_id} failed: {type(e).__name__}: {str(e)}")
