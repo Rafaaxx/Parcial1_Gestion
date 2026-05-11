@@ -232,8 +232,8 @@ Implementation checklist for ingredient and allergen management system.
 
 ## 13. Code Quality & Documentation
 
-- [ ] 13.1 Run backend linters: `black backend/app/ingredientes`, `flake8 backend/app/ingredientes`, `mypy backend/app/ingredientes`
-- [ ] 13.2 Run frontend linters: `eslint frontend/src/features/ingredientes`, `prettier --check frontend/src/features/ingredientes`
+- [x] 13.1 Run backend linters: `black backend/app/ingredientes`, `flake8 backend/app/ingredientes`, `mypy backend/app/ingredientes`
+- [x] 13.2 Run frontend linters: `eslint frontend/src/features/ingredientes`, `prettier --check frontend/src/features/ingredientes`
 - [ ] 13.3 Add docstrings to service methods (summary + param + return types)
 - [ ] 13.4 Add comments for non-obvious logic (e.g., soft delete filter)
 - [ ] 13.5 Update `backend/README.md` with ingredient module documentation
@@ -242,15 +242,15 @@ Implementation checklist for ingredient and allergen management system.
 
 ## 14. Final Verification & Merge
 
-- [ ] 14.1 Verify all tests pass: `pytest backend/tests/test_ingredientes.py` + `npm run test frontend`
+- [x] 14.1 Verify all tests pass: `pytest backend/tests/test_ingredientes.py` + `npm run test frontend`
 - [ ] 14.2 Verify Swagger UI shows all 5 endpoints correctly
 - [ ] 14.3 Git status clean (all changes staged/committed)
 - [ ] 14.4 Create conventional commits:
-  - [ ] 14.4a `feat(db): add ingrediente table migration`
-  - [ ] 14.4b `feat(ingredientes): implement CRUD service + router`
-  - [ ] 14.4c `feat(ingredientes): add TanStack Query hooks`
-  - [ ] 14.4d `feat(ingredientes): add React components`
-  - [ ] 14.4e `test(ingredientes): add integration + unit tests`
+   - [ ] 14.4a `feat(db): add ingrediente table migration`
+   - [ ] 14.4b `feat(ingredientes): implement CRUD service + router`
+   - [ ] 14.4c `feat(ingredientes): add TanStack Query hooks`
+   - [ ] 14.4d `feat(ingredientes): add React components`
+   - [ ] 14.4e `test(ingredientes): add integration + unit tests`
 - [ ] 14.5 Create pull request with link to change-04 design/specs
 - [ ] 14.6 Code review: verify against design decisions, check RBAC, validate soft delete behavior
 - [ ] 14.7 Merge to main once approved
