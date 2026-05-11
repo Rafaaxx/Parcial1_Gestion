@@ -185,48 +185,48 @@ Implementation checklist for ingredient and allergen management system.
 - [x] 10.1 Add "Ingredientes" link to admin sidebar (only visible for STOCK/ADMIN roles)
 - [x] 10.2 Create route `/admin/ingredientes` pointing to IngredientList component
 - [x] 10.3 Wrap route with ProtectedRoute HOC requiring role [STOCK, ADMIN]
-- [ ] 10.4 Test navigation: CLIENT role should not see link; STOCK role should see it
+- [x] 10.4 Test navigation: CLIENT role should not see link; STOCK role should see it
 
 ---
 
 ## 11. Frontend Testing
 
-- [ ] 11.1 Create `frontend/src/features/ingredientes/__tests__/IngredientList.test.tsx`:
-  - [ ] 11.1a Render list of ingredients from mock data
-  - [ ] 11.1b Loading state displays spinner
-  - [ ] 11.1c Error state displays error message
-  - [ ] 11.1d Edit button opens EditIngredientModal
-  - [ ] 11.1e Delete button opens DeleteConfirmModal
-- [ ] 11.2 Create `frontend/src/features/ingredientes/__tests__/CreateIngredientModal.test.tsx`:
-  - [ ] 11.2a Form submission validates non-empty nombre
-  - [ ] 11.2b Submit button disabled during mutation
-  - [ ] 11.2c Success closes modal and shows toast
-  - [ ] 11.2d Error displays error message
-- [ ] 11.3 Create `frontend/src/features/ingredientes/__tests__/EditIngredientModal.test.tsx`:
-  - [ ] 11.3a Form pre-populates with ingredient data
-  - [ ] 11.3b Submit button updates ingredient
-  - [ ] 11.3c Success closes modal and refetches
-- [ ] 11.4 Create `frontend/src/features/ingredientes/__tests__/DeleteConfirmModal.test.tsx`:
-  - [ ] 11.4a Delete button calls delete mutation
-  - [ ] 11.4b Success closes modal and refetches
-- [ ] 11.5 Run frontend tests: `npm run test frontend/src/features/ingredientes`
+- [x] 11.1 Create `frontend/src/features/ingredientes/__tests__/IngredientList.test.tsx`:
+    - [x] 11.1a Render list of ingredients from mock data
+    - [x] 11.1b Loading state displays spinner
+    - [x] 11.1c Error state displays error message
+    - [x] 11.1d Edit button opens EditIngredientModal
+    - [x] 11.1e Delete button opens DeleteConfirmModal
+- [x] 11.2 Create `frontend/src/features/ingredientes/__tests__/CreateIngredientModal.test.tsx`:
+    - [x] 11.2a Form submission validates non-empty nombre
+    - [x] 11.2b Submit button disabled during mutation
+    - [x] 11.2c Success closes modal and shows toast
+    - [x] 11.2d Error displays error message
+- [x] 11.3 Create `frontend/src/features/ingredientes/__tests__/EditIngredientModal.test.tsx`:
+    - [x] 11.3a Form pre-populates with ingredient data
+    - [x] 11.3b Submit button updates ingredient
+    - [x] 11.3c Success closes modal and refetches
+- [x] 11.4 Create `frontend/src/features/ingredientes/__tests__/DeleteConfirmModal.test.tsx`:
+    - [x] 11.4a Delete button calls delete mutation
+    - [x] 11.4b Success closes modal and refetches
+- [x] 11.5 Run frontend tests: `npm run test frontend/src/features/ingredientes`
 
 ---
 
 ## 12. End-to-End Testing
 
-- [ ] 12.1 Manual E2E: Stock manager creates ingredient "Gluten" (es_alergeno=true)
-  - [ ] 12.1a Verify ingredient appears in list
-  - [ ] 12.1b Verify ingredient appears in allergen filter
-  - [ ] 12.1c Verify ingredient details show correct data
-- [ ] 12.2 Manual E2E: Edit ingredient name from "Gluten" to "Trigo"
-  - [ ] 12.2a Verify list shows updated name
-  - [ ] 12.2b Verify actualizado_en timestamp updated
-- [ ] 12.3 Manual E2E: Delete ingredient
-  - [ ] 12.3a Verify ingredient no longer appears in list
-  - [ ] 12.3c Verify GET /api/v1/ingredientes/{id} returns 404
-  - [ ] 12.3d Verify database: eliminado_en is set (not physically deleted)
-- [ ] 12.4 Manual E2E: CLIENT role cannot create/edit/delete (403 responses)
+- [x] 12.1 Manual E2E: Stock manager creates ingredient "Gluten" (es_alergeno=true)
+    - [x] 12.1a Verify ingredient appears in list
+    - [x] 12.1b Verify ingredient appears in allergen filter
+    - [x] 12.1c Verify ingredient details show correct data
+- [x] 12.2 Manual E2E: Edit ingredient name from "Gluten" to "Trigo"
+    - [x] 12.2a Verify list shows updated name
+    - [x] 12.2b Verify actualizado_en timestamp updated
+- [x] 12.3 Manual E2E: Delete ingredient
+    - [x] 12.3a Verify ingredient no longer appears in list
+    - [x] 12.3b Verify GET /api/v1/ingredientes/{id} returns 404
+    - [x] 12.3c Verify database: eliminado_en is set (not physically deleted)
+- [x] 12.4 Manual E2E: CLIENT role cannot create/edit/delete (403 responses)
 
 ---
 
@@ -234,23 +234,23 @@ Implementation checklist for ingredient and allergen management system.
 
 - [x] 13.1 Run backend linters: `black backend/app/ingredientes`, `flake8 backend/app/ingredientes`, `mypy backend/app/ingredientes`
 - [x] 13.2 Run frontend linters: `eslint frontend/src/features/ingredientes`, `prettier --check frontend/src/features/ingredientes`
-- [ ] 13.3 Add docstrings to service methods (summary + param + return types)
-- [ ] 13.4 Add comments for non-obvious logic (e.g., soft delete filter)
-- [ ] 13.5 Update `backend/README.md` with ingredient module documentation
+- [x] 13.3 Add docstrings to service methods (summary + param + return types)
+- [x] 13.4 Add comments for non-obvious logic (e.g., soft delete filter)
+- [x] 13.5 Update `backend/README.md` with ingredient module documentation
 
 ---
 
 ## 14. Final Verification & Merge
 
 - [x] 14.1 Verify all tests pass: `pytest backend/tests/test_ingredientes.py` + `npm run test frontend`
-- [ ] 14.2 Verify Swagger UI shows all 5 endpoints correctly
-- [ ] 14.3 Git status clean (all changes staged/committed)
-- [ ] 14.4 Create conventional commits:
-   - [ ] 14.4a `feat(db): add ingrediente table migration`
-   - [ ] 14.4b `feat(ingredientes): implement CRUD service + router`
-   - [ ] 14.4c `feat(ingredientes): add TanStack Query hooks`
-   - [ ] 14.4d `feat(ingredientes): add React components`
-   - [ ] 14.4e `test(ingredientes): add integration + unit tests`
+- [x] 14.2 Verify Swagger UI shows all 5 endpoints correctly
+- [x] 14.3 Git status clean (all changes staged/committed)
+- [x] 14.4 Create conventional commits:
+    - [x] 14.4a `feat(db): add ingrediente table migration`
+    - [x] 14.4b `feat(ingredientes): implement CRUD service + router`
+    - [x] 14.4c `feat(ingredientes): add TanStack Query hooks`
+    - [x] 14.4d `feat(ingredientes): add React components`
+    - [x] 14.4e `test(ingredientes): add integration + unit tests`
 - [ ] 14.5 Create pull request with link to change-04 design/specs
 - [ ] 14.6 Code review: verify against design decisions, check RBAC, validate soft delete behavior
 - [ ] 14.7 Merge to main once approved
