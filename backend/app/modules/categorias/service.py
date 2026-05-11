@@ -300,15 +300,10 @@ class CategoriaService:
                 status_code=409
             )
         
-        # Check if has products in this category
-        # Note: count_products_in_category catches exceptions internally and returns 0
-        # if the productos table doesn't exist (safe for incremental development)
-        product_count = await self.uow.categorias.count_products_in_category(categoria_id)
-        if product_count > 0:
-            raise AppException(
-                message=f"Cannot delete category: it has {product_count} products",
-                status_code=409
-            )
+        # NOTE: Skipping product count check for now since productos table doesn't exist yet
+        # This validation will be re-enabled once CHANGE-05 (Product Catalog) is implemented
+        # The count_products_in_category() method has a try-catch but exceptions during
+        # flush/commit can still corrupt the transaction state in async SQLAlchemy
         
         # Soft-delete
         await self.uow.categorias.soft_delete(categoria_id)
