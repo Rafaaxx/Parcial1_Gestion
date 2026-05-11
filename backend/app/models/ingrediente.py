@@ -1,10 +1,10 @@
 """Ingrediente model — ingredient catalog with allergen flag and soft delete"""
-from typing import Optional, TYPE_CHECKING
-from sqlmodel import SQLModel, Field
+from typing import Optional, List, TYPE_CHECKING
+from sqlmodel import SQLModel, Field, Relationship
 from app.models.mixins import BaseModel
 
 if TYPE_CHECKING:
-    pass
+    from app.models.producto import ProductoIngrediente
 
 
 class Ingrediente(BaseModel, table=True):
@@ -32,4 +32,13 @@ class Ingrediente(BaseModel, table=True):
         nullable=False,
         index=True,
         description="Indica si el ingrediente es un alérgeno común"
+    )
+    
+    # Relationships for CHANGE-06: producto-ingredient associations
+    productos: List["ProductoIngrediente"] = Relationship(
+        back_populates="ingrediente",
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan",
+            "foreign_keys": "[ProductoIngrediente.ingrediente_id]",
+        }
     )
