@@ -2,7 +2,7 @@
  * TanStack Query hooks for ingredient queries and mutations
  * Manages server state, caching, and automatic refetching
  */
-import { useQuery, useMutation, useQueryClient, } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchIngredientes, fetchIngredienteById, createIngrediente, updateIngrediente, deleteIngrediente, } from './api';
 // Query key factory for better cache management
 const ingredientesQueryKeys = {

@@ -70,9 +70,7 @@ describe('IngredientList Component', () => {
     });
     it('11.1d: Edit button opens EditIngredientModal', async () => {
         const mockIngredients = {
-            items: [
-                { id: 1, nombre: 'Tomate', es_alergeno: false, creado_en: '2024-01-01' },
-            ],
+            items: [{ id: 1, nombre: 'Tomate', es_alergeno: false, creado_en: '2024-01-01' }],
             total: 1,
             skip: 0,
             limit: 100,
@@ -90,9 +88,7 @@ describe('IngredientList Component', () => {
     });
     it('11.1e: Delete button opens DeleteConfirmModal', async () => {
         const mockIngredients = {
-            items: [
-                { id: 1, nombre: 'Tomate', es_alergeno: false, creado_en: '2024-01-01' },
-            ],
+            items: [{ id: 1, nombre: 'Tomate', es_alergeno: false, creado_en: '2024-01-01' }],
             total: 1,
             skip: 0,
             limit: 100,

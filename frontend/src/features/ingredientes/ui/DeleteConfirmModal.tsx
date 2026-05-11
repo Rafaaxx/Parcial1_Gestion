@@ -5,8 +5,7 @@
 
 import { useState } from 'react';
 import { useDeleteIngrediente } from '@/entities/ingrediente/hooks';
-import { Button } from '@/shared/ui/button';
-import { Modal } from '@/shared/ui/modal';
+import { Button, Modal } from '@/shared/ui';
 
 interface DeleteConfirmModalProps {
   ingredientId: number | null;
@@ -39,7 +38,7 @@ export function DeleteConfirmModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Confirmar eliminación" variant="destructive">
+    <Modal isOpen={isOpen} onClose={onClose} title="Confirmar eliminación">
       <div className="space-y-4">
         {error && <div className="text-red-500 text-sm">{error}</div>}
 
@@ -54,7 +53,7 @@ export function DeleteConfirmModal({
           <Button variant="secondary" onClick={onClose} type="button">
             Cancelar
           </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={deleteMutation.isPending}>
+          <Button variant="danger" onClick={handleDelete} disabled={deleteMutation.isPending}>
             {deleteMutation.isPending ? 'Eliminando...' : 'Eliminar'}
           </Button>
         </div>

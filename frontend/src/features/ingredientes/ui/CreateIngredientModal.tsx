@@ -6,8 +6,7 @@
 import { useState } from 'react';
 import { useCreateIngrediente } from '@/entities/ingrediente/hooks';
 import type { IngredienteCreate } from '@/entities/ingrediente/types';
-import { Button } from '@/shared/ui/button';
-import { Modal } from '@/shared/ui/modal';
+import { Button, Modal } from '@/shared/ui';
 
 interface CreateIngredientModalProps {
   isOpen: boolean;

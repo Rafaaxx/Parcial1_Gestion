@@ -8,7 +8,7 @@ import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { useTheme } from '@/shared/hooks';
 import { ProtectedRoute } from '@/shared/routing';
 import { Layout } from '@/shared/components/Navigation';
-import { Skeleton } from '@/shared/ui';
+import { Skeleton, Spinner } from '@/shared/ui';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { UnauthorizedPage } from '@/pages/UnauthorizedPage';
 import { AdminDashboardPage } from '@/pages/admin/DashboardPage';
@@ -57,13 +57,8 @@ const HomePage: React.FC = () => (
 );
 
 const PageSkeleton: React.FC = () => (
-  <div className="p-8">
-    <Skeleton className="h-10 w-1/3 mb-6" />
-    <div className="space-y-4">
-      <Skeleton className="h-6 w-full" />
-      <Skeleton className="h-6 w-full" />
-      <Skeleton className="h-6 w-2/3" />
-    </div>
+  <div className="flex items-center justify-center min-h-screen">
+    <Spinner size="lg" color="primary" label="Cargando página..." />
   </div>
 );
 

@@ -27,7 +27,9 @@ export async function fetchIngredientes(skip = 0, limit = 100, esAlergeno) {
     if (esAlergeno !== undefined) {
         params.es_alergeno = esAlergeno;
     }
-    const response = await axiosInstance.get('/api/v1/ingredientes', { params });
+    const response = await axiosInstance.get('/api/v1/ingredientes', {
+        params,
+    });
     return response.data;
 }
 /**

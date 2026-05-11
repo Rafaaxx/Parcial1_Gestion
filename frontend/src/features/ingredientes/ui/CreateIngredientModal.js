@@ -5,8 +5,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  */
 import { useState } from 'react';
 import { useCreateIngrediente } from '@/entities/ingrediente/hooks';
-import { Button } from '@/shared/ui/button';
-import { Modal } from '@/shared/ui/modal';
+import { Button, Modal } from '@/shared/ui';
 export function CreateIngredientModal({ isOpen, onClose, onSuccess }) {
     const [nombre, setNombre] = useState('');
     const [esAlergeno, setEsAlergeno] = useState(false);

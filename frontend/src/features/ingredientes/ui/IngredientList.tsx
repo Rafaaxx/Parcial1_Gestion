@@ -5,9 +5,7 @@
 
 import { useState } from 'react';
 import { useIngredientes } from '@/entities/ingrediente/hooks';
-import { Badge } from '@/shared/ui/badge';
-import { Button } from '@/shared/ui/button';
-import { Spinner } from '@/shared/ui/spinner';
+import { Badge, Button, Spinner } from '@/shared/ui';
 
 interface IngredientListProps {
   onEdit?: (id: number) => void;
@@ -70,14 +68,14 @@ export function IngredientList({ onEdit, onDelete, readonly = false }: Ingredien
                       </Button>
                     )}
                     {onDelete && (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => onDelete(ingrediente.id)}
-                      >
-                        Eliminar
-                      </Button>
-                    )}
+                       <Button
+                         size="sm"
+                         variant="danger"
+                         onClick={() => onDelete(ingrediente.id)}
+                       >
+                         Eliminar
+                       </Button>
+                     )}
                   </td>
                 )}
               </tr>

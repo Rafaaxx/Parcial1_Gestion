@@ -7,6 +7,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/store';
 import { useUIStore } from '@/features/ui/store';
+import { Badge, Button } from '@/shared/ui';
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -66,23 +67,21 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
               {/* Role Badge */}
               <div className="flex gap-1 flex-wrap">
                 {user.roles.slice(0, 1).map((role) => (
-                  <span
-                    key={role}
-                    className="hidden sm:inline-block px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded"
-                  >
+                  <Badge key={role} variant="primary" size="sm">
                     {role}
-                  </span>
+                  </Badge>
                 ))}
               </div>
             </div>
 
             {/* Logout Button */}
-            <button
+            <Button
               onClick={handleLogout}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              variant="secondary"
+              className="text-sm"
             >
               Cerrar sesión
-            </button>
+            </Button>
           </div>
         )}
       </div>

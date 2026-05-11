@@ -19,7 +19,9 @@ export function mockAuthAsStockUser() {
         roles: ['STOCK'],
     };
     useAuthStore.getState().setUser(mockUser);
-    useAuthStore.getState().setTokens('dev-token-stock-' + Date.now(), 'dev-refresh-token-stock-' + Date.now());
+    useAuthStore
+        .getState()
+        .setTokens('dev-token-stock-' + Date.now(), 'dev-refresh-token-stock-' + Date.now());
     console.log('✅ Mocked auth as STOCK user:', mockUser);
 }
 /**
@@ -33,7 +35,9 @@ export function mockAuthAsAdminUser() {
         roles: ['ADMIN', 'STOCK', 'PEDIDOS'],
     };
     useAuthStore.getState().setUser(mockUser);
-    useAuthStore.getState().setTokens('dev-token-admin-' + Date.now(), 'dev-refresh-token-admin-' + Date.now());
+    useAuthStore
+        .getState()
+        .setTokens('dev-token-admin-' + Date.now(), 'dev-refresh-token-admin-' + Date.now());
     console.log('✅ Mocked auth as ADMIN user:', mockUser);
 }
 /**
@@ -47,7 +51,9 @@ export function mockAuthAsClientUser() {
         roles: ['CLIENT'],
     };
     useAuthStore.getState().setUser(mockUser);
-    useAuthStore.getState().setTokens('dev-token-client-' + Date.now(), 'dev-refresh-token-client-' + Date.now());
+    useAuthStore
+        .getState()
+        .setTokens('dev-token-client-' + Date.now(), 'dev-refresh-token-client-' + Date.now());
     console.log('✅ Mocked auth as CLIENT user:', mockUser);
 }
 /**
