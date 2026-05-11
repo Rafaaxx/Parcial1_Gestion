@@ -72,13 +72,18 @@ async def create_categoria(
     try:
         service = CategoriaService(uow)
         result = await service.create_categoria(data)
+        await uow.commit()
         return result
     except AppException as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except ValidationError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        await uow.rollback()
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"POST /categorias failed: {type(e).__name__}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {type(e).__name__}")
 
 
 @router.get(
@@ -230,13 +235,18 @@ async def update_categoria(
     try:
         service = CategoriaService(uow)
         result = await service.update_categoria(categoria_id, data)
+        await uow.commit()
         return result
     except AppException as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except ValidationError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        await uow.rollback()
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"PUT /categorias/{categoria_id} failed: {type(e).__name__}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {type(e).__name__}")
 
 
 @router.delete(
@@ -280,10 +290,15 @@ async def delete_categoria(
     try:
         service = CategoriaService(uow)
         await service.delete_categoria(categoria_id)
+        await uow.commit()
         # 204 No Content — no return value
     except AppException as e:
         raise HTTPException(status_code=e.status_code, detail=e.message)
     except ValidationError as e:
         raise HTTPException(status_code=409, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        await uow.rollback()
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"DELETE /categorias/{categoria_id} failed: {type(e).__name__}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {type(e).__name__}")

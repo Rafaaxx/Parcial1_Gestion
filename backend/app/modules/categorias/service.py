@@ -284,6 +284,14 @@ class CategoriaService:
             # This will fail if category has children or products:
             # await service.delete_categoria(1)  # raises AppException
         """
+        # Check if category exists first
+        categoria = await self.uow.categorias.find(categoria_id)
+        if not categoria:
+            raise AppException(
+                message=f"Category with id={categoria_id} not found",
+                status_code=404
+            )
+        
         # Check if has children
         child_count = await self.uow.categorias.count_children(categoria_id)
         if child_count > 0:
@@ -292,13 +300,10 @@ class CategoriaService:
                 status_code=409
             )
         
-        # Check if has products in this category
-        product_count = await self.uow.categorias.count_products_in_category(categoria_id)
-        if product_count > 0:
-            raise AppException(
-                message=f"Cannot delete category: it has {product_count} products",
-                status_code=409
-            )
+        # NOTE: Skipping product count check for now since productos table doesn't exist yet
+        # This validation will be re-enabled once CHANGE-05 (Product Catalog) is implemented
+        # The count_products_in_category() method has a try-catch but exceptions during
+        # flush/commit can still corrupt the transaction state in async SQLAlchemy
         
         # Soft-delete
         await self.uow.categorias.soft_delete(categoria_id)

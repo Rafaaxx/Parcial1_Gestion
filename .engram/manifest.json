@@ -56,6 +56,30 @@
       "sessions": 1,
       "memories": 4,
       "prompts": 0
+    },
+    {
+      "id": "0f210202",
+      "created_by": "Lauti Ferreria",
+      "created_at": "2026-05-10T23:38:59Z",
+      "sessions": 2,
+      "memories": 0,
+      "prompts": 4
+    },
+    {
+      "id": "53ac8f71",
+      "created_by": "rafan",
+      "created_at": "2026-05-11T03:42:44Z",
+      "sessions": 3,
+      "memories": 7,
+      "prompts": 39
+    },
+    {
+      "id": "12d67b8c",
+      "created_by": "rafan",
+      "created_at": "2026-05-11T13:17:13Z",
+      "sessions": 1,
+      "memories": 1,
+      "prompts": 3
     }
   ]
 }

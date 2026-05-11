@@ -2,23 +2,31 @@
  * Auth store for managing user identity and authentication state
  */
 
-import { create } from 'zustand'
+import { create } from 'zustand';
 
 export interface User {
-  id: string
-  email: string
-  name: string
-  role: 'ADMIN' | 'STOCK' | 'PEDIDOS' | 'CLIENT'
+  id: string;
+  email: string;
+  name: string;
+  roles: Array<'ADMIN' | 'STOCK' | 'PEDIDOS' | 'CLIENT'>;
+}
+
+/**
+ * Check if user has any of the required roles
+ */
+export function userHasRole(user: User | null, requiredRoles: string[]): boolean {
+  if (!user) return false;
+  return requiredRoles.some((role) => user.roles.includes(role as any));
 }
 
 export interface AuthState {
-  user: User | null
-  token: string | null
-  refreshToken: string | null
-  isAuthenticated: boolean
-  setUser: (user: User | null) => void
-  setTokens: (token: string, refreshToken: string) => void
-  logout: () => void
+  user: User | null;
+  token: string | null;
+  refreshToken: string | null;
+  isAuthenticated: boolean;
+  setUser: (user: User | null) => void;
+  setTokens: (token: string, refreshToken: string) => void;
+  logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -31,7 +39,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({
       user,
       isAuthenticated: user !== null,
-    })
+    });
   },
 
   setTokens: (token: string, refreshToken: string) => {
@@ -39,7 +47,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       token,
       refreshToken,
       isAuthenticated: true,
-    })
+    });
   },
 
   logout: () => {
@@ -48,6 +56,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       token: null,
       refreshToken: null,
       isAuthenticated: false,
-    })
+    });
   },
-}))
+}));

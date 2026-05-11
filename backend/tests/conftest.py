@@ -1,9 +1,21 @@
 """Pytest configuration and fixtures"""
 
 import asyncio
+import os
+import sys
+from pathlib import Path
 import pytest
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from httpx import AsyncClient, ASGITransport
+
+# Load .env BEFORE importing app config
+from dotenv import load_dotenv
+env_file = Path(__file__).parent.parent.parent / "backend" / ".env"
+if env_file.exists():
+    load_dotenv(env_file, override=True)
+else:
+    # Fallback to parent .env
+    load_dotenv(override=True)
 
 # Disable rate limiting for tests
 from app.config import settings
@@ -26,11 +38,9 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 async def test_engine():
-    """Create test database engine"""
-    # Use SQLite for tests (simpler, no external DB needed)
-    # In production, use a test PostgreSQL database
+    """Create test database engine - function scoped for isolation"""
     test_url = "sqlite+aiosqlite:///:memory:"
     
     engine = create_async_engine(
@@ -46,9 +56,6 @@ async def test_engine():
     yield engine
     
     # Cleanup
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-    
     await engine.dispose()
 
 
