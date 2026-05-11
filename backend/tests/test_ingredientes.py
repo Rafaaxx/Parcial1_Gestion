@@ -1,7 +1,7 @@
 """Integration tests for ingredientes endpoints"""
 
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.pool import StaticPool
 from sqlmodel import SQLModel, Session
@@ -54,7 +54,8 @@ def override_get_uow(uow):
 async def client(test_uow):
     """Create test client"""
     app.dependency_overrides[get_uow] = override_get_uow(test_uow)
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.clear()
 
