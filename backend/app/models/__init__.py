@@ -10,6 +10,7 @@ from app.models.usuario_rol import UsuarioRol
 from app.models.ingrediente import Ingrediente
 from app.models.producto import Producto, ProductoCategoria, ProductoIngrediente
 from app.modules.refreshtokens.model import RefreshToken
+from app.models.direccion_entrega import DireccionEntrega
 
 __all__ = [
     "TimestampMixin",
@@ -26,4 +27,5 @@ __all__ = [
     "ProductoCategoria",
     "ProductoIngrediente",
     "RefreshToken",
+    "DireccionEntrega",
 ]

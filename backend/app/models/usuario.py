@@ -6,6 +6,7 @@ from app.models.mixins import BaseModel
 if TYPE_CHECKING:
     from app.modules.refreshtokens.model import RefreshToken
     from app.models.usuario_rol import UsuarioRol
+    from app.models.direccion_entrega import DireccionEntrega
 
 
 class Usuario(BaseModel, table=True):
@@ -26,4 +27,8 @@ class Usuario(BaseModel, table=True):
     usuario_roles: List["UsuarioRol"] = Relationship(
         back_populates="usuario",
         sa_relationship_kwargs={"foreign_keys": "UsuarioRol.usuario_id"},
+    )
+    direcciones: List["DireccionEntrega"] = Relationship(
+        back_populates="usuario",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
