@@ -206,7 +206,154 @@ backend/
 4. **Mixins**: Reusable behavior (timestamps, soft delete)
 5. **Async/Await**: All database operations are non-blocking
 
-## Common Tasks
+## Modules
+
+### Ingredientes (CHANGE-04)
+
+The `Ingredientes` module provides comprehensive ingredient management for the Food Store system, with full CRUD operations, soft-delete support, and role-based access control (RBAC).
+
+#### Features
+
+- **Full CRUD Operations**: Create, read, update, and soft-delete ingredients
+- **Soft Delete Pattern**: Ingredients are never physically deleted, only marked with `deleted_at` timestamp
+- **Allergen Tracking**: Boolean flag (`es_alergeno`) to mark allergen ingredients
+- **Pagination**: Efficient list retrieval with `skip`/`limit` parameters
+- **Filtering**: Filter ingredients by allergen status
+- **RBAC**: Only STOCK and ADMIN roles can create, update, or delete ingredients
+- **Uniqueness Validation**: Ingredient names are unique across active (non-deleted) ingredients
+- **Soft Validation**: Automatic whitespace trimming on ingredient names
+
+#### API Endpoints
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/v1/ingredientes` | STOCK, ADMIN | Create new ingredient |
+| `GET` | `/api/v1/ingredientes` | Public | List ingredients with optional filters |
+| `GET` | `/api/v1/ingredientes/{id}` | Public | Get single ingredient by ID |
+| `PUT` | `/api/v1/ingredientes/{id}` | STOCK, ADMIN | Update existing ingredient |
+| `DELETE` | `/api/v1/ingredientes/{id}` | STOCK, ADMIN | Soft-delete ingredient (sets `deleted_at`) |
+
+#### Example Requests
+
+**Create an ingredient:**
+
+```bash
+curl -X POST http://localhost:8000/api/v1/ingredientes \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"nombre": "Gluten", "es_alergeno": true}'
+```
+
+Response (201 Created):
+
+```json
+{
+  "id": 1,
+  "nombre": "Gluten",
+  "es_alergeno": true,
+  "created_at": "2026-05-10T12:30:00Z",
+  "updated_at": "2026-05-10T12:30:00Z",
+  "deleted_at": null
+}
+```
+
+**List ingredients with allergen filter:**
+
+```bash
+curl http://localhost:8000/api/v1/ingredientes?es_alergeno=true&skip=0&limit=10
+```
+
+Response (200 OK):
+
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "nombre": "Gluten",
+      "es_alergeno": true,
+      "created_at": "2026-05-10T12:30:00Z",
+      "updated_at": "2026-05-10T12:30:00Z",
+      "deleted_at": null
+    }
+  ],
+  "total": 1,
+  "skip": 0,
+  "limit": 10
+}
+```
+
+**Update an ingredient:**
+
+```bash
+curl -X PUT http://localhost:8000/api/v1/ingredientes/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"nombre": "Trigo", "es_alergeno": true}'
+```
+
+Response (200 OK):
+
+```json
+{
+  "id": 1,
+  "nombre": "Trigo",
+  "es_alergeno": true,
+  "created_at": "2026-05-10T12:30:00Z",
+  "updated_at": "2026-05-10T12:35:00Z",
+  "deleted_at": null
+}
+```
+
+**Soft-delete an ingredient:**
+
+```bash
+curl -X DELETE http://localhost:8000/api/v1/ingredientes/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Response (204 No Content)
+
+After deletion, `GET /api/v1/ingredientes/1` returns 404 (ingredient is excluded from queries).
+
+#### Implementation Details
+
+**Database Schema:**
+
+- `id` (Integer, Primary Key)
+- `nombre` (VARCHAR(255), Unique where `deleted_at IS NULL`)
+- `es_alergeno` (Boolean)
+- `created_at` (DateTime, auto-set)
+- `updated_at` (DateTime, auto-set)
+- `deleted_at` (DateTime, NULL for active ingredients)
+
+**Layers:**
+
+1. **Model**: `app/models/ingrediente.py` — SQLModel ORM mapping
+2. **Schema**: `app/modules/ingredientes/schemas.py` — Request/response validation
+3. **Repository**: `app/repositories/ingrediente_repository.py` — Data access with soft-delete filtering
+4. **Service**: `app/modules/ingredientes/service.py` — Business logic (validation, uniqueness checks)
+5. **Router**: `app/modules/ingredientes/router.py` — 5 REST endpoints with RBAC
+
+**Error Responses:**
+
+- `409 Conflict`: Duplicate ingredient name
+- `404 Not Found`: Ingredient doesn't exist or was soft-deleted
+- `422 Unprocessable Entity`: Validation error (empty name, etc.)
+- `403 Forbidden`: Insufficient permissions (requires STOCK/ADMIN)
+
+#### Testing
+
+Run integration tests for ingredientes:
+
+```bash
+pytest backend/tests/integration/test_ingredientes_api.py -v
+pytest backend/tests/test_ingredientes.py -v
+```
+
+All 20+ integration tests cover CRUD operations, soft-delete, pagination, filtering, RBAC, and duplicate detection.
+
+
 
 ### CORS Configuration
 
