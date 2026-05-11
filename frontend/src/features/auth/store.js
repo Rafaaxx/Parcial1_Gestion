@@ -2,6 +2,14 @@
  * Auth store for managing user identity and authentication state
  */
 import { create } from 'zustand';
+/**
+ * Check if user has any of the required roles
+ */
+export function userHasRole(user, requiredRoles) {
+    if (!user)
+        return false;
+    return requiredRoles.some((role) => user.roles.includes(role));
+}
 export const useAuthStore = create((set) => ({
     user: null,
     token: null,

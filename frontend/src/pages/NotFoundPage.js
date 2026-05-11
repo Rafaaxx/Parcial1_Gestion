@@ -1,0 +1,7 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { useNavigate } from 'react-router-dom';
+export const NotFoundPage = () => {
+    const navigate = useNavigate();
+    return (_jsx("div", { className: "min-h-screen bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-gray-900 dark:to-gray-950 flex items-center justify-center px-4", children: _jsxs("div", { className: "text-center max-w-md", children: [_jsxs("div", { className: "mb-8", children: [_jsx("h1", { className: "text-9xl font-bold text-yellow-600 dark:text-yellow-500", children: "404" }), _jsx("h2", { className: "text-3xl font-bold text-gray-900 dark:text-white mt-2", children: "P\u00E1gina No Encontrada" })] }), _jsx("p", { className: "text-gray-700 dark:text-gray-300 mb-8 text-lg", children: "Lo sentimos, la p\u00E1gina que buscas no existe o ha sido movida." }), _jsxs("div", { className: "flex flex-col gap-3 sm:flex-row sm:justify-center", children: [_jsx("button", { onClick: () => navigate('/', { replace: true }), className: "px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg transition-colors", children: "Ir a Inicio" }), _jsx("button", { onClick: () => navigate(-1), className: "px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors", children: "Volver Atr\u00E1s" })] })] }) }));
+};
+//# sourceMappingURL=NotFoundPage.js.map

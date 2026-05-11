@@ -5,8 +5,12 @@ export interface User {
     id: string;
     email: string;
     name: string;
-    role: 'ADMIN' | 'STOCK' | 'PEDIDOS' | 'CLIENT';
+    roles: Array<'ADMIN' | 'STOCK' | 'PEDIDOS' | 'CLIENT'>;
 }
+/**
+ * Check if user has any of the required roles
+ */
+export declare function userHasRole(user: User | null, requiredRoles: string[]): boolean;
 export interface AuthState {
     user: User | null;
     token: string | null;

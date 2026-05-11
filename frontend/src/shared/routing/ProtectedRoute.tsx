@@ -11,16 +11,19 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRoles: string[];
   fallbackPath?: string;
+  unauthorizedPath?: string;
 }
 
 /**
  * ProtectedRoute: Wraps a component and checks user roles before rendering
- * If user is not authenticated or lacks required roles, redirects to fallbackPath (default: /login)
+ * If user is not authenticated, redirects to fallbackPath (default: /login)
+ * If user lacks required roles, redirects to unauthorizedPath (default: /unauthorized)
  */
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   requiredRoles,
   fallbackPath = '/login',
+  unauthorizedPath = '/unauthorized',
 }) => {
   const { user, isAuthenticated } = useAuthStore();
 
@@ -39,6 +42,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <>{children}</>;
   }
 
-  // User lacks required roles -> redirect to fallback
-  return <Navigate to={fallbackPath} replace />;
+  // User lacks required roles -> redirect to unauthorized page
+  return <Navigate to={unauthorizedPath} replace />;
 };
