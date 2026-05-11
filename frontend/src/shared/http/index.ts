@@ -2,5 +2,5 @@
  * HTTP client exports
  */
 
-export { apiClient, default } from './client'
-export { setupRequestInterceptor, setupResponseInterceptor } from './interceptors'
+export { apiClient, default } from './client';
+export { setupRequestInterceptor, setupResponseInterceptor } from './interceptors';

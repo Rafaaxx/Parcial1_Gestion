@@ -1,14 +1,14 @@
 /**
  * Development helper to mock authentication without login
  * Use this in the browser console during development:
- * 
+ *
  * import { mockAuthAsStockUser } from '@/shared/dev/mockAuth'
  * mockAuthAsStockUser()
- * 
+ *
  * Then navigate to /admin/ingredientes
  */
 
-import { useAuthStore, type User } from '@/features/auth/store'
+import { useAuthStore, type User } from '@/features/auth/store';
 
 /**
  * Mock authentication as a STOCK user for testing inventory management
@@ -19,15 +19,14 @@ export function mockAuthAsStockUser() {
     email: 'stock@foodstore.dev',
     name: 'Stock Manager',
     roles: ['STOCK'],
-  }
+  };
 
-  useAuthStore.getState().setUser(mockUser)
-  useAuthStore.getState().setTokens(
-    'dev-token-stock-' + Date.now(),
-    'dev-refresh-token-stock-' + Date.now()
-  )
+  useAuthStore.getState().setUser(mockUser);
+  useAuthStore
+    .getState()
+    .setTokens('dev-token-stock-' + Date.now(), 'dev-refresh-token-stock-' + Date.now());
 
-  console.log('✅ Mocked auth as STOCK user:', mockUser)
+  console.log('✅ Mocked auth as STOCK user:', mockUser);
 }
 
 /**
@@ -39,15 +38,14 @@ export function mockAuthAsAdminUser() {
     email: 'admin@foodstore.dev',
     name: 'Admin',
     roles: ['ADMIN', 'STOCK', 'PEDIDOS'],
-  }
+  };
 
-  useAuthStore.getState().setUser(mockUser)
-  useAuthStore.getState().setTokens(
-    'dev-token-admin-' + Date.now(),
-    'dev-refresh-token-admin-' + Date.now()
-  )
+  useAuthStore.getState().setUser(mockUser);
+  useAuthStore
+    .getState()
+    .setTokens('dev-token-admin-' + Date.now(), 'dev-refresh-token-admin-' + Date.now());
 
-  console.log('✅ Mocked auth as ADMIN user:', mockUser)
+  console.log('✅ Mocked auth as ADMIN user:', mockUser);
 }
 
 /**
@@ -59,21 +57,20 @@ export function mockAuthAsClientUser() {
     email: 'client@foodstore.dev',
     name: 'Regular Client',
     roles: ['CLIENT'],
-  }
+  };
 
-  useAuthStore.getState().setUser(mockUser)
-  useAuthStore.getState().setTokens(
-    'dev-token-client-' + Date.now(),
-    'dev-refresh-token-client-' + Date.now()
-  )
+  useAuthStore.getState().setUser(mockUser);
+  useAuthStore
+    .getState()
+    .setTokens('dev-token-client-' + Date.now(), 'dev-refresh-token-client-' + Date.now());
 
-  console.log('✅ Mocked auth as CLIENT user:', mockUser)
+  console.log('✅ Mocked auth as CLIENT user:', mockUser);
 }
 
 /**
  * Clear auth state (logout)
  */
 export function clearMockAuth() {
-  useAuthStore.getState().logout()
-  console.log('✅ Cleared auth state')
+  useAuthStore.getState().logout();
+  console.log('✅ Cleared auth state');
 }

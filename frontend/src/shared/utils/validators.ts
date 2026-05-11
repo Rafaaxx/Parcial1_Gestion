@@ -6,16 +6,16 @@
  * Validate email format
  */
 export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }
 
 /**
  * Validate phone number (basic)
  */
 export function isValidPhone(phone: string): boolean {
-  const phoneRegex = /^\+?[\d\s\-()]+$/
-  return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 10
+  const phoneRegex = /^\+?[\d\s\-()]+$/;
+  return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 10;
 }
 
 /**
@@ -23,10 +23,10 @@ export function isValidPhone(phone: string): boolean {
  */
 export function isValidUrl(url: string): boolean {
   try {
-    new URL(url)
-    return true
+    new URL(url);
+    return true;
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -34,7 +34,7 @@ export function isValidUrl(url: string): boolean {
  * Check if string is empty or whitespace only
  */
 export function isEmpty(text: string): boolean {
-  return !text || text.trim().length === 0
+  return !text || text.trim().length === 0;
 }
 
 /**
@@ -47,6 +47,6 @@ export function isStrongPassword(password: string): boolean {
     /[a-z]/.test(password), // has lowercase
     /\d/.test(password), // has number
     /[^A-Za-z\d]/.test(password), // has special char
-  ]
-  return rules.filter(Boolean).length >= 4
+  ];
+  return rules.filter(Boolean).length >= 4;
 }

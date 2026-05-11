@@ -15,7 +15,9 @@ export const UnauthorizedPage: React.FC = () => {
         {/* Error Code */}
         <div className="mb-8">
           <h1 className="text-9xl font-bold text-red-600 dark:text-red-500">403</h1>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">Acceso Prohibido</h2>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+            Acceso Prohibido
+          </h2>
         </div>
 
         {/* Message */}

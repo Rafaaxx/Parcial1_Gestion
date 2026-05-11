@@ -2,18 +2,20 @@
  * Input component with label and validation
  */
 
-import React from 'react'
+import React from 'react';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string
-  error?: string
+  label?: string;
+  error?: string;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className = '', label, error, ...props }, ref) => {
     return (
       <div className="flex flex-col gap-1">
-        {label && <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>}
+        {label && (
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+        )}
         <input
           ref={ref}
           className={`
@@ -30,8 +32,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         />
         {error && <span className="text-sm text-red-500">{error}</span>}
       </div>
-    )
+    );
   }
-)
+);
 
-Input.displayName = 'Input'
+Input.displayName = 'Input';

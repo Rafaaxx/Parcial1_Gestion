@@ -4,10 +4,10 @@
  */
 import React from 'react';
 interface ProtectedRouteProps {
-    children: React.ReactNode;
-    requiredRoles: string[];
-    fallbackPath?: string;
-    unauthorizedPath?: string;
+  children: React.ReactNode;
+  requiredRoles: string[];
+  fallbackPath?: string;
+  unauthorizedPath?: string;
 }
 /**
  * ProtectedRoute: Wraps a component and checks user roles before rendering

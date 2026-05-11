@@ -3,7 +3,7 @@
  */
 import React from 'react';
 interface AdminLayoutProps {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }
 export declare const AdminLayout: React.FC<AdminLayoutProps>;
 export {};

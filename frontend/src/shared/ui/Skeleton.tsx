@@ -2,13 +2,13 @@
  * Skeleton loader component for loading states
  */
 
-import React from 'react'
+import React from 'react';
 
 export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
-  width?: string | number
-  height?: string | number
-  count?: number
-  circle?: boolean
+  width?: string | number;
+  height?: string | number;
+  count?: number;
+  circle?: boolean;
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({
@@ -19,7 +19,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   className = '',
   ...props
 }) => {
-  const skeletons = Array(count).fill(0)
+  const skeletons = Array(count).fill(0);
 
   return (
     <div className="flex flex-col gap-2">
@@ -37,5 +37,5 @@ export const Skeleton: React.FC<SkeletonProps> = ({
         />
       ))}
     </div>
-  )
-}
+  );
+};

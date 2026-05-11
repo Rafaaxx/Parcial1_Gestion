@@ -110,7 +110,5 @@ export const MENU_BY_ROLE: MenuItem[] = [
  * Get menu items for a specific user role
  */
 export function getMenuItemsByRole(userRoles: string[]): MenuItem[] {
-  return MENU_BY_ROLE.filter((item) =>
-    item.roles.some((role) => userRoles.includes(role))
-  );
+  return MENU_BY_ROLE.filter((item) => item.roles.some((role) => userRoles.includes(role)));
 }

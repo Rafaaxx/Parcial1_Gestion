@@ -2,24 +2,26 @@
  * Select component
  */
 
-import React from 'react'
+import React from 'react';
 
 export interface SelectOption {
-  label: string
-  value: string | number
+  label: string;
+  value: string | number;
 }
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
-  label?: string
-  error?: string
-  options: SelectOption[]
+  label?: string;
+  error?: string;
+  options: SelectOption[];
 }
 
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ className = '', label, error, options, ...props }, ref) => {
     return (
       <div className="flex flex-col gap-1">
-        {label && <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>}
+        {label && (
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+        )}
         <select
           ref={ref}
           className={`
@@ -43,8 +45,8 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         </select>
         {error && <span className="text-sm text-red-500">{error}</span>}
       </div>
-    )
+    );
   }
-)
+);
 
-Select.displayName = 'Select'
+Select.displayName = 'Select';

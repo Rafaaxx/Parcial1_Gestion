@@ -2,24 +2,24 @@
  * HTTP interceptors for token management and error handling
  */
 
-import { AxiosError, InternalAxiosRequestConfig } from 'axios'
-import { apiClient } from './client'
-import { useAuthStore } from '@/features/auth/store'
+import { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { apiClient } from './client';
+import { useAuthStore } from '@/features/auth/store';
 
 /**
  * Request interceptor: add Bearer token to Authorization header
  */
 export const setupRequestInterceptor = () => {
   apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-    const token = useAuthStore.getState().token
+    const token = useAuthStore.getState().token;
 
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+      config.headers.Authorization = `Bearer ${token}`;
     }
 
-    return config
-  })
-}
+    return config;
+  });
+};
 
 /**
  * Response interceptor: handle 401 errors and token refresh
@@ -29,14 +29,14 @@ export const setupResponseInterceptor = () => {
     (response) => response,
     async (error: AxiosError) => {
       const originalRequest = error.config as InternalAxiosRequestConfig & {
-        _retry?: boolean
-      }
+        _retry?: boolean;
+      };
 
       // Handle 401 Unauthorized
       if (error.response?.status === 401 && !originalRequest._retry) {
-        originalRequest._retry = true
+        originalRequest._retry = true;
 
-        const { refreshToken, setTokens, logout } = useAuthStore.getState()
+        const { refreshToken, setTokens, logout } = useAuthStore.getState();
 
         if (refreshToken) {
           try {
@@ -45,20 +45,20 @@ export const setupResponseInterceptor = () => {
             // setTokens(response.data.token, response.data.refreshToken)
             // return apiClient(originalRequest)
           } catch (refreshError) {
-            logout()
+            logout();
             // TODO: Redirect to login in CHANGE-02
           }
         } else {
-          logout()
+          logout();
           // TODO: Redirect to login in CHANGE-02
         }
       }
 
-      return Promise.reject(error)
+      return Promise.reject(error);
     }
-  )
-}
+  );
+};
 
 // Setup interceptors on module import
-setupRequestInterceptor()
-setupResponseInterceptor()
+setupRequestInterceptor();
+setupResponseInterceptor();

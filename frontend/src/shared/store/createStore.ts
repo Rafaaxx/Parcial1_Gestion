@@ -3,10 +3,10 @@
  * Provides consistent store creation with optional devtools integration
  */
 
-import { create, StateCreator, StoreApi } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { create, StateCreator, StoreApi } from 'zustand';
+import { devtools } from 'zustand/middleware';
 
-export type Store<T> = StoreApi<T>
+export type Store<T> = StoreApi<T>;
 
 /**
  * Create a typed Zustand store with devtools support
@@ -16,12 +16,12 @@ export type Store<T> = StoreApi<T>
  */
 export const createStore = <T extends Record<string, any>>(
   name: string,
-  stateCreator: StateCreator<T, [], []>,
+  stateCreator: StateCreator<T, [], []>
 ): ((selector?: (state: T) => any) => any) => {
   return create<T, [['zustand/devtools', never]]>(
     devtools(stateCreator as any, {
       name,
       enabled: import.meta.env.VITE_DEBUG === 'true',
     }) as any
-  )
-}
+  );
+};

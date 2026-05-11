@@ -15,7 +15,9 @@ export const NotFoundPage: React.FC = () => {
         {/* Error Code */}
         <div className="mb-8">
           <h1 className="text-9xl font-bold text-yellow-600 dark:text-yellow-500">404</h1>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">Página No Encontrada</h2>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+            Página No Encontrada
+          </h2>
         </div>
 
         {/* Message */}

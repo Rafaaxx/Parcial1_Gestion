@@ -10,5 +10,8 @@ export type Store<T> = StoreApi<T>;
  * @param initialState Initial state
  * @returns Zustand hook for the store
  */
-export declare const createStore: <T extends Record<string, any>>(name: string, stateCreator: StateCreator<T, [], []>) => ((selector?: (state: T) => any) => any);
+export declare const createStore: <T extends Record<string, any>>(
+  name: string,
+  stateCreator: StateCreator<T, [], []>
+) => (selector?: (state: T) => any) => any;
 //# sourceMappingURL=createStore.d.ts.map

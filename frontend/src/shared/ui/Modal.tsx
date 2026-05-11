@@ -2,31 +2,25 @@
  * Modal dialog component
  */
 
-import React from 'react'
-import { Button } from './Button'
+import React from 'react';
+import { Button } from './Button';
 
 export interface ModalAction {
-  label: string
-  onClick: () => void
-  variant?: 'primary' | 'secondary' | 'danger'
+  label: string;
+  onClick: () => void;
+  variant?: 'primary' | 'secondary' | 'danger';
 }
 
 export interface ModalProps {
-  isOpen: boolean
-  onClose: () => void
-  title?: string
-  actions?: ModalAction[]
-  children?: React.ReactNode
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  actions?: ModalAction[];
+  children?: React.ReactNode;
 }
 
-export const Modal: React.FC<ModalProps> = ({
-  isOpen,
-  onClose,
-  title,
-  actions,
-  children,
-}) => {
-  if (!isOpen) return null
+export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, actions, children }) => {
+  if (!isOpen) return null;
 
   return (
     <>
@@ -51,7 +45,12 @@ export const Modal: React.FC<ModalProps> = ({
                 className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -77,5 +76,5 @@ export const Modal: React.FC<ModalProps> = ({
         </div>
       </div>
     </>
-  )
-}
+  );
+};

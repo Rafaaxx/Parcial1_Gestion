@@ -2,10 +2,10 @@
  * Menu configuration by role for role-based navigation
  */
 export interface MenuItem {
-    label: string;
-    path: string;
-    icon: string;
-    roles: Array<'ADMIN' | 'STOCK' | 'PEDIDOS' | 'CLIENT'>;
+  label: string;
+  path: string;
+  icon: string;
+  roles: Array<'ADMIN' | 'STOCK' | 'PEDIDOS' | 'CLIENT'>;
 }
 /**
  * Menu items grouped by role

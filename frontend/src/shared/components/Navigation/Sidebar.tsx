@@ -52,7 +52,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
               aria-label="Close sidebar"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -60,7 +65,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
           {/* User Info */}
           {user && (
             <div className="px-4 py-4 border-b border-gray-200 dark:border-gray-800 hidden md:block">
-              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user.name}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                {user.name}
+              </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
               <div className="mt-2 flex gap-1 flex-wrap">
                 {user.roles.map((role) => (

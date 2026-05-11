@@ -2,18 +2,20 @@
  * Textarea component
  */
 
-import React from 'react'
+import React from 'react';
 
 export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  label?: string
-  error?: string
+  label?: string;
+  error?: string;
 }
 
 export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className = '', label, error, ...props }, ref) => {
     return (
       <div className="flex flex-col gap-1">
-        {label && <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>}
+        {label && (
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+        )}
         <textarea
           ref={ref}
           className={`
@@ -31,8 +33,8 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         />
         {error && <span className="text-sm text-red-500">{error}</span>}
       </div>
-    )
+    );
   }
-)
+);
 
-Textarea.displayName = 'Textarea'
+Textarea.displayName = 'Textarea';
