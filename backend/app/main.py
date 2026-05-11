@@ -14,6 +14,7 @@ from app.middleware.rate_limiter import limiter, rate_limit_error_handler
 from app.modules.auth.router import router as auth_router
 from app.modules.categorias.router import router as categorias_router
 from app.modules.ingredientes.router import router as ingredientes_router
+from app.modules.productos.router import router as productos_router
 from app.modules.direcciones.router import router as router_direcciones
 
 # Configure logging
@@ -125,6 +126,9 @@ app.include_router(categorias_router)
 app.include_router(ingredientes_router)
 
 
+# ── Productos Router ───────────────────────────────────────────────────────────
+
+app.include_router(productos_router)
 # ── Direcciones Router ────────────────────────────────────────────────────────────
 
 app.include_router(router_direcciones)
