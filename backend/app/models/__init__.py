@@ -6,6 +6,7 @@ from app.models.estado_pedido import EstadoPedido
 from app.models.forma_pago import FormaPago
 from app.models.usuario import Usuario
 from app.models.usuario_rol import UsuarioRol
+from app.models.ingrediente import Ingrediente
 from app.modules.refreshtokens.model import RefreshToken
 
 __all__ = [
@@ -17,5 +18,6 @@ __all__ = [
     "FormaPago",
     "Usuario",
     "UsuarioRol",
+    "Ingrediente",
     "RefreshToken",
 ]
