@@ -284,6 +284,14 @@ class CategoriaService:
             # This will fail if category has children or products:
             # await service.delete_categoria(1)  # raises AppException
         """
+        # Check if category exists first
+        categoria = await self.uow.categorias.find(categoria_id)
+        if not categoria:
+            raise AppException(
+                message=f"Category with id={categoria_id} not found",
+                status_code=404
+            )
+        
         # Check if has children
         child_count = await self.uow.categorias.count_children(categoria_id)
         if child_count > 0:
