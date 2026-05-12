@@ -21,7 +21,7 @@ export function ProductDetailPage() {
           <div className="text-center py-12">
             <p className="text-red-600 font-medium mb-4">Invalid product ID</p>
             <button
-              onClick={() => navigate('/catalog')}
+              onClick={() => navigate('/productos')}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               Back to Catalog
@@ -38,7 +38,7 @@ export function ProductDetailPage() {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4">
           <button
-            onClick={() => navigate('/catalog')}
+            onClick={() => navigate('/productos')}
             className="mb-6 text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2"
           >
             ← Back to Catalog
@@ -61,7 +61,7 @@ export function ProductDetailPage() {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4">
           <button
-            onClick={() => navigate('/catalog')}
+            onClick={() => navigate('/productos')}
             className="mb-6 text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2"
           >
             ← Back to Catalog
@@ -71,7 +71,7 @@ export function ProductDetailPage() {
               {error instanceof Error ? error.message : 'Product not found'}
             </p>
             <button
-              onClick={() => navigate('/catalog')}
+              onClick={() => navigate('/productos')}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               Back to Catalog
@@ -90,7 +90,7 @@ export function ProductDetailPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
         <button
-          onClick={() => navigate('/catalog')}
+          onClick={() => navigate('/productos')}
           className="mb-6 text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2"
         >
           ← Back to Catalog
@@ -101,9 +101,9 @@ export function ProductDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
             {/* Product Image */}
             <div>
-              {product.imagen_url ? (
+              {product.imagen ? (
                 <img
-                  src={product.imagen_url}
+                  src={product.imagen}
                   alt={product.nombre}
                   className="w-full h-96 object-cover rounded-lg"
                 />
@@ -147,7 +147,11 @@ export function ProductDetailPage() {
               {/* Price */}
               <div className="mb-6 pb-6 border-b border-gray-200">
                 <p className="text-gray-600 text-sm mb-2">Price per unit</p>
-                <p className="text-5xl font-bold text-gray-900">${product.precio.toFixed(2)}</p>
+                <p className="text-5xl font-bold text-gray-900">
+                  ${typeof product.precio_base === 'string'
+                    ? parseFloat(product.precio_base).toFixed(2)
+                    : product.precio_base.toFixed(2)}
+                </p>
               </div>
 
               {/* Description */}
@@ -235,7 +239,7 @@ export function ProductDetailPage() {
         {/* Bottom Actions */}
         <div className="mt-8 flex justify-center">
           <button
-            onClick={() => navigate('/catalog')}
+            onClick={() => navigate('/productos')}
             className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
           >
             Back to Catalog

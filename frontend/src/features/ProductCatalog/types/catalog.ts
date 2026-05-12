@@ -27,31 +27,33 @@ export interface CategoryInfo {
 export interface ProductCard {
   id: number
   nombre: string
-  descripcion: string
-  precio: number
-  imagen_url: string | null
+  descripcion?: string
+  precio_base: number | string  // Backend sends Decimal, which serializes to string
+  imagen: string | null
   disponible: boolean
   categorias: CategoryInfo[]
+  ingredientes?: IngredientInfo[]
 }
 
 /** Product list item returned from API */
 export interface ProductListItem {
   id: number
   nombre: string
-  descripcion: string
-  precio: number
-  imagen_url: string | null
+  descripcion?: string
+  precio_base: number | string  // Backend sends Decimal, which serializes to string
+  imagen: string | null
   disponible: boolean
   categorias: CategoryInfo[]
+  ingredientes?: IngredientInfo[]
 }
 
 /** Product detail with full information */
 export interface ProductDetail {
   id: number
   nombre: string
-  descripcion: string
-  precio: number
-  imagen_url: string | null
+  descripcion?: string
+  precio_base: number | string  // Backend sends Decimal, which serializes to string
+  imagen: string | null
   disponible: boolean
   categorias: CategoryInfo[]
   ingredientes: IngredientInfo[]

@@ -19,9 +19,9 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
     >
       {/* Image Container */}
       <div className="relative w-full h-48 bg-gray-200 overflow-hidden">
-        {product.imagen_url ? (
+        {product.imagen ? (
           <img
-            src={product.imagen_url}
+            src={product.imagen}
             alt={product.nombre}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -92,7 +92,9 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
         {/* Price (bottom of card) */}
         <div className="mt-auto pt-4 border-t border-gray-200">
           <div className="text-2xl font-bold text-gray-900">
-            ${product.precio.toFixed(2)}
+            ${typeof product.precio_base === 'string' 
+              ? parseFloat(product.precio_base).toFixed(2) 
+              : product.precio_base.toFixed(2)}
           </div>
           <p className="text-xs text-gray-500 mt-1">per unit</p>
         </div>
