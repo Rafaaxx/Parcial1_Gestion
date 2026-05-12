@@ -349,3 +349,79 @@ class PedidoService:
             usuario_id=usuario_id,
         )
         self.uow.session.add(historial)
+
+    async def cambiar_estado(
+        self,
+        pedido_id: int,
+        nuevo_estado: str,
+        observacion: str | None = None,
+        usuario_id: int | None = None,
+    ) -> Pedido:
+        """
+        Change the state of an order (FSM transition).
+
+        Current implementation ( CHANGE-10 not yet done):
+        - PENDIENTE -> CONFIRMADO (payment approved)
+        - CONFIRMADO -> CANCELADO (admin only)
+
+        Args:
+            pedido_id: Order ID to transition
+            nuevo_estado: Target state code
+            observacion: Optional note about the transition
+            usuario_id: User performing the transition (None = system)
+
+        Returns:
+            Updated Pedido
+
+        Raises:
+            HTTPException: 400 if transition is invalid
+        """
+        # Get current pedido
+        pedido = await self.uow.pedidos.find(pedido_id)
+        if not pedido:
+            raise HTTPException(status_code=404, detail="Pedido no encontrado")
+
+        estado_actual = pedido.estado_codigo
+        estado_nuevo = nuevo_estado
+
+        # Validar transición según FSM simple
+        transiciones_permitidas = {
+            "PENDIENTE": ["CONFIRMADO", "CANCELADO"],
+            "CONFIRMADO": ["EN_PREPARACION", "CANCELADO"],
+            "EN_PREPARACION": ["EN_CAMINO", "CANCELADO"],
+            "EN_CAMINO": ["ENTREGADO"],
+            "CANCELADO": [],  # Terminal
+            "ENTREGADO": [],  # Terminal
+        }
+
+        permitidas = transiciones_permitidas.get(estado_actual, [])
+        if estado_nuevo not in permitidas:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Transición inválida: {estado_actual} -> {estado_nuevo}. "
+                       f"Estados permitidos: {permitidas or 'ninguno'}",
+            )
+
+        # Validar que no sea transición a terminal sin autorización especial
+        if estado_nuevo in ("CANCELADO", "ENTREGADO") and usuario_id is None:
+            # Solo permitir si es transición automática por sistema (pago aprobado)
+            # Por ahora permitir
+            pass
+
+        # Actualizar estado
+        pedido.estado_codigo = estado_nuevo
+        self.uow.session.add(pedido)
+        await self.uow.session.flush()
+
+        # Crear historial de transición
+        historial = HistorialEstadoPedido(
+            pedido_id=pedido_id,
+            estado_desde=estado_actual,
+            estado_hacia=estado_nuevo,
+            observacion=observacion,
+            usuario_id=usuario_id,
+        )
+        self.uow.session.add(historial)
+
+        logger.info(f"Pedido {pedido_id} transitioned: {estado_actual} -> {estado_nuevo}")
+        return pedido

@@ -115,6 +115,18 @@ class Pedido(BaseModel, table=True):
     direccion: Optional["DireccionEntrega"] = Relationship(
         back_populates="pedidos",
     )
+    pagos: list["Pago"] = Relationship(
+        back_populates="pedido",
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan",
+            "foreign_keys": "[Pago.pedido_id]",
+        },
+    )
+
+
+# Import Pago for type hint (no circular dependency at runtime)
+if TYPE_CHECKING:
+    from app.modules.pagos.model import Pago
 
 
 class DetallePedido(SQLModel, table=True):

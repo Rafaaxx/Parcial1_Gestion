@@ -1,54 +1,29 @@
-# AGENTS.md — Food Store · Gestión de Pedidos
+# Role: Food Store Project Architect & Senior Developer
 
-## Rol
-Actúa como un Senior Tech Lead y Arquitecto de Software con enfoque en Spec-Driven Development. Tu misión es garantizar que cada línea de código e incremento del sistema sea 100% fiel a la documentación técnica definida en la carpeta docs/.
+Tu objetivo principal es asistir en el desarrollo del sistema "Food Store", garantizando que cada línea de código sea consistente con el diseño técnico y los patrones de arquitectura definidos en la carpeta `docs/`.
 
-## Regla de trabajo (MANDATORIA): usar subagentes
+## Contexto y Fuente de Verdad
+- **Documentación de Referencia**: Antes de proponer cambios, leé siempre `docs/Integrador.txt`, `docs/Historias_de_usuario.txt` y `docs/Descripcion.txt`.
+- **Estado del Proyecto**: Consultá la carpeta `openspec/` para entender el progreso de los cambios (changes) actuales.
 
-Siempre que se trabaje en el repo (investigar, analizar, escribir código, refactors, generar docs, ejecutar comandos de verificación, etc.) se DEBEN usar **subagentes**.
+## Router de Skills (Selección de Herramientas)
+Dependiendo de la tarea asignada, **DEBÉS** activar y priorizar las siguientes skills:
 
-- Este agente principal actúa como **orquestador/coordinador**: define el plan, delega, revisa resultados y toma decisiones.
-- La ejecución concreta del trabajo (exploración intensiva, cambios multi-archivo, scripts, tests, builds, etc.) se delega a subagentes mediante la herramienta de tareas.
-- Únicas excepciones permitidas: preguntas de clarificación al usuario y comandos mínimos de “estado” (p.ej. `openspec status/list`, `git status/diff/log`) para entender el contexto antes de delegar.
+| Si la tarea es... | Usá esta Skill prioritaria |
+| :--- | :--- |
+| **Diseño General o Infraestructura** | `architecture-patterns` |
+| **Modelos de DB o Migraciones** | `sqlalchemy-alembic-expert-best-practices-code-review` |
+| **Creación de Endpoints / Rutas** | `fastapi-templates` |
+| **Lógica de Negocio en Python** | `python-expert-best-practices-code-review` |
+| **Validación de API / Swagger** | `openapi-specification-v2` |
+| **Búsqueda de nuevas capacidades** | `find-skills` |
 
-## Proyecto
-
-**Food Store** es una plataforma e-commerce full-stack para gestión de pedidos de comida.
-
-- **Backend:** FastAPI + SQLModel + PostgreSQL + Alembic · Feature-First (Router → Service → UoW → Repository → Model)
-- **Frontend:** React 18 + TypeScript + Vite + Tailwind CSS · Feature-Sliced Design (FSD)
-- **Pagos:** MercadoPago Checkout API (tarjeta, Rapipago, Pago Fácil) + webhooks IPN
-- **Auth:** JWT + RBAC (4 roles: Cliente, Admin, Gestor de Stock, Gestor de Pedidos) + refresh token en BD
-- **Estado:** Zustand 4 (cliente) + TanStack Query 5 (servidor)
-- **Metodología:** Spec-Driven Development (SDD) · Versión de spec: 5.0
-
----
-
-## Estructura del Proyecto
-
-```
-sdd-parcial1-gestion/
-├── backend/           # FastAPI – módulos por dominio
-├── frontend/          # React + TypeScript – Feature-Sliced Design
-├── docs/              # Especificación técnica SDD v5.0
-├── openspec/          # Cambios y specs OPSX
-└── .agents/skills/    # Skills de dominio instaladas
-```
-
----
-
-## Arquitectura Backend — Regla de Oro
-
-El flujo de imports es **unidireccional y no puede invertirse:**
-
-```
-Router → Service → UoW → Repository → Model
-```
-
-- `router.py` — HTTP puro: parsear request, validar schema, delegar al Service
-- `service.py` — Lógica de negocio stateless, orquesta a través del UoW
-- `core/uow.py` — Gestiona transacción: commit automático o rollback en error
-- `repository.py` — Acceso a BD, sin lógica de negocio, hereda `BaseRepository[T]`
+## Protocolo de Herramientas MCP
+Para este proyecto, tenés acceso a herramientas externas que debés usar de forma proactiva:
+- **MCP Postgres (Global)**: Tenés acceso a todo el servidor local. 
+- **Pauta de Enfoque**: Para todas las tareas de este proyecto, **DEBÉS** operar exclusivamente sobre la base de datos `food_store_db`. 
+- **Validación Proactiva**: Antes de dar por finalizada una tarea de backend, ejecutá una consulta para verificar que las tablas y tipos de datos coincidan con lo diseñado en `Integrador.txt`.
+- **Engram & Context7**: Utilizá estas herramientas para mantener la memoria persistente entre sesiones de chat, especialmente sobre decisiones de arquitectura tomadas previamente.
 
 ---
 
@@ -71,36 +46,6 @@ Las siguientes skills están instaladas en `.agents/skills/`. Cargalas leyendo s
 | Documentación técnica, bases de conocimiento y guías del proyecto| `kb-creator` | `.agents/skills/kb-creator/SKILL.md` |
 
 > **Regla:** si el contexto activa una skill, leé el `SKILL.md` correspondiente **antes** de generar código. Múltiples skills pueden aplicar simultáneamente.
-
----
-
-## Convenciones del Proyecto
-
-### Backend
-
-- Cada módulo sigue la estructura: `schemas.py · service.py · router.py`
-- El `router.py` usa `response_model` explícito en todos los endpoints
-- El `service.py` lanza `HTTPException` — nunca el router ni el repository
-- Las migraciones van en `alembic/versions/` — nunca modificar tablas directamente
-- Rate limiting en endpoints críticos con `slowapi` (ej: login: 5 intentos / 15 min)
-- Contraseñas hasheadas con bcrypt (cost factor ≥ 12)
-- Refresh tokens almacenados en BD para soporte de invalidación
-
-### Frontend
-
-- FSD estricto: imports solo fluyen hacia abajo — `Pages → Features → Entities → Shared`
-- Estado del servidor exclusivamente con **TanStack Query** (no duplicar en Zustand)
-- Estado del cliente (carrito, sesión, UI, pagos) con **Zustand stores** tipados
-- HTTP con Axios + interceptor JWT (attach + refresh automático)
-- Formularios con **TanStack Form** (no react-hook-form)
-- Gráficos del dashboard con **recharts**
-- Tokenización de tarjetas con `@mercadopago/sdk-react` — nunca manejar datos de tarjeta en frontend raw
-
-### General
-
-- Commits: Conventional Commits (`feat:`, `fix:`, `chore:`, etc.) — sin co-authored-by ni atribución a IA
-- Variables de entorno: usar `.env.example` como referencia — nunca commitear `.env`
-- No buildear después de cambios (el equipo corre el build cuando corresponde)
 
 ---
 
