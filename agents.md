@@ -58,14 +58,17 @@ Las siguientes skills están instaladas en `.agents/skills/`. Cargalas leyendo s
 
 | Contexto de activación | Skill | Archivo a leer |
 |------------------------|-------|----------------|
-| Cualquier endpoint FastAPI, service, repository, schema Pydantic, UoW, router | `fastapi-python` | `.agents/skills/fastapi-python/SKILL.md` |
-| Queries SQL, migraciones Alembic, optimización PostgreSQL, índices | `postgres` | `.agents/skills/postgres/SKILL.md` |
-| Componentes React, páginas, hooks, Tailwind, estilo visual del frontend | `frontend-design` | `.agents/skills/frontend-design/SKILL.md` |
+| Cualquier endpoint FastAPI, service, repository, schema Pydantic, UoW, router | `fastapi-templates` | `.agents/skills/fastapi-templates/SKILL.md` |
+| Queries SQL, migraciones Alembic, optimización PostgreSQL, índices | `sqlalchemy-alembic-expert-best-practices-code-review` | `.agents/skills/sqlalchemy-alembic-expert-best-practices-code-review/SKILL.md` |
+| Componentes React, páginas, hooks, Tailwind, estilo visual del frontend | `dashboard-crud-page` | `.agents/skills/dashboard-crud-page/SKILL.md` |
 | Design system, tokens, componentes Tailwind reutilizables, sistema de clases | `tailwind-design-system` | `.agents/skills/tailwind-design-system/SKILL.md` |
-| Documentación técnica, README, guías, tutoriales, diátaxis | `documentation-writer` | `.agents/skills/documentation-writer/SKILL.md` |
-| Crear o mejorar una skill de agente IA | `skill-creator` | `.agents/skills/skill-creator/SKILL.md` |
 | El usuario pregunta qué skill usar o si existe una skill para X | `find-skills` | `.agents/skills/find-skills/SKILL.md` |
-| Reportar cambios realizados en un commit (summary, changelog) | `commit-changes-reporter` | `.agents/skills/commit-changes-reporter/SKILL.md` |
+| Arquitectura limpia, patrones de diseño y estructura del proyecto | `architecture-patterns` | `.agents/skills/architecture-patterns/SKILL.md` |
+| Revisión de lógica Python, buenas prácticas y validación de código | `python-expert-best-practices-code-review` | `.agents/skills/python-expert-best-practices-code-review/SKILL.md` |
+| Análisis de código Python mediante herramientas automatizadas | `python-code-review` | `.agents/skills/python-code-review/SKILL.md` |
+| Planificación de tareas, hitos del proyecto y hojas de ruta| `roadmap-generator` | `.agents/skills/roadmap-generator/SKILL.md` |
+| Definición de contratos de API y especificaciones OpenAPI/Swagger| `openapi-specification-v2` | `.agents/skills/openapi-specification-v2/SKILL.md` |
+| Documentación técnica, bases de conocimiento y guías del proyecto| `kb-creator` | `.agents/skills/kb-creator/SKILL.md` |
 
 > **Regla:** si el contexto activa una skill, leé el `SKILL.md` correspondiente **antes** de generar código. Múltiples skills pueden aplicar simultáneamente.
 
@@ -185,17 +188,6 @@ Si `git push` falla (conflictos en remoto, sin acceso, etc.):
 2. NO cerrar la sesión en Engram todavía
 3. Esperar indicaciones del usuario
 
----
-
-## MCPs Configurados (nivel proyecto)
-
-| MCP | Uso |
-|-----|-----|
-| `devdocs-mcp` | Lookup de documentación técnica offline (FastAPI, React, SQLModel, Tailwind, etc.) |
-
-Configuración en `.opencode/opencode.json`.
-
----
 
 ## Documentación de Referencia
 
