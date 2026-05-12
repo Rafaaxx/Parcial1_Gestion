@@ -17,7 +17,7 @@ export function CatalogPage() {
   const { currentPage, limit, setPage } = useCatalogStore()
 
   const handleProductClick = (id: number) => {
-    navigate(`/catalog/${id}`)
+    navigate(`/productos/${id}`)
   }
 
   const handlePageChange = (page: number) => {
