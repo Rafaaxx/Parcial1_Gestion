@@ -80,7 +80,13 @@ class Producto(BaseModel, table=True):
         sa_relationship_kwargs={
             "cascade": "all, delete-orphan",
             "foreign_keys": "[ProductoIngrediente.producto_id]",
-        }
+        },
+    )
+    detalles_pedido: List["DetallePedido"] = Relationship(
+        back_populates="producto",
+        sa_relationship_kwargs={
+            "foreign_keys": "[DetallePedido.producto_id]",
+        },
     )
 
 

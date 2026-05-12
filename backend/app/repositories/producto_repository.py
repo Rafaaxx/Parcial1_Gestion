@@ -493,10 +493,10 @@ class ProductoRepository(BaseRepository[Producto]):
     async def list_categorias(self, producto_id: int) -> List[ProductoCategoria]:
         """
         List all categories associated with a product.
-        
+
         Args:
             producto_id: Product ID
-            
+
         Returns:
             List of ProductoCategoria associations with category details
         """
@@ -508,3 +508,30 @@ class ProductoRepository(BaseRepository[Producto]):
         )
         result = await self.session.execute(query)
         return result.scalars().all()
+
+    async def get_for_update(self, producto_id: int) -> Optional[Producto]:
+        """
+        Get product with row-level lock for stock validation.
+
+        CRITICAL: This method requires PostgreSQL.
+        SQLite does NOT support SELECT FOR UPDATE.
+
+        Uses: SELECT ... FROM productos WHERE id = $1 FOR UPDATE
+
+        This prevents race conditions when multiple concurrent orders
+        try to reserve the same product stock simultaneously.
+
+        Args:
+            producto_id: Product ID to lock
+
+        Returns:
+            Producto with row locked, or None if not found/soft-deleted
+        """
+        query = (
+            select(Producto)
+            .where(Producto.id == producto_id)
+            .where(Producto.deleted_at.is_(None))
+            .with_for_update()
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
