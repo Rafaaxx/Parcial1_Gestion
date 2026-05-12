@@ -1,26 +1,13 @@
 /**
  * ProductDetailPage — Single product details
+ * Integrates the ProductDetailPage component from ProductCatalog feature
  */
 
 import React from 'react'
+import { ProductDetailPage as ProductDetailView } from '@/features/ProductCatalog/pages/ProductDetailPage'
 
 export const ProductDetailPage: React.FC = () => {
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">
-        Detalle del Producto
-      </h1>
-      <div className="card-base p-12 text-center">
-        <span className="text-5xl block mb-4">🥘</span>
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-2">
-          Próximamente
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          La página de detalle del producto estará disponible pronto.
-        </p>
-      </div>
-    </div>
-  )
+  return <ProductDetailView />
 }
 
 export default ProductDetailPage
