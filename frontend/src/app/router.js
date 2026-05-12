@@ -23,6 +23,7 @@ const AdminCategories = lazy(() => import('@/pages/AdminCategories'));
 const AdminOrders = lazy(() => import('@/pages/AdminOrders'));
 const AdminUsers = lazy(() => import('@/pages/AdminUsers'));
 const AdminStock = lazy(() => import('@/pages/AdminStock'));
+const AdminIngredients = lazy(() => import('@/pages/admin/IngredientsPage'));
 export const router = createBrowserRouter([
     {
         path: '/',
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
                         children: [
                             { path: 'admin', element: _jsx(AdminDashboard, {}) },
                             { path: 'admin/productos', element: _jsx(AdminProducts, {}) },
+                            { path: 'admin/ingredientes', element: _jsx(AdminIngredients, {}) },
                             { path: 'admin/categorias', element: _jsx(AdminCategories, {}) },
                             { path: 'admin/pedidos', element: _jsx(AdminOrders, {}) },
                             { path: 'admin/usuarios', element: _jsx(AdminUsers, {}) },

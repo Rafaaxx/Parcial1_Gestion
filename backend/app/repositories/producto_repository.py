@@ -55,6 +55,7 @@ class ProductoRepository(BaseRepository[Producto]):
         busqueda: Optional[str] = None,
         precio_desde: Optional[Decimal] = None,
         precio_hasta: Optional[Decimal] = None,
+        allergen_ids: Optional[List[int]] = None,
         order_by: Optional[Any] = None,
     ) -> Tuple[List[Producto], int]:
         """
@@ -68,6 +69,7 @@ class ProductoRepository(BaseRepository[Producto]):
             busqueda: Search by name (ILIKE, case-insensitive)
             precio_desde: Minimum price filter
             precio_hasta: Maximum price filter
+            allergen_ids: List of ingredient IDs to exclude (NOT EXISTS logic)
             order_by: SQLAlchemy order_by clause
             
         Returns:
@@ -106,6 +108,15 @@ class ProductoRepository(BaseRepository[Producto]):
             )
             conditions.append(Producto.id.in_(subquery))
         
+        # Allergen filter (NOT EXISTS logic)
+        if allergen_ids:
+            # Products that do NOT have any of the specified ingredients
+            allergen_subquery = (
+                select(ProductoIngrediente.producto_id)
+                .where(ProductoIngrediente.ingrediente_id.in_(allergen_ids))
+            )
+            conditions.append(~Producto.id.in_(allergen_subquery))
+        
         # Apply all conditions
         if conditions:
             query = query.where(and_(*conditions))
@@ -127,6 +138,7 @@ class ProductoRepository(BaseRepository[Producto]):
         # Execute with eager loading of associations
         query = query.options(
             selectinload(Producto.categorias).selectinload(ProductoCategoria.categoria),
+            selectinload(Producto.ingredientes).selectinload(ProductoIngrediente.ingrediente),
         )
         
         result = await self.session.execute(query)
