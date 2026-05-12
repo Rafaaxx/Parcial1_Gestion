@@ -1,1 +1,1 @@
-{"version":3,"file":"ProductDetailPage.d.ts","sourceRoot":"","sources":["ProductDetailPage.tsx"],"names":[],"mappings":"AAAA;;GAEG;AAEH,OAAO,KAAK,MAAM,OAAO,CAAA;AAEzB,eAAO,MAAM,iBAAiB,EAAE,KAAK,CAAC,EAiBrC,CAAA;AAED,eAAe,iBAAiB,CAAA"}
+{"version":3,"file":"ProductDetailPage.d.ts","sourceRoot":"","sources":["ProductDetailPage.tsx"],"names":[],"mappings":"AAAA;;;GAGG;AAEH,OAAO,KAAK,MAAM,OAAO,CAAA;AAGzB,eAAO,MAAM,iBAAiB,EAAE,KAAK,CAAC,EAErC,CAAA;AAED,eAAe,iBAAiB,CAAA"}

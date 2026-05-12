@@ -8,7 +8,6 @@ sqlmodel
 asyncpg
 aiosqlite
 alembic
-psycopg2
 
 # Validation & Settings
 pydantic

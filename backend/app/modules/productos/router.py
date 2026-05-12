@@ -105,6 +105,7 @@ async def create_producto(
     responses={
         200: {"description": "List of products returned"},
     },
+    tags=["products"],
 )
 async def list_productos(
     skip: int = Query(0, ge=0, description="Pagination offset"),
@@ -114,6 +115,7 @@ async def list_productos(
     busqueda: Optional[str] = Query(None, description="Search by name (case-insensitive)"),
     precio_desde: Optional[Decimal] = Query(None, ge=0, description="Minimum price"),
     precio_hasta: Optional[Decimal] = Query(None, ge=0, description="Maximum price"),
+    excluirAlergenos: Optional[str] = Query(None, description="Exclude products with allergen IDs (comma-separated, e.g. 1,3,7)"),
     uow: UnitOfWork = Depends(get_uow),
 ) -> ProductoListResponse:
     """
@@ -129,12 +131,27 @@ async def list_productos(
     - `busqueda` (optional): Search by name (case-insensitive, ILIKE)
     - `precio_desde` (optional): Minimum price filter
     - `precio_hasta` (optional): Maximum price filter
+    - `excluirAlergenos` (optional): Exclude products with specific ingredient IDs (comma-separated)
     
     **Note**: Public endpoint hides stock_cantidad (per spec: "No revelar stock exacto")
+    
+    **Allergen Exclusion**:
+    - Format: `excluirAlergenos=5` or `excluirAlergenos=1,3,7`
+    - Products containing ANY of these ingredient IDs are excluded
+    - Invalid IDs are silently ignored
     
     **Responses**:
     - 200: Returns ProductoListResponse with items, total, pagination
     """
+    # Parse allergen IDs from comma-separated string
+    allergen_ids = []
+    if excluirAlergenos:
+        try:
+            allergen_ids = [int(id_str.strip()) for id_str in excluirAlergenos.split(",") if id_str.strip()]
+        except ValueError:
+            # Silently ignore invalid IDs
+            allergen_ids = []
+    
     try:
         service = ProductoService(uow.session)
         return await service.list_productos(
@@ -145,6 +162,7 @@ async def list_productos(
             busqueda=busqueda,
             precio_desde=precio_desde,
             precio_hasta=precio_hasta,
+            allergen_ids=allergen_ids,
             include_stock=False,  # Public endpoint hides stock
         )
     except Exception as e:
@@ -160,6 +178,7 @@ async def list_productos(
         200: {"description": "Product found"},
         404: {"description": "Product not found or soft-deleted"},
     },
+    tags=["products"],
 )
 async def get_producto(
     producto_id: int,
