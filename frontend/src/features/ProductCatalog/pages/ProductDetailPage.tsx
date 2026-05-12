@@ -2,10 +2,14 @@
  * ProductDetailPage Component
  * Displays full product details: name, description, price, image, categories, ingredients
  * Shows allergen warnings and stock status
+ * Includes quantity selector, ingredient customizer, and "Agregar al carrito" button
  */
 
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useProductDetail } from '../hooks/useCatalogFilters'
+import { AddToCartButton } from '@/features/cart/components/AddToCartButton'
+import { IngredientCustomizer } from '@/features/cart/components/IngredientCustomizer'
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -13,6 +17,20 @@ export function ProductDetailPage() {
   const productId = id ? Number(id) : null
 
   const { product, isLoading, error } = useProductDetail(productId || 0)
+
+  // Quantity and personalization state for add-to-cart
+  const [quantity, setQuantity] = useState(1)
+  const [excludedIds, setExcludedIds] = useState<number[]>([])
+  const [added, setAdded] = useState(false)
+
+  // Reset state when product changes
+  const handleAdded = () => {
+    setAdded(true)
+    setQuantity(1)
+    setExcludedIds([])
+    // Reset the "added" indicator after a short delay
+    setTimeout(() => setAdded(false), 2000)
+  }
 
   if (!productId) {
     return (
@@ -176,11 +194,83 @@ export function ProductDetailPage() {
                   </div>
                 </div>
               )}
+
+              {/* Quantity Selector & Add to Cart — only if available */}
+              {product.disponible && (
+                <div className="mt-auto pt-6 border-t border-gray-200 space-y-4">
+                  {/* Quantity selector */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Cantidad
+                    </label>
+                    <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg w-fit">
+                      <button
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        className="px-4 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-l-lg transition-colors"
+                        aria-label="Disminuir cantidad"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <span className="px-6 py-2 text-lg font-semibold text-gray-900 dark:text-gray-100 min-w-[3rem] text-center border-x border-gray-300 dark:border-gray-600">
+                        {quantity}
+                      </span>
+                      <button
+                        onClick={() => setQuantity((q) => Math.min(50, q + 1))}
+                        className="px-4 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-r-lg transition-colors"
+                        aria-label="Aumentar cantidad"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* AddToCartButton */}
+                  <AddToCartButton
+                    producto={product}
+                    cantidad={quantity}
+                    personalizacion={excludedIds}
+                    large
+                    onAdded={handleAdded}
+                  />
+                  {added && (
+                    <p className="text-sm text-green-600 font-medium text-center">
+                      ✓ Agregado al carrito
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* If not available */}
+              {!product.disponible && (
+                <div className="mt-auto pt-6 border-t border-gray-200">
+                  <button
+                    disabled
+                    className="w-full py-3 px-6 bg-gray-300 text-gray-500 font-semibold rounded-lg cursor-not-allowed text-center"
+                  >
+                    Producto no disponible
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Ingredients & Allergen Information */}
           <div className="border-t border-gray-200 p-8 bg-gray-50">
+            {/* Ingredient Customizer (only if product has removable ingredients) */}
+            {product.disponible && product.ingredientes && product.ingredientes.some((i) => i.es_removible) && (
+              <div className="mb-8">
+                <IngredientCustomizer
+                  ingredientes={product.ingredientes}
+                  excludedIds={excludedIds}
+                  onChange={setExcludedIds}
+                />
+              </div>
+            )}
+
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-4">
                 <h2 className="text-2xl font-bold text-gray-900">Ingredients</h2>

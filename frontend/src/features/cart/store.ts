@@ -1,34 +1,18 @@
 /**
  * Cart store for managing shopping cart state
+ *
+ * State: client-side only (Zustand + persist middleware → localStorage)
+ * Persists only the `items` array (selectors are computed, not stored).
  */
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { CartItem, CartState, ProductoParaCarrito } from './types'
+import { COSTO_ENVIO_FLAT, CART_STORAGE_KEY, CART_MAX_ITEMS } from './types'
 
-export interface CartItem {
-  productoId: string
-  producto: {
-    id: string
-    nombre: string
-    precio: number
-    imagen?: string
-  }
-  cantidad: number
-  personalizacion?: {
-    ingredienteId: string
-    removido: boolean
-  }[]
-}
-
-export interface CartState {
-  items: CartItem[]
-  addItem: (item: CartItem) => void
-  removeItem: (productoId: string) => void
-  updateQuantity: (productoId: string, cantidad: number) => void
-  clearCart: () => void
-  totalItems: () => number
-  subtotal: () => number
-  total: () => number
+function buildItemKey(productoId: number, personalizacion: number[]): string {
+  const sorted = [...personalizacion].sort()
+  return `${productoId}_${JSON.stringify(sorted)}`
 }
 
 export const useCartStore = create<CartState>()(
@@ -36,40 +20,84 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
 
-      addItem: (item: CartItem) => {
+      addItem: (producto: ProductoParaCarrito, cantidad = 1, personalizacion: number[] = []) => {
+        if (cantidad <= 0) return
+
         const { items } = get()
+        const productoId = producto.id
+        const newKey = buildItemKey(productoId, personalizacion)
+
         const existingIndex = items.findIndex(
-          (i) => i.productoId === item.productoId
+          (item) => buildItemKey(item.productoId, item.personalizacion) === newKey
         )
 
         if (existingIndex >= 0) {
+          // Same product + same personalization → increment quantity
           const updated = [...items]
-          updated[existingIndex] = {
-            ...updated[existingIndex],
-            cantidad: updated[existingIndex].cantidad + item.cantidad,
-          }
+          const current = updated[existingIndex]
+          const newCantidad = Math.min(current.cantidad + cantidad, CART_MAX_ITEMS)
+          updated[existingIndex] = { ...current, cantidad: newCantidad }
           set({ items: updated })
         } else {
-          set({ items: [...items, item] })
+          // New entry
+          const precio =
+            typeof producto.precio_base === 'string'
+              ? parseFloat(producto.precio_base)
+              : producto.precio_base
+
+          const newItem: CartItem = {
+            productoId,
+            nombre: producto.nombre,
+            precio,
+            imagenUrl: producto.imagen ?? '',
+            cantidad: Math.min(cantidad, CART_MAX_ITEMS),
+            personalizacion,
+            ingredientes: producto.ingredientes ?? [],
+          }
+          set({ items: [...items, newItem] })
         }
       },
 
-      removeItem: (productoId: string) => {
+      removeItem: (productoId: number, personalizacion?: number[]) => {
         const { items } = get()
-        set({ items: items.filter((i) => i.productoId !== productoId) })
+        if (personalizacion !== undefined) {
+          const key = buildItemKey(productoId, personalizacion)
+          set({ items: items.filter((i) => buildItemKey(i.productoId, i.personalizacion) !== key) })
+        } else {
+          set({ items: items.filter((i) => i.productoId !== productoId) })
+        }
       },
 
-      updateQuantity: (productoId: string, cantidad: number) => {
+      updateQuantity: (productoId: number, cantidad: number, personalizacion?: number[]) => {
         const { items } = get()
+
         if (cantidad <= 0) {
-          set({ items: items.filter((i) => i.productoId !== productoId) })
+          // Remove the item
+          if (personalizacion !== undefined) {
+            const key = buildItemKey(productoId, personalizacion)
+            set({ items: items.filter((i) => buildItemKey(i.productoId, i.personalizacion) !== key) })
+          } else {
+            set({ items: items.filter((i) => i.productoId !== productoId) })
+          }
           return
         }
-        set({
-          items: items.map((i) =>
-            i.productoId === productoId ? { ...i, cantidad } : i
-          ),
-        })
+
+        const clamped = Math.min(cantidad, CART_MAX_ITEMS)
+
+        if (personalizacion !== undefined) {
+          const key = buildItemKey(productoId, personalizacion)
+          set({
+            items: items.map((i) =>
+              buildItemKey(i.productoId, i.personalizacion) === key ? { ...i, cantidad: clamped } : i
+            ),
+          })
+        } else {
+          set({
+            items: items.map((i) =>
+              i.productoId === productoId ? { ...i, cantidad: clamped } : i
+            ),
+          })
+        }
       },
 
       clearCart: () => {
@@ -81,18 +109,20 @@ export const useCartStore = create<CartState>()(
       },
 
       subtotal: () => {
-        return get().items.reduce(
-          (sum, item) => sum + item.producto.precio * item.cantidad,
-          0
-        )
+        return get().items.reduce((sum, item) => sum + item.precio * item.cantidad, 0)
+      },
+
+      costoEnvio: () => {
+        return get().items.length > 0 ? COSTO_ENVIO_FLAT : 0
       },
 
       total: () => {
-        return get().subtotal()
+        const state = get()
+        return state.subtotal() + state.costoEnvio()
       },
     }),
     {
-      name: 'food-store-cart',
+      name: CART_STORAGE_KEY,
       partialize: (state) => ({
         items: state.items,
       }),

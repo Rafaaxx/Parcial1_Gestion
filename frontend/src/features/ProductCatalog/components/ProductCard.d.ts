@@ -1,6 +1,7 @@
 /**
  * ProductCard Component
- * Displays a single product in card format with image, price, categories, and availability
+ * Displays a single product in card format with image, price, categories, availability,
+ * and an "Agregar al carrito" button.
  */
 import { ProductListItem } from '../types/catalog';
 interface ProductCardProps {

@@ -1,9 +1,11 @@
 /**
  * ProductCard Component
- * Displays a single product in card format with image, price, categories, and availability
+ * Displays a single product in card format with image, price, categories, availability,
+ * and an "Agregar al carrito" button.
  */
 
 import { ProductListItem } from '../types/catalog'
+import { AddToCartButton } from '@/features/cart/components/AddToCartButton'
 
 interface ProductCardProps {
   product: ProductListItem
@@ -11,9 +13,19 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onClick }: ProductCardProps) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.key === 'Enter' || e.key === ' ') && onClick) {
+      e.preventDefault()
+      onClick()
+    }
+  }
+
   return (
-    <button
+    <div
       onClick={onClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
       className="group relative flex flex-col h-full bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer hover:-translate-y-1"
       aria-label={`Product: ${product.nombre}`}
     >
@@ -98,7 +110,17 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
           </div>
           <p className="text-xs text-gray-500 mt-1">per unit</p>
         </div>
+
+        {/* Add to Cart Button */}
+        {product.disponible && (
+          <div className="mt-3">
+            <AddToCartButton
+              producto={product}
+              className="w-full text-center"
+            />
+          </div>
+        )}
       </div>
-    </button>
+    </div>
   )
 }

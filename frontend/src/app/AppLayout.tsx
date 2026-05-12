@@ -12,6 +12,9 @@ import { Breadcrumbs } from '@/shared/ui/Breadcrumbs'
 import { Footer } from '@/shared/ui/Footer'
 import { UserDropdown } from '@/shared/ui/UserDropdown'
 import { CartBadge } from '@/shared/ui/CartBadge'
+import { CartDrawer } from '@/features/cart/components/CartDrawer'
+import { useCartUIStore } from '@/features/cart/stores/cartUIStore'
+import { ToastNotifierProvider } from '@/features/cart/components/ToastNotifier'
 import { Skeleton } from '@/shared/ui/Skeleton'
 
 export const AppLayout: React.FC = () => {
@@ -22,6 +25,8 @@ export const AppLayout: React.FC = () => {
   const restoreSession = useAuthStore((s) => s.restoreSession)
   const { theme, toggleTheme, applyTheme } = useTheme()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const isCartDrawerOpen = useCartUIStore((s) => s.isDrawerOpen)
+  const closeCartDrawer = useCartUIStore((s) => s.closeCart)
 
   // Apply theme on mount
   useEffect(() => {
@@ -146,19 +151,24 @@ export const AppLayout: React.FC = () => {
       <Breadcrumbs />
 
       {/* Main content */}
-      <main className="flex-1 container mx-auto px-4 py-6">
-        <React.Suspense
-          fallback={
-            <div className="space-y-4">
-              <Skeleton height="2rem" width="60%" />
-              <Skeleton height="1rem" count={3} />
-              <Skeleton height="12rem" />
-            </div>
-          }
-        >
-          <Outlet />
-        </React.Suspense>
-      </main>
+      <ToastNotifierProvider>
+        <main className="flex-1 container mx-auto px-4 py-6">
+          <React.Suspense
+            fallback={
+              <div className="space-y-4">
+                <Skeleton height="2rem" width="60%" />
+                <Skeleton height="1rem" count={3} />
+                <Skeleton height="12rem" />
+              </div>
+            }
+          >
+            <Outlet />
+          </React.Suspense>
+        </main>
+      </ToastNotifierProvider>
+
+      {/* Cart Drawer */}
+      <CartDrawer isOpen={isCartDrawerOpen} onClose={closeCartDrawer} />
 
       {/* Footer */}
       <Footer />
