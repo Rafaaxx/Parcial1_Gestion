@@ -4,7 +4,7 @@ from sqlmodel import SQLModel, Field, Relationship
 from app.models.mixins import BaseModel
 
 if TYPE_CHECKING:
-    pass
+    from app.models.producto import ProductoCategoria
 
 
 class Categoria(BaseModel, table=True):
@@ -49,5 +49,13 @@ class Categoria(BaseModel, table=True):
         sa_relationship_kwargs={
             "cascade": "all, delete-orphan",
             "foreign_keys": "[Categoria.parent_id]",
+        }
+    )
+    # Relationships for CHANGE-06: producto-category associations
+    productos: List["ProductoCategoria"] = Relationship(
+        back_populates="categoria",
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan",
+            "foreign_keys": "[ProductoCategoria.categoria_id]",
         }
     )

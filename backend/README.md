@@ -355,6 +355,123 @@ All 20+ integration tests cover CRUD operations, soft-delete, pagination, filter
 
 
 
+### Productos (CHANGE-06)
+
+The `Productos` module provides comprehensive product catalog management with stock tracking, availability control, and N:M associations with categories and ingredients.
+
+#### Features
+
+- **Full CRUD Operations**: Create, read, update, and soft-delete products
+- **Soft Delete Pattern**: Products are never physically deleted, only marked with `deleted_at` timestamp
+- **Stock Management**: Atomic stock updates using `SELECT FOR UPDATE` to prevent race conditions
+- **Availability Toggle**: Independent `disponible` flag (separate from stock quantity)
+- **Price Precision**: Decimal storage (2 decimal places) for accurate pricing
+- **N:M Associations**: Products linked to multiple categories and ingredients
+- **Ingredient Removibility**: Each product-ingredient link has `es_removible` flag for order personalization
+- **Allergen Display**: Ingredients with `es_alergeno=true` display badges in the public catalog
+- **Filtering & Pagination**: Filter by category, availability, name search, price range
+- **RBAC**: STOCK and ADMIN can create/update/delete; PUBLIC can read catalog
+
+#### API Endpoints
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/v1/productos` | STOCK, ADMIN | Create new product |
+| `GET` | `/api/v1/productos` | Public | List products with filters |
+| `GET` | `/api/v1/productos/{id}` | Public | Get product detail |
+| `PUT` | `/api/v1/productos/{id}` | STOCK, ADMIN | Update product |
+| `DELETE` | `/api/v1/productos/{id}` | ADMIN | Soft-delete product |
+| `PATCH` | `/api/v1/productos/{id}/stock` | STOCK, ADMIN | Update stock atomically |
+| `PATCH` | `/api/v1/productos/{id}/disponibilidad` | STOCK, ADMIN | Toggle availability |
+| `POST` | `/api/v1/productos/{id}/categorias` | STOCK, ADMIN | Add category to product |
+| `DELETE` | `/api/v1/productos/{id}/categorias/{cat_id}` | STOCK, ADMIN | Remove category |
+| `GET` | `/api/v1/productos/{id}/ingredientes` | Public | List product ingredients |
+| `POST` | `/api/v1/productos/{id}/ingredientes` | STOCK, ADMIN | Add ingredient |
+| `DELETE` | `/api/v1/productos/{id}/ingredientes/{ing_id}` | STOCK, ADMIN | Remove ingredient |
+
+#### Example Requests
+
+**Create a product:**
+
+```bash
+curl -X POST http://localhost:8000/api/v1/productos \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Pizza Margherita",
+    "descripcion": "Pizza clásica italiana",
+    "precio_base": 150.00,
+    "stock_cantidad": 50,
+    "disponible": true
+  }'
+```
+
+Response (201 Created):
+
+```json
+{
+  "id": 1,
+  "nombre": "Pizza Margherita",
+  "descripcion": "Pizza clásica italiana",
+  "precio_base": "150.00",
+  "disponible": true,
+  "imagen": null,
+  "created_at": "2026-05-11T12:00:00Z",
+  "updated_at": "2026-05-11T12:00:00Z",
+  "deleted_at": null
+}
+```
+
+**List products with filters:**
+
+```bash
+curl "http://localhost:8000/api/v1/productos?disponible=true&precio_desde=100&precio_hasta=500&skip=0&limit=20"
+```
+
+**Update stock:**
+
+```bash
+curl -X PATCH http://localhost:8000/api/v1/productos/1/stock \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"stock_cantidad": 75}'
+```
+
+#### Implementation Details
+
+**Database Tables:**
+
+- `productos`: Main product table (id, nombre, descripcion, precio_base, stock_cantidad, disponible, imagen)
+- `productos_categorias`: Pivot table for N:M product-category relationship (es_principal flag)
+- `productos_ingredientes`: Pivot table for N:M product-ingredient relationship (es_removible flag)
+
+**Layers:**
+
+1. **Model**: `app/models/producto.py` — SQLModel ORM (Producto, ProductoCategoria, ProductoIngrediente)
+2. **Schema**: `app/modules/productos/schemas.py` — 15+ Pydantic schemas for requests/responses
+3. **Repository**: `app/repositories/producto_repository.py` — Data access with atomic stock updates
+4. **Service**: `app/modules/productos/service.py` — Business logic (uniqueness, stock validation)
+5. **Router**: `app/modules/productos/router.py` — 12 REST endpoints with RBAC
+
+**Error Responses:**
+
+- `409 Conflict`: Duplicate product name, duplicate category/ingredient association
+- `404 Not Found`: Product/category/ingredient not found
+- `422 Unprocessable Entity`: Validation error (negative price, negative stock)
+- `403 Forbidden`: Insufficient permissions
+
+#### Testing
+
+Run integration tests for productos:
+
+```bash
+pytest backend/tests/integration/test_productos_api.py -v
+```
+
+All 34 integration tests cover CRUD, soft-delete, pagination, filters, stock management, associations, and RBAC.
+
+
+
 ### CORS Configuration
 
 CORS (Cross-Origin Resource Sharing) allows the frontend to make requests to the API from different domains.

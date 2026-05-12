@@ -34,6 +34,46 @@
       "prompts": 0
     },
     {
+      "id": "0f210202",
+      "created_by": "Lauti Ferreria",
+      "created_at": "2026-05-10T23:38:59Z",
+      "sessions": 2,
+      "memories": 0,
+      "prompts": 4
+    },
+    {
+      "id": "53ac8f71",
+      "created_by": "rafan",
+      "created_at": "2026-05-11T03:42:44Z",
+      "sessions": 3,
+      "memories": 7,
+      "prompts": 39
+    },
+    {
+      "id": "12d67b8c",
+      "created_by": "rafan",
+      "created_at": "2026-05-11T13:17:13Z",
+      "sessions": 1,
+      "memories": 1,
+      "prompts": 3
+    },
+    {
+      "id": "7a2842f4",
+      "created_by": "rafan",
+      "created_at": "2026-05-11T19:34:29Z",
+      "sessions": 7,
+      "memories": 6,
+      "prompts": 35
+    },
+    {
+      "id": "b2172c0f",
+      "created_by": "rafan",
+      "created_at": "2026-05-11T20:27:18Z",
+      "sessions": 4,
+      "memories": 4,
+      "prompts": 12
+    },
+    {
       "id": "86e8dcb3",
       "created_by": "lucas",
       "created_at": "2026-05-11T23:22:11Z",
