@@ -26,7 +26,7 @@
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
     "jsx": "react-jsx",
-    "types": ["vite/client"],
+    "types": ["vite/client", "@testing-library/jest-dom", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],

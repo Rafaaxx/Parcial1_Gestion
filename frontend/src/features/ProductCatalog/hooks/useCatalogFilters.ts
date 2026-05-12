@@ -4,9 +4,9 @@
  */
 
 import { useQuery, useQueryClient, UseQueryResult } from '@tanstack/react-query'
-import { getProducts } from '../api/catalogApi'
+import { getProducts, getProductDetail } from '../api/catalogApi'
 import { useCatalogStore } from '../stores/catalogStore'
-import { ProductListItem, ProductsResponse } from '../types/catalog'
+import { ProductListItem, ProductsResponse, ProductDetail } from '../types/catalog'
 
 interface UseCatalogProductsResult {
   products: ProductListItem[]
@@ -64,8 +64,6 @@ export function useInvalidateProducts() {
  * Hook to fetch product detail with caching
  */
 export function useProductDetail(id: number) {
-  const { getProductDetail } = require('../api/catalogApi')
-
   const query = useQuery({
     queryKey: ['producto-detail', id],
     queryFn: () => getProductDetail(id),

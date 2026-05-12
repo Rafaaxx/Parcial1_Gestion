@@ -21,6 +21,10 @@ export interface AuthState {
     setRehydrated: () => void;
     restoreSession: () => Promise<void>;
 }
+/**
+ * Check if user has any of the required roles (standalone utility for legacy components)
+ */
+export declare function userHasRole(user: User | null, requiredRoles: string[]): boolean;
 export declare const useAuthStore: import("zustand").UseBoundStore<Omit<import("zustand").StoreApi<AuthState>, "persist"> & {
     persist: {
         setOptions: (options: Partial<import("zustand/middleware").PersistOptions<AuthState, {

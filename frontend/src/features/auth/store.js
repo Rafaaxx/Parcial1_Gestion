@@ -4,6 +4,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { apiClient } from '@/shared/http/client';
+/**
+ * Check if user has any of the required roles (standalone utility for legacy components)
+ */
+export function userHasRole(user, requiredRoles) {
+    if (!user)
+        return false;
+    return requiredRoles.some((role) => user.roles.includes(role));
+}
 export const useAuthStore = create()(persist((set, get) => ({
     user: null,
     token: null,
