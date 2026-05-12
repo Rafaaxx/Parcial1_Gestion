@@ -7,11 +7,12 @@ export interface AllergenInfo {
     nombre: string;
     es_alergeno: boolean;
 }
-/** Ingredient information with allergen flag */
+/** Ingredient information with allergen and removable flags */
 export interface IngredientInfo {
     id: number;
     nombre: string;
     es_alergeno: boolean;
+    es_removible?: boolean;
 }
 /** Category information */
 export interface CategoryInfo {

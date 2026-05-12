@@ -1,29 +1,47 @@
 /**
- * Cart store interface for CHANGE-08 (Shopping Cart)
- * Reserved for future implementation
+ * Cart store types for CHANGE-08 (Shopping Cart)
+ *
+ * - CartItem stores a snapshot of product data at the time of adding.
+ * - personalizacion is an array of ingredient IDs that the user wants excluded/removed.
+ * - Duplicate detection uses productoId + personalizacion (same product with different
+ *   personalization = separate cart entries).
  */
+import type { IngredientInfo } from '@/features/ProductCatalog/types/catalog';
 export interface CartItem {
-    productoId: string;
-    producto: {
-        id: string;
-        nombre: string;
-        precio: number;
-        imagen?: string;
-    };
+    productoId: number;
+    nombre: string;
+    /** precio snapshot at the time the item was added to cart */
+    precio: number;
+    imagenUrl: string;
     cantidad: number;
-    personalizacion?: {
-        ingredienteId: string;
-        removido: boolean;
-    }[];
+    /** IDs of ingredients the user chose to remove (excluded) */
+    personalizacion: number[];
+    /** Full ingredient info for display (names of excluded ingredients, etc.) */
+    ingredientes: IngredientInfo[];
+}
+/**
+ * Minimal product shape accepted by addItem.
+ * Both ProductListItem and ProductDetail from the catalog match this interface.
+ */
+export interface ProductoParaCarrito {
+    id: number;
+    nombre: string;
+    precio_base: number | string;
+    imagen?: string | null;
+    ingredientes?: IngredientInfo[];
 }
 export interface CartState {
     items: CartItem[];
-    addItem: (item: CartItem) => void;
-    removeItem: (productoId: string) => void;
-    updateQuantity: (productoId: string, cantidad: number) => void;
+    addItem: (producto: ProductoParaCarrito, cantidad?: number, personalizacion?: number[]) => void;
+    removeItem: (productoId: number, personalizacion?: number[]) => void;
+    updateQuantity: (productoId: number, cantidad: number, personalizacion?: number[]) => void;
     clearCart: () => void;
     totalItems: () => number;
     subtotal: () => number;
+    costoEnvio: () => number;
     total: () => number;
 }
+export declare const COSTO_ENVIO_FLAT = 50;
+export declare const CART_STORAGE_KEY = "food-store-cart";
+export declare const CART_MAX_ITEMS = 50;
 //# sourceMappingURL=types.d.ts.map

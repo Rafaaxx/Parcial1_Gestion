@@ -1,22 +1,26 @@
 /**
  * CartBadge component showing item count with shopping cart icon
+ *
+ * - Primary click: opens CartDrawer (slide-over panel)
+ * - Secondary: link to /carrito full page is available via the NavMenu "Mi Carrito" link
  */
 
 import React from 'react'
-import { Link } from 'react-router-dom'
 import { useAuth } from '@/shared/hooks/useAuth'
 import { useCartStore } from '@/features/cart/store'
+import { useCartUIStore } from '@/features/cart/stores/cartUIStore'
 
 export const CartBadge: React.FC = () => {
   const { user, hasRole } = useAuth()
   const count = useCartStore((state) => state.totalItems())
+  const openCart = useCartUIStore((s) => s.openCart)
 
   // Only visible for CLIENT role or any authenticated user
   if (!user || !hasRole('CLIENT')) return null
 
   return (
-    <Link
-      to="/carrito"
+    <button
+      onClick={openCart}
       className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
       aria-label={`Carrito de compras${count > 0 ? `, ${count} artículos` : ''}`}
     >
@@ -39,7 +43,7 @@ export const CartBadge: React.FC = () => {
           {count > 99 ? '99+' : count}
         </span>
       )}
-    </Link>
+    </button>
   )
 }
 
