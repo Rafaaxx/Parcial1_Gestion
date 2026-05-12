@@ -114,6 +114,7 @@ class ProductoService:
         busqueda: Optional[str] = None,
         precio_desde: Optional[Decimal] = None,
         precio_hasta: Optional[Decimal] = None,
+        allergen_ids: Optional[List[int]] = None,
         include_stock: bool = False,
     ) -> ProductoListResponse:
         """
@@ -127,6 +128,7 @@ class ProductoService:
             busqueda: Search by name (case-insensitive)
             precio_desde: Minimum price
             precio_hasta: Maximum price
+            allergen_ids: List of ingredient IDs to exclude (allergens)
             include_stock: If True, includes stock_cantidad in response
             
         Returns:
@@ -140,6 +142,7 @@ class ProductoService:
             busqueda=busqueda,
             precio_desde=precio_desde,
             precio_hasta=precio_hasta,
+            allergen_ids=allergen_ids or [],
         )
         
         items = [

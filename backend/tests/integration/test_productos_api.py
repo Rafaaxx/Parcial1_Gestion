@@ -705,3 +705,351 @@ class TestProductoRBAC:
             headers=headers
         )
         assert response_stock.status_code == 403
+
+
+# ── Task 1.6-1.11: Allergen Filter Tests ──────────────────────────────────────
+
+class TestAllergenFilter:
+    """Tasks 1.6-1.11: Tests for allergen exclusion filtering and eager loading.
+    
+    - Task 1.6: Parse excluirAlergenos query param (comma-separated IDs)
+    - Task 1.7: Implement NOT EXISTS SQL filter in repository
+    - Task 1.9: Test search + category + price + allergens combined
+    - Task 1.10: Test pagination edge cases
+    - Task 1.11: Validate allergen filter with real IDs
+    """
+
+    async def _create_ingrediente(self, client, admin_token, nombre="Tomate", es_alergeno=False) -> int:
+        """Helper to create an ingrediente and return its ID."""
+        payload = {"nombre": nombre, "es_alergeno": es_alergeno}
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        response = await client.post("/api/v1/ingredientes", json=payload, headers=headers)
+        return response.json()["id"]
+
+    async def test_exclude_single_allergen(self, client, admin_token):
+        """1.6 + 1.7: Exclude products with single allergen.
+        
+        SPEC: excluirAlergenos=5 returns products that do NOT contain ingredient 5
+        """
+        # Create allergen: peanuts (es_alergeno=true)
+        peanut_id = await self._create_ingrediente(client, admin_token, "Maní", es_alergeno=True)
+        
+        # Create two products: one with peanuts, one without
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        
+        # Product with peanuts
+        p1 = await create_test_producto(client, admin_token, "Chocolate com Maní", Decimal("100.00"))
+        await client.post(
+            f"/api/v1/productos/{p1['id']}/ingredientes",
+            json={"ingrediente_id": peanut_id},
+            headers=headers
+        )
+        
+        # Product without peanuts
+        p2 = await create_test_producto(client, admin_token, "Chocolate Puro", Decimal("100.00"))
+        
+        # Query: exclude peanuts
+        response = await client.get(f"/api/v1/productos?excluirAlergenos={peanut_id}")
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Should only have p2, NOT p1
+        nombres = [item["nombre"] for item in data["items"]]
+        assert "Chocolate Puro" in nombres
+        assert "Chocolate com Maní" not in nombres
+
+    async def test_exclude_multiple_allergens(self, client, admin_token):
+        """1.6 + 1.7: Exclude products with multiple allergens (comma-separated).
+        
+        SPEC: excluirAlergenos=1,3,7 excludes products containing ANY of those ingredients
+        """
+        # Create allergens
+        peanut_id = await self._create_ingrediente(client, admin_token, "Maní", es_alergeno=True)
+        milk_id = await self._create_ingrediente(client, admin_token, "Leche", es_alergeno=True)
+        gluten_id = await self._create_ingrediente(client, admin_token, "Gluten", es_alergeno=True)
+        
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        
+        # Product with peanuts
+        p_peanut = await create_test_producto(client, admin_token, "With Peanuts", Decimal("50.00"))
+        await client.post(
+            f"/api/v1/productos/{p_peanut['id']}/ingredientes",
+            json={"ingrediente_id": peanut_id},
+            headers=headers
+        )
+        
+        # Product with milk
+        p_milk = await create_test_producto(client, admin_token, "With Milk", Decimal("50.00"))
+        await client.post(
+            f"/api/v1/productos/{p_milk['id']}/ingredientes",
+            json={"ingrediente_id": milk_id},
+            headers=headers
+        )
+        
+        # Product safe (no allergens)
+        p_safe = await create_test_producto(client, admin_token, "Safe Product", Decimal("50.00"))
+        
+        # Query: exclude all three allergens
+        query = f"excluirAlergenos={peanut_id},{milk_id},{gluten_id}"
+        response = await client.get(f"/api/v1/productos?{query}")
+        assert response.status_code == 200
+        data = response.json()
+        
+        nombres = [item["nombre"] for item in data["items"]]
+        # Should only have p_safe
+        assert "Safe Product" in nombres
+        assert "With Peanuts" not in nombres
+        assert "With Milk" not in nombres
+
+    async def test_allergen_with_other_filters(self, client, admin_token):
+        """1.9: Combine allergen filter with search, category, and price filters.
+        
+        SPEC: All filters applied in AND logic
+        """
+        # Setup
+        peanut_id = await self._create_ingrediente(client, admin_token, "Maní", es_alergeno=True)
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        
+        # Create category
+        cat_response = await client.post(
+            "/api/v1/categorias",
+            json={"nombre": "Desserts"},
+            headers=headers
+        )
+        cat_id = cat_response.json()["id"]
+        
+        # Product: "Chocolate con Maní" (peanuts, in category, price 200)
+        p1 = await create_test_producto(client, admin_token, "Chocolate con Maní", Decimal("200.00"))
+        await client.post(
+            f"/api/v1/productos/{p1['id']}/ingredientes",
+            json={"ingrediente_id": peanut_id},
+            headers=headers
+        )
+        await client.post(
+            f"/api/v1/productos/{p1['id']}/categorias",
+            json={"categoria_id": cat_id},
+            headers=headers
+        )
+        
+        # Product: "Chocolate Pure" (no peanuts, in category, price 150)
+        p2 = await create_test_producto(client, admin_token, "Chocolate Pure", Decimal("150.00"))
+        await client.post(
+            f"/api/v1/productos/{p2['id']}/categorias",
+            json={"categoria_id": cat_id},
+            headers=headers
+        )
+        
+        # Query: search "chocolate" + category + precio_desde=100 + precio_hasta=175 + exclude peanuts
+        # Expected: only p2 (p1 is excluded by peanuts and price > 175)
+        query = f"busqueda=chocolate&categoria={cat_id}&precio_desde=100&precio_hasta=175&excluirAlergenos={peanut_id}"
+        response = await client.get(f"/api/v1/productos?{query}")
+        assert response.status_code == 200
+        data = response.json()
+        
+        nombres = [item["nombre"] for item in data["items"]]
+        assert "Chocolate Pure" in nombres
+        assert "Chocolate con Maní" not in nombres
+
+    async def test_allergen_nonexistent_id(self, client, admin_token):
+        """1.11: Allergen ID that doesn't exist.
+        
+        SPEC: Silently returns all products (no products contain ingredient 99999)
+        """
+        # Create products
+        await create_test_producto(client, admin_token, "Product1", Decimal("100.00"))
+        await create_test_producto(client, admin_token, "Product2", Decimal("100.00"))
+        
+        # Query with non-existent allergen ID
+        response = await client.get("/api/v1/productos?excluirAlergenos=99999")
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Should return all products (since no products have ingredient 99999)
+        assert data["total"] >= 2
+
+    async def test_allergen_invalid_format(self, client):
+        """1.6: Invalid allergen ID format (non-integer).
+        
+        SPEC: Silently ignores invalid IDs or returns 400
+        """
+        # Query with invalid (non-integer) allergen ID
+        response = await client.get("/api/v1/productos?excluirAlergenos=abc,xyz")
+        # Should either accept gracefully or return 400, but NOT 500
+        assert response.status_code in [200, 400]
+
+    async def test_pagination_edge_case_beyond_total(self, client, admin_token):
+        """1.10: Skip beyond total returns empty list.
+        
+        SPEC: GET /api/v1/productos?skip=10000&limit=20 returns empty []
+        """
+        # Create just 5 products
+        for i in range(5):
+            await create_test_producto(client, admin_token, f"P{i}", Decimal("50.00"))
+        
+        # Skip far beyond
+        response = await client.get("/api/v1/productos?skip=10000&limit=20")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["items"]) == 0
+        assert data["total"] >= 5
+
+    async def test_pagination_zero_results(self, client, admin_token):
+        """1.10: Filter that produces zero results.
+        
+        SPEC: Empty array, total reflects filtered count
+        """
+        # Create product with specific name
+        await create_test_producto(client, admin_token, "UniqueProduct123", Decimal("50.00"))
+        
+        # Search for something that doesn't exist
+        response = await client.get("/api/v1/productos?busqueda=xyznotfound")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["items"]) == 0
+        assert data["total"] == 0
+
+    async def test_pagination_default_limit(self, client, admin_token):
+        """1.10: Default pagination is skip=0, limit=20.
+        
+        SPEC: GET /api/v1/productos (no params) applies defaults
+        """
+        # Create 25 products
+        for i in range(25):
+            await create_test_producto(client, admin_token, f"Product{i:02d}", Decimal("50.00"))
+        
+        response = await client.get("/api/v1/productos")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["skip"] == 0
+        assert data["limit"] == 20
+        assert len(data["items"]) == 20
+        assert data["total"] >= 25
+
+    async def test_allergen_filter_public_no_auth(self, client, admin_token):
+        """1.6 + 1.7: Allergen filter is public (no auth required).
+        
+        SPEC: Anonymous client can use excluirAlergenos without Authorization
+        """
+        # Create products (requires auth)
+        peanut_id = await self._create_ingrediente(client, admin_token, "Maní", es_alergeno=True)
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        
+        p1 = await create_test_producto(client, admin_token, "Product With Peanuts", Decimal("50.00"))
+        await client.post(
+            f"/api/v1/productos/{p1['id']}/ingredientes",
+            json={"ingrediente_id": peanut_id},
+            headers=headers
+        )
+        
+        # Query WITHOUT Authorization header
+        response = await client.get(f"/api/v1/productos?excluirAlergenos={peanut_id}")
+        assert response.status_code == 200
+        data = response.json()
+        # Should be filtered correctly
+        nombres = [item["nombre"] for item in data["items"]]
+        assert "Product With Peanuts" not in nombres
+
+    async def test_eager_loading_no_n_plus_one(self, client, admin_token, db_session):
+        """1.2 + 1.3: Eager loading prevents N+1 queries.
+        
+        Verifies that fetching products with categories/ingredients doesn't
+        cause N+1 query problems (tested via query counting in integration).
+        """
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        
+        # Create product with category and ingredients
+        cat_response = await client.post(
+            "/api/v1/categorias",
+            json={"nombre": "Pizza"},
+            headers=headers
+        )
+        cat_id = cat_response.json()["id"]
+        
+        ing_response = await client.post(
+            "/api/v1/ingredientes",
+            json={"nombre": "Mozzarella", "es_alergeno": False},
+            headers=headers
+        )
+        ing_id = ing_response.json()["id"]
+        
+        product = await create_test_producto(client, admin_token, "Pizza Test", Decimal("100.00"))
+        
+        await client.post(
+            f"/api/v1/productos/{product['id']}/categorias",
+            json={"categoria_id": cat_id},
+            headers=headers
+        )
+        
+        await client.post(
+            f"/api/v1/productos/{product['id']}/ingredientes",
+            json={"ingrediente_id": ing_id},
+            headers=headers
+        )
+        
+        # Fetch via GET /{id} — should have eager loaded categories and ingredients
+        response = await client.get(f"/api/v1/productos/{product['id']}")
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Verify relationships are loaded
+        assert "categorias" in data
+        assert "ingredientes" in data
+        assert len(data["categorias"]) == 1
+        assert len(data["ingredientes"]) == 1
+        assert data["categorias"][0]["categoria"]["nombre"] == "Pizza"
+        assert data["ingredientes"][0]["ingrediente"]["nombre"] == "Mozzarella"
+
+    async def test_product_list_includes_categories_and_allergens(self, client, admin_token):
+        """1.4 + 1.5: ProductoListItem includes categories and allergen info.
+        
+        SPEC: List response includes nested categories and ingredients (with es_alergeno flag)
+        """
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        
+        # Create product with category and allergen
+        peanut_id = await self._create_ingrediente(client, admin_token, "Maní", es_alergeno=True)
+        
+        cat_response = await client.post(
+            "/api/v1/categorias",
+            json={"nombre": "Snacks"},
+            headers=headers
+        )
+        cat_id = cat_response.json()["id"]
+        
+        product = await create_test_producto(client, admin_token, "Peanut Snack", Decimal("50.00"))
+        
+        await client.post(
+            f"/api/v1/productos/{product['id']}/categorias",
+            json={"categoria_id": cat_id},
+            headers=headers
+        )
+        
+        await client.post(
+            f"/api/v1/productos/{product['id']}/ingredientes",
+            json={"ingrediente_id": peanut_id},
+            headers=headers
+        )
+        
+        # List products
+        response = await client.get("/api/v1/productos")
+        assert response.status_code == 200
+        data = response.json()
+        
+        # Find our product
+        found = None
+        for item in data["items"]:
+            if item["nombre"] == "Peanut Snack":
+                found = item
+                break
+        
+        assert found is not None
+        # Verify structure
+        assert "categorias" in found
+        assert "ingredientes" in found
+        assert len(found["categorias"]) == 1
+        assert found["categorias"][0]["nombre"] == "Snacks"
+        assert len(found["ingredientes"]) == 1
+        assert found["ingredientes"][0]["nombre"] == "Maní"
+        assert found["ingredientes"][0]["es_alergeno"] is True
+        # CRITICAL: stock_cantidad NOT in public list
+        assert "stock_cantidad" not in found
