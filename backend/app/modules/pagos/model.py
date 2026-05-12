@@ -37,7 +37,7 @@ class Pago(BaseModel, table=True):
         foreign_key="pedidos.id",
         nullable=False,
         index=True,
-        description="Pedido que se está pagando (CASCADE)",
+        description="Pedido que se esta pagando (CASCADE)",
     )
     mp_payment_id: Optional[int] = Field(
         default=None,
@@ -66,7 +66,8 @@ class Pago(BaseModel, table=True):
         description="Clave de idempotencia para prevenir cobros duplicados",
     )
     monto: Decimal = Field(
-        sa_column_kwargs={"nullable": False"},
+        default=Decimal("0.00"),
+        sa_column_kwargs={"nullable": False},
         description="Monto del pago (DECIMAL 10,2)",
     )
 
