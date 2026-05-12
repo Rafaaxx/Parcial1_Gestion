@@ -32,3 +32,4 @@ class Usuario(BaseModel, table=True):
         back_populates="usuario",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
+    pedidos: List["Pedido"] = Relationship(back_populates="usuario")

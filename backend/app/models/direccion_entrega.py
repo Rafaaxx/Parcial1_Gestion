@@ -1,5 +1,5 @@
 """DireccionEntrega model — delivery addresses for users with soft delete"""
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, List, TYPE_CHECKING
 from sqlmodel import SQLModel, Field, Relationship
 from app.models.mixins import BaseModel
 
@@ -46,3 +46,4 @@ class DireccionEntrega(BaseModel, table=True):
     usuario: Optional["Usuario"] = Relationship(
         back_populates="direcciones",
     )
+    pedidos: List["Pedido"] = Relationship(back_populates="direccion")
