@@ -144,4 +144,3 @@ Si `git push` falla (conflictos en remoto, sin acceso, etc.):
 | `docs/CHANGES.md` | Historial de cambios del proyecto |
 | `backend/README.md` | Setup y estructura del backend |
 | `frontend/README.md` | Setup y estructura del frontend |
-

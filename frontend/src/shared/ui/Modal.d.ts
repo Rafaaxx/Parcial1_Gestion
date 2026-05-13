@@ -15,4 +15,4 @@ export interface ModalProps {
     children?: React.ReactNode;
 }
 export declare const Modal: React.FC<ModalProps>;
-//# sourceMappingURL=modal.d.ts.map
+//# sourceMappingURL=Modal.d.ts.map

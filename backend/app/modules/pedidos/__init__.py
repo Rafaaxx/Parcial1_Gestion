@@ -7,8 +7,11 @@ from app.modules.pedidos.schemas import (
     PedidoRead,
     PedidoDetail,
     PedidoListResponse,
+    AvanzarEstadoRequest,
+    TransicionResponse,
 )
 from app.modules.pedidos.service import PedidoService, StockInsufficientError, PaymentMethodNotFoundError
+from app.modules.pedidos.fsm import EstadoPedido, es_estado_terminal, is_valid_state
 
 __all__ = [
     "CrearPedidoRequest",
@@ -18,7 +21,12 @@ __all__ = [
     "PedidoRead",
     "PedidoDetail",
     "PedidoListResponse",
+    "AvanzarEstadoRequest",
+    "TransicionResponse",
     "PedidoService",
     "StockInsufficientError",
     "PaymentMethodNotFoundError",
+    "EstadoPedido",
+    "es_estado_terminal",
+    "is_valid_state",
 ]
