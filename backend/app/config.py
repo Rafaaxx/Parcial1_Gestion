@@ -72,6 +72,8 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_from_email: str = "no-reply@foodstore.com"
 
+    frontend_url: str = "http://localhost:5173"
+
     class Config:
         env_file = ".env"
         case_sensitive = False

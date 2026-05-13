@@ -6,7 +6,7 @@
 import React from 'react';
 import { IngredientList } from '@/features/ingredientes/ui';
 
-export const IngredientsAdminPage: React.FC = () => {
+const IngredientsAdminPage: React.FC = () => {
   return (
     <div className="p-8">
       <div className="mb-6">
@@ -20,3 +20,5 @@ export const IngredientsAdminPage: React.FC = () => {
     </div>
   );
 };
+
+export default IngredientsAdminPage;

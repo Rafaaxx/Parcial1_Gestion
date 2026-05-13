@@ -385,7 +385,7 @@ PENDIENTE ──[pago aprobado]──→ CONFIRMADO ──[gestión]──→ EN
 
 ### DOMINIO 4: Pagos e Integración
 
-#### CHANGE-12: Integración MercadoPago
+#### CHANGE-12: Integración MercadoPago ✅ (archivado 2026-05-12)
 
 | Campo | Valor |
 |-------|-------|
@@ -394,6 +394,8 @@ PENDIENTE ──[pago aprobado]──→ CONFIRMADO ──[gestión]──→ EN
 | **Funcionalidad** | SDK MP tokenización, crear pago, tabla Pago, idempotency_key |
 | **Dependencias** | CHANGE-09, CHANGE-01, CHANGE-00 |
 | **Duración estimada** | 16h |
+| **Estado** | ✅ Hecho (archivado 2026-05-12) |
+| **Evidencia** | `openspec/changes/archive/2026-05-12-change-12-mercadopago-checkout/` |
 
 **Modelo Pago**:
 - pedido_id, monto, mp_payment_id (UQ, nullable)
@@ -592,4 +594,5 @@ Para marcar como **completado y archivado**:
 
 ---
 
+**Última actualización**: 2026-05-12
 **Generado**: 2026-03-31 | **Especificación**: Food Store v5.0 | **Metodología**: SDD

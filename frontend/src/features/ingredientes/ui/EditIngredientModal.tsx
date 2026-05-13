@@ -6,9 +6,9 @@
 import { useState, useEffect } from 'react';
 import { useIngredienteDetail, useUpdateIngrediente } from '@/entities/ingrediente/hooks';
 import type { IngredienteUpdate } from '@/entities/ingrediente/types';
-import { Button } from '@/shared/ui/button';
-import { Modal } from '@/shared/ui/modal';
-import { Spinner } from '@/shared/ui/spinner';
+import { Button } from '@/shared/ui/Button';
+import { Modal } from '@/shared/ui/Modal';
+import { Spinner } from '@/shared/ui/Spinner';
 
 interface EditIngredientModalProps {
   ingredientId: number | null;

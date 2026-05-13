@@ -24,6 +24,7 @@ from app.models.categoria import Categoria
 from app.models.ingrediente import Ingrediente
 from app.models.estado_pedido import EstadoPedido
 from app.models.forma_pago import FormaPago
+from app.modules.pagos.model import Pago
 from app.config import settings
 
 logging.basicConfig(level=logging.INFO)

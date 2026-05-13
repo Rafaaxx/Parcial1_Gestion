@@ -17,6 +17,7 @@ from app.modules.ingredientes.router import router as ingredientes_router
 from app.modules.productos.router import router as productos_router
 from app.modules.direcciones.router import router as router_direcciones
 from app.modules.pedidos.router import router as pedidos_router
+from app.modules.pagos.router import router as pagos_router
 
 # Configure logging
 logging.basicConfig(level=settings.log_level)
@@ -136,6 +137,7 @@ app.include_router(router_direcciones)
 # ── Pedidos Router ───────────────────────────────────────────────────────────────
 
 app.include_router(pedidos_router, prefix="/api/v1")
+app.include_router(pagos_router, prefix="/api/v1")
 
 if __name__ == "__main__":
     import uvicorn

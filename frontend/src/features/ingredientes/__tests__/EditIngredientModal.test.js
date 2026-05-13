@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { EditIngredientModal } from '../EditIngredientModal';
+import { EditIngredientModal } from '../ui/EditIngredientModal';
 import * as api from '@/entities/ingrediente/api';
 // Mock the API module
 vi.mock('@/entities/ingrediente/api');
@@ -25,9 +25,9 @@ const mockIngredient = {
     id: 1,
     nombre: 'Tomate',
     es_alergeno: false,
-    creado_en: '2024-01-01',
-    actualizado_en: '2024-01-01',
-    eliminado_en: null,
+    created_at: '2024-01-01T00:00:00',
+    updated_at: '2024-01-01T00:00:00',
+    deleted_at: null,
 };
 describe('EditIngredientModal Component', () => {
     beforeEach(() => {

@@ -122,6 +122,30 @@
       "prompts": 9
     },
     {
+      "id": "80bc79d1",
+      "created_by": "Nicolas",
+      "created_at": "2026-05-12T23:24:15Z",
+      "sessions": 4,
+      "memories": 8,
+      "prompts": 14
+    },
+    {
+      "id": "251bcfa0",
+      "created_by": "Nicolas",
+      "created_at": "2026-05-12T23:33:33Z",
+      "sessions": 0,
+      "memories": 2,
+      "prompts": 2
+    },
+    {
+      "id": "b65efd73",
+      "created_by": "Nicolas",
+      "created_at": "2026-05-12T23:34:34Z",
+      "sessions": 1,
+      "memories": 1,
+      "prompts": 0
+    },
+    {
       "id": "5d20b908",
       "created_by": "rafan",
       "created_at": "2026-05-13T13:52:00Z",

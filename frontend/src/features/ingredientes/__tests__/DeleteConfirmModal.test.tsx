@@ -8,7 +8,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import { DeleteConfirmModal } from '../DeleteConfirmModal';
+import { DeleteConfirmModal } from '../ui/DeleteConfirmModal';
 import * as api from '@/entities/ingrediente/api';
 
 // Mock the API module

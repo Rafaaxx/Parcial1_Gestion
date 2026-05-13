@@ -6,7 +6,7 @@ import { jsx as _jsx } from "react/jsx-runtime";
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { IngredientList } from '../IngredientList';
+import { IngredientList } from '../ui/IngredientList';
 import * as api from '@/entities/ingrediente/api';
 // Mock the API module
 vi.mock('@/entities/ingrediente/api');
@@ -40,8 +40,8 @@ describe('IngredientList Component', () => {
     it('11.1a: renders list of ingredients from mock data', async () => {
         const mockIngredients = {
             items: [
-                { id: 1, nombre: 'Tomate', es_alergeno: false, creado_en: '2024-01-01' },
-                { id: 2, nombre: 'Maní', es_alergeno: true, creado_en: '2024-01-02' },
+                { id: 1, nombre: 'Tomate', es_alergeno: false, created_at: '2024-01-01T00:00:00', updated_at: '2024-01-01T00:00:00', deleted_at: null },
+                { id: 2, nombre: 'Maní', es_alergeno: true, created_at: '2024-01-02T00:00:00', updated_at: '2024-01-02T00:00:00', deleted_at: null },
             ],
             total: 2,
             skip: 0,
@@ -71,7 +71,7 @@ describe('IngredientList Component', () => {
     it('11.1d: Edit button opens EditIngredientModal', async () => {
         const mockIngredients = {
             items: [
-                { id: 1, nombre: 'Tomate', es_alergeno: false, creado_en: '2024-01-01' },
+                { id: 1, nombre: 'Tomate', es_alergeno: false, created_at: '2024-01-01T00:00:00', updated_at: '2024-01-01T00:00:00', deleted_at: null },
             ],
             total: 1,
             skip: 0,
@@ -91,7 +91,7 @@ describe('IngredientList Component', () => {
     it('11.1e: Delete button opens DeleteConfirmModal', async () => {
         const mockIngredients = {
             items: [
-                { id: 1, nombre: 'Tomate', es_alergeno: false, creado_en: '2024-01-01' },
+                { id: 1, nombre: 'Tomate', es_alergeno: false, created_at: '2024-01-01T00:00:00', updated_at: '2024-01-01T00:00:00', deleted_at: null },
             ],
             total: 1,
             skip: 0,

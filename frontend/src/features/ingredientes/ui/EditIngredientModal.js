@@ -5,9 +5,9 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  */
 import { useState, useEffect } from 'react';
 import { useIngredienteDetail, useUpdateIngrediente } from '@/entities/ingrediente/hooks';
-import { Button } from '@/shared/ui/button';
-import { Modal } from '@/shared/ui/modal';
-import { Spinner } from '@/shared/ui/spinner';
+import { Button } from '@/shared/ui/Button';
+import { Modal } from '@/shared/ui/Modal';
+import { Spinner } from '@/shared/ui/Spinner';
 export function EditIngredientModal({ ingredientId, isOpen, onClose, onSuccess, }) {
     const [nombre, setNombre] = useState('');
     const [esAlergeno, setEsAlergeno] = useState(false);

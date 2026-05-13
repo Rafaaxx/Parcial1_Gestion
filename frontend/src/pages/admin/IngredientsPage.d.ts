@@ -3,5 +3,6 @@
  * Lists all ingredients with CRUD operations (only for STOCK/ADMIN roles)
  */
 import React from 'react';
-export declare const IngredientsAdminPage: React.FC;
+declare const IngredientsAdminPage: React.FC;
+export default IngredientsAdminPage;
 //# sourceMappingURL=IngredientsPage.d.ts.map

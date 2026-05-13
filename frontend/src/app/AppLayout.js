@@ -32,6 +32,9 @@ export const AppLayout = () => {
     }, [theme, applyTheme]);
     // Restore user session after rehydration (if token exists but user is null)
     useEffect(() => {
+        if (token) {
+            localStorage.setItem('access_token', token);
+        }
         if (rehydrated && token && !user) {
             restoreSession();
         }
