@@ -11,8 +11,6 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-const token = localStorage.getItem('access_token')
-
 
 export type PaymentStatus = 'idle' | 'processing' | 'approved' | 'rejected' | 'error'
 
@@ -178,8 +176,8 @@ export const usePaymentStore = create<PaymentState>()(
         const { setProcessing, setInitPoint, setError } = get()
 
         // Get auth token from localStorage
+        const token = localStorage.getItem('access_token')
         const authHeader = token ? { Authorization: `Bearer ${token}` } : {}
-
         try {
           setProcessing(0)
 
