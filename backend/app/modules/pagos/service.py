@@ -9,6 +9,7 @@ import mercadopago
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.config import settings
 
 from app.uow import UnitOfWork
 from app.modules.pagos.model import Pago
@@ -87,10 +88,11 @@ class PagoService:
     def mp_client(self) -> mercadopago.SDK:
         """Lazy initialization of MercadoPago SDK."""
         if self._mp_client is None:
-            access_token = os.getenv("MP_ACCESS_TOKEN")
+            access_token = settings.mp_access_token
+            print("Access_Token: ", access_token)
             if not access_token:
                 raise ValueError("MP_ACCESS_TOKEN not configured")
-            self._mp_client = mercadopago.SDK(access_token)
+            self._mp_client = mercadopago.SDK(access_token,)
         return self._mp_client
 
     async def crear_pago(
@@ -155,14 +157,15 @@ class PagoService:
                     }
                 ],
                 "external_reference": external_reference,
-                "notification_url": os.getenv("MP_NOTIFICATION_URL", ""),
-                "auto_return": "all",
+                "notification_url": settings.mp_notification_url,
                 "back_urls": {
-                    "success": f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/checkout/success",
-                    "pending": f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/checkout/pending",
-                    "failure": f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/checkout/failure",
+                    "success": f"{settings.frontend_url}/checkout/success",
+                    "pending": f"{settings.frontend_url}/checkout/pending",
+                    "failure": f"{settings.frontend_url}/checkout/failure",
                 },
             }
+
+            print("Preference Data:", preference_data)
 
             # Use preference (checkout redirection) instead of direct card payment
             # This is simpler and more common for this use case

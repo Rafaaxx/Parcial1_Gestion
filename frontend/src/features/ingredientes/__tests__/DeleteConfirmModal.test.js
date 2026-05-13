@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { DeleteConfirmModal } from '../DeleteConfirmModal';
+import { DeleteConfirmModal } from '../ui/DeleteConfirmModal';
 import * as api from '@/entities/ingrediente/api';
 // Mock the API module
 vi.mock('@/entities/ingrediente/api');

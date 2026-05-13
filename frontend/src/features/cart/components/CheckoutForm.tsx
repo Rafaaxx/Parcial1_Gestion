@@ -3,7 +3,7 @@
  *
  * This component:
  * 1. Shows "Pagar con MercadoPago" button
- * 2. Calls POST /api/v1/pagos/crear
+ * 2. Creates order + payment in one flow (crearPedidoYPagar)
  * 3. Redirects to MP checkout (init_point)
  *
  * Note: We use checkout redirection, not direct card tokenization.
@@ -12,9 +12,14 @@
 
 import React from 'react'
 import { usePaymentStore } from '../stores/paymentStore'
-import { useCartStore } from '../stores'
 
 interface CheckoutFormProps {
+  /** Cart items to convert to order */
+  items: Array<{
+    productoId: number
+    cantidad: number
+    personalizacion: number[]
+  }>
   /** Called when payment is initiated (before redirect) */
   onPaymentStart?: () => void
   /** Called when there's an error */
@@ -22,25 +27,28 @@ interface CheckoutFormProps {
 }
 
 export const CheckoutForm: React.FC<CheckoutFormProps> = ({
+  items,
   onPaymentStart,
   onError,
 }) => {
-  const { createPayment, status, errorMessage } = usePaymentStore()
-  const pedidoId = useCartStore((s) => s.pedidoId)
+  const { crearPedidoYPagar, status, errorMessage } = usePaymentStore()
 
   const isLoading = status === 'processing'
+  const isDisabled = items.length === 0
 
   const handlePayment = async () => {
-    if (!pedidoId) {
-      onError?.('No hay pedido activo')
+    if (items.length === 0) {
+      onError?.('El carrito está vacío')
       return
     }
 
     try {
       onPaymentStart?.()
-      await createPayment(pedidoId)
-      // Redirect happens inside createPayment
+      await crearPedidoYPagar(items)
+      // Redirect happens inside crearPedidoYPagar
     } catch (error) {
+      console.log(error);
+      
       const message = error instanceof Error ? error.message : 'Error al iniciar pago'
       onError?.(message)
     }
@@ -65,12 +73,12 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
         <button
           onClick={handlePayment}
-          disabled={isLoading || !pedidoId}
+          disabled={isLoading || isDisabled}
           className={`
             w-full py-3 px-4 rounded-lg font-medium transition-colors
             flex items-center justify-center gap-2
             ${
-              isLoading || !pedidoId
+              isLoading || isDisabled
                 ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed'
                 : 'bg-blue-600 hover:bg-blue-700 text-white'
             }

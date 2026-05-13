@@ -10,6 +10,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { useCartStore } from '@/features/cart/store'
 import { CartSummary } from '@/features/cart/components/CartSummary'
+import { CheckoutForm } from '@/features/cart/components/CheckoutForm'
 import { useToast } from '@/features/cart/components/ToastNotifier'
 
 export const CartPage: React.FC = () => {
@@ -302,20 +303,17 @@ export const CartPage: React.FC = () => {
             </h2>
             <CartSummary hideCheckoutButton />
 
-            {/* Checkout button (disabled) */}
-            <div className="relative group mt-4">
-              <button
-                disabled
-                className="w-full py-3 px-4 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-semibold rounded-lg cursor-not-allowed text-sm"
-              >
-                Ir a pagar
-              </button>
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block">
-                <div className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs rounded py-1 px-2 whitespace-nowrap shadow-lg">
-                  Próximamente
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-100" />
-                </div>
-              </div>
+            {/* Checkout button - using CheckoutForm */}
+            <div className="mt-4">
+              <CheckoutForm
+                items={items.map(item => ({
+                  productoId: item.productoId,
+                  cantidad: item.cantidad,
+                  personalizacion: item.personalizacion,
+                }))}
+                onPaymentStart={() => showToast('info', 'Creando pedido...')}
+                onError={(error) => showToast('error', error)}
+              />
             </div>
 
             {/* Continue shopping */}

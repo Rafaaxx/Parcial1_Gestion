@@ -33,6 +33,13 @@ interface PaymentState {
   // Async actions (call API)
   createPayment: (pedidoId: number) => Promise<void>
   checkPaymentStatus: (pedidoId: number) => Promise<void>
+
+  // Create order + payment in one flow
+  crearPedidoYPagar: (items: Array<{
+    productoId: number
+    cantidad: number
+    personalizacion: number[]
+  }>) => Promise<number>
 }
 
 export const usePaymentStore = create<PaymentState>()(
@@ -84,15 +91,16 @@ export const usePaymentStore = create<PaymentState>()(
 
       createPayment: async (pedidoId: number) => {
         const { setProcessing, setInitPoint, setError } = get()
-
+        const token = localStorage.getItem('access_token')
+        const authHeader = token ? { Authorization: `Bearer ${token}` } : {}
         try {
           setProcessing(pedidoId)
 
-          const response = await fetch('/api/v1/pagos/crear', {
+          const response = await fetch('http://localhost:8000/api/v1/pagos/crear', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              // Add auth header - assume token is available
+              ...authHeader,
             },
             body: JSON.stringify({ pedido_id: pedidoId }),
           })
@@ -125,11 +133,13 @@ export const usePaymentStore = create<PaymentState>()(
 
       checkPaymentStatus: async (pedidoId: number) => {
         const { setApproved, setRejected, setError } = get()
+        const token = localStorage.getItem('access_token')
+        const authHeader = token ? { Authorization: `Bearer ${token}` } : {}
 
         try {
-          const response = await fetch(`/api/v1/pagos/${pedidoId}`, {
+          const response = await fetch(`http://localhost:8000/api/v1/pagos/${pedidoId}`, {
             headers: {
-              // Add auth header
+              ...authHeader,
             },
           })
 
@@ -160,6 +170,87 @@ export const usePaymentStore = create<PaymentState>()(
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Error desconocido'
           setError(message)
+        }
+      },
+
+      crearPedidoYPagar: async (items) => {
+        const { setProcessing, setInitPoint, setError } = get()
+
+        // Get auth token from localStorage
+        const token = localStorage.getItem('access_token')
+        const authHeader = token ? { Authorization: `Bearer ${token}` } : {}
+
+        try {
+          setProcessing(0)
+
+          // Step 1: Create the order
+          const pedidoRequest = {
+            items: items.map(item => ({
+              producto_id: item.productoId,
+              cantidad: item.cantidad,
+              personalizacion: item.personalizacion || null,
+            })),
+            forma_pago_codigo: 'MERCADOPAGO',
+          }
+
+          console.log(pedidoRequest);
+          
+
+          const pedidoResponse = await fetch('http://localhost:8000/api/v1/pedidos', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...authHeader,
+            },
+            body: JSON.stringify(pedidoRequest),
+          })
+
+          console.log(pedidoResponse);
+          
+
+          if (!pedidoResponse.ok) {
+            const error = await pedidoResponse.json()
+            throw new Error(error.detail || 'Error al crear el pedido')
+          }
+
+          const pedidoData = await pedidoResponse.json()
+          const pedidoId = pedidoData.id
+
+          setProcessing(pedidoId)
+
+          // Step 2: Create the payment
+          const pagoResponse = await fetch('http://localhost:8000/api/v1/pagos/crear', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...authHeader,
+            },
+            body: JSON.stringify({ pedido_id: pedidoId }),
+          })
+
+          if (!pagoResponse.ok) {
+            const error = await pagoResponse.json()
+            throw new Error(error.detail || 'Error al crear el pago')
+          }
+
+          const pagoData = await pagoResponse.json()
+
+          if (pagoData.init_point) {
+            setInitPoint(pagoData.init_point)
+            window.location.href = pagoData.init_point
+          } else if (pagoData.mp_status === 'approved') {
+            set({ status: 'approved', mpPaymentId: pagoData.mp_payment_id, pedidoId })
+          } else {
+            set({ status: 'processing', pedidoId })
+          }
+
+          return pedidoId
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Error desconocido'
+          console.log(message);
+          
+          setError(message)
+          throw error
         }
       },
     }),
