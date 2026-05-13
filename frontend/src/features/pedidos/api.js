@@ -2,7 +2,7 @@
  * API integration for Pedidos (Orders)
  * Handles all HTTP calls to the backend orders endpoints
  */
-import axios from 'axios';
+import { apiClient } from '@/shared/http/client';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const API_VERSION = '/api/v1';
 /**
@@ -18,7 +18,8 @@ const getAuthHeaders = () => {
                 return { Authorization: `Bearer ${token}` };
             }
         }
-    } catch (e) {
+    }
+    catch (e) {
         console.error('[DEBUG] Error reading token:', e);
     }
     return {};
@@ -44,7 +45,7 @@ export async function getPedidos(skip = 0, limit = 20, filtros) {
             if (filtros.busqueda)
                 params.busqueda = filtros.busqueda;
         }
-        const response = await axios.get(`${API_BASE}${API_VERSION}/pedidos`, { 
+        const response = await apiClient.get(`${API_BASE}${API_VERSION}/pedidos`, {
             params,
             headers: getAuthHeaders(),
         });
@@ -69,7 +70,7 @@ export async function getPedidos(skip = 0, limit = 20, filtros) {
  */
 export async function getPedidoDetail(id) {
     try {
-        const response = await axios.get(`${API_BASE}${API_VERSION}/pedidos/${id}`, { headers: getAuthHeaders() });
+        const response = await apiClient.get(`${API_BASE}${API_VERSION}/pedidos/${id}`, { headers: getAuthHeaders() });
         return response.data;
     }
     catch (error) {
@@ -93,7 +94,7 @@ export async function getPedidoDetail(id) {
  */
 export async function transicionarEstado(pedidoId, data) {
     try {
-        const response = await axios.patch(`${API_BASE}${API_VERSION}/pedidos/${pedidoId}/estado`, data, { headers: getAuthHeaders() });
+        const response = await apiClient.patch(`${API_BASE}${API_VERSION}/pedidos/${pedidoId}/estado`, data, { headers: getAuthHeaders() });
         return response.data;
     }
     catch (error) {
@@ -124,7 +125,7 @@ export async function transicionarEstado(pedidoId, data) {
  */
 export async function cancelarPedido(pedidoId, motivo) {
     try {
-        const response = await axios.delete(`${API_BASE}${API_VERSION}/pedidos/${pedidoId}`, { 
+        const response = await apiClient.delete(`${API_BASE}${API_VERSION}/pedidos/${pedidoId}`, {
             params: { motivo },
             headers: getAuthHeaders(),
         });
@@ -155,7 +156,7 @@ export async function cancelarPedido(pedidoId, motivo) {
  */
 export async function getPedidoHistorial(pedidoId) {
     try {
-        const response = await axios.get(`${API_BASE}${API_VERSION}/pedidos/${pedidoId}/historial`, { headers: getAuthHeaders() });
+        const response = await apiClient.get(`${API_BASE}${API_VERSION}/pedidos/${pedidoId}/historial`, { headers: getAuthHeaders() });
         return response.data;
     }
     catch (error) {

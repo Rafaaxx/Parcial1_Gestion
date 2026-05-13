@@ -3,7 +3,7 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
  * OrderDetailModal - Modal con tabs para ver detalle del pedido
  */
 import { useState } from 'react';
-import { Modal, Button } from '@/shared/ui';
+import { Modal } from '@/shared/ui';
 import { ESTADO_LABELS, ESTADO_COLORS } from '../types';
 import { HistorialTimeline } from './HistorialTimeline';
 import { getTransicionesDisponibles } from '../hooks';
@@ -20,7 +20,12 @@ export const OrderDetailModal = ({ pedido, open, onClose, }) => {
         motivo: '',
         error: '',
     });
-    if (!pedido)
+    // Handle loading state
+    if (pedido === undefined) {
+        return (_jsx(Modal, { isOpen: open, onClose: onClose, title: "Cargando...", children: _jsx("div", { className: "p-4 text-center", children: "Cargando detalles del pedido..." }) }));
+    }
+    // Handle no pedido selected
+    if (pedido === null)
         return null;
     const userRoles = user?.roles || [];
     const transiciones = getTransicionesDisponibles(pedido.estado_codigo, userRoles);
@@ -88,9 +93,30 @@ export const OrderDetailModal = ({ pedido, open, onClose, }) => {
                 return null;
         }
     };
-    return (_jsxs(_Fragment, { children: [_jsxs(Modal, { open: open, onClose: onClose, title: `Pedido #${pedido.id}`, size: "lg", actions: _jsxs(_Fragment, { children: [_jsx(Button, { variant: "outline", onClick: onClose, children: "Cerrar" }), transiciones.map((t, idx) => (_jsx(Button, { variant: t.nuevo_estado === 'CANCELADO' ? 'danger' : 'primary', onClick: () => handleTransicion(t), disabled: transicionMutation.isPending || cancelarMutation.isPending, children: t.label }, idx)))] }), children: [_jsx("div", { className: "flex border-b border-gray-200 dark:border-gray-700 mb-4", children: tabs.map((tab) => (_jsx("button", { onClick: () => setActiveTab(tab.id), className: `px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${activeTab === tab.id
+    const modalActions = [
+        { label: 'Cerrar', onClick: onClose, variant: 'secondary' },
+        ...transiciones.map((t) => ({
+            label: t.label,
+            onClick: () => handleTransicion(t),
+            variant: t.nuevo_estado === 'CANCELADO' ? 'danger' : 'primary',
+        })),
+    ];
+    const isMutating = transicionMutation.isPending || cancelarMutation.isPending;
+    // DEBUG: Show what's happening - MADE VERY VISIBLE
+    const debugInfo = (_jsxs("div", { style: {
+            backgroundColor: '#ff0000',
+            color: 'white',
+            padding: '20px',
+            margin: '10px 0',
+            fontSize: '16px',
+            fontWeight: 'bold'
+        }, children: [_jsx("div", { children: "\uD83D\uDEA8 DEBUG INFO:" }), _jsxs("div", { children: ["userRoles: ", JSON.stringify(userRoles)] }), _jsxs("div", { children: ["estado: ", pedido.estado_codigo] }), _jsxs("div", { children: ["transiciones: ", transiciones.length] }), transiciones.map((t, i) => (_jsxs("div", { style: { color: 'yellow' }, children: ["\uD83D\uDC49 ", t.label, " \u2192 ", t.nuevo_estado] }, i))), _jsxs("div", { children: ["actions array length: ", modalActions.length] })] }));
+    return (_jsxs(_Fragment, { children: [_jsxs(Modal, { isOpen: open, onClose: onClose, title: `Pedido #${pedido.id}`, actions: modalActions, children: [_jsx("div", { className: isMutating ? 'opacity-50 pointer-events-none' : '', children: debugInfo }), _jsx("div", { className: "flex border-b border-gray-200 dark:border-gray-700 mb-4", children: tabs.map((tab) => (_jsx("button", { onClick: () => setActiveTab(tab.id), className: `px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${activeTab === tab.id
                                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`, children: tab.label }, tab.id))) }), _jsx("div", { className: "min-h-[300px]", children: renderTabContent() })] }), _jsx(Modal, { open: cancelModal.open, onClose: () => setCancelModal({ open: false, motivo: '', error: '' }), title: "Cancelar Pedido", actions: _jsxs(_Fragment, { children: [_jsx(Button, { variant: "outline", onClick: () => setCancelModal({ open: false, motivo: '', error: '' }), children: "Cancelar" }), _jsx(Button, { variant: "danger", onClick: handleConfirmCancel, disabled: cancelarMutation.isPending, children: cancelarMutation.isPending ? 'Cancelando...' : 'Confirmar' })] }), children: _jsxs("div", { className: "space-y-4", children: [_jsxs("p", { className: "text-gray-600 dark:text-gray-400", children: ["\u00BFEst\u00E1s seguro de que deseas cancelar el pedido #", pedido.id, "?"] }), _jsxs("div", { children: [_jsxs("label", { className: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1", children: ["Motivo de cancelaci\u00F3n ", _jsx("span", { className: "text-red-500", children: "*" })] }), _jsx("textarea", { value: cancelModal.motivo, onChange: (e) => setCancelModal((prev) => ({ ...prev, motivo: e.target.value, error: '' })), placeholder: "Ingrese el motivo de la cancelaci\u00F3n...", rows: 3, className: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" }), cancelModal.error && (_jsx("p", { className: "text-red-500 text-sm mt-1", children: cancelModal.error }))] })] }) })] }));
+                                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`, children: tab.label }, tab.id))) }), _jsx("div", { className: "min-h-[300px]", children: renderTabContent() })] }), _jsx(Modal, { isOpen: cancelModal.open, onClose: () => setCancelModal({ open: false, motivo: '', error: '' }), title: "Cancelar Pedido", actions: [
+                    { label: 'Cancelar', onClick: () => setCancelModal({ open: false, motivo: '', error: '' }), variant: 'secondary' },
+                    { label: cancelarMutation.isPending ? 'Cancelando...' : 'Confirmar', onClick: handleConfirmCancel, variant: 'danger' },
+                ], children: _jsxs("div", { className: "space-y-4", children: [_jsxs("p", { className: "text-gray-600 dark:text-gray-400", children: ["\u00BFEst\u00E1s seguro de que deseas cancelar el pedido #", pedido.id, "?"] }), _jsxs("div", { children: [_jsxs("label", { className: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1", children: ["Motivo de cancelaci\u00F3n ", _jsx("span", { className: "text-red-500", children: "*" })] }), _jsx("textarea", { value: cancelModal.motivo, onChange: (e) => setCancelModal((prev) => ({ ...prev, motivo: e.target.value, error: '' })), placeholder: "Ingrese el motivo de la cancelaci\u00F3n...", rows: 3, className: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" }), cancelModal.error && (_jsx("p", { className: "text-red-500 text-sm mt-1", children: cancelModal.error }))] })] }) })] }));
 };
 export default OrderDetailModal;
 //# sourceMappingURL=OrderDetailModal.js.map

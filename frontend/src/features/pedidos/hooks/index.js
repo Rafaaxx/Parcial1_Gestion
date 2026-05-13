@@ -63,14 +63,14 @@ const TRANSICIONES_POR_ESTADO = {
         {
             label: 'Confirmar',
             nuevo_estado: 'CONFIRMADO',
-            allowed_roles: ['SISTEMA'],
+            allowed_roles: ['ADMIN', 'PEDIDOS'],
             icon: '✓',
         },
         {
             label: 'Cancelar',
             nuevo_estado: 'CANCELADO',
             requires_motivo: true,
-            allowed_roles: ['CLIENT', 'ADMIN', 'PEDIDOS'],
+            allowed_roles: ['ADMIN', 'PEDIDOS'],
             icon: '✕',
         },
     ],
@@ -100,7 +100,7 @@ const TRANSICIONES_POR_ESTADO = {
             label: 'Cancelar',
             nuevo_estado: 'CANCELADO',
             requires_motivo: true,
-            allowed_roles: ['ADMIN'],
+            allowed_roles: ['ADMIN', 'PEDIDOS'],
             icon: '✕',
         },
     ],
@@ -116,7 +116,11 @@ const TRANSICIONES_POR_ESTADO = {
     CANCELADO: [],
 };
 export function getTransicionesDisponibles(estadoActual, userRoles) {
+    console.log('[getTransiciones] userRoles recibidos:', userRoles, 'estado:', estadoActual);
     const transiciones = TRANSICIONES_POR_ESTADO[estadoActual] || [];
-    return transiciones.filter((t) => t.allowed_roles.some((role) => userRoles.includes(role)));
+    console.log('[getTransiciones] transiciones para este estado:', transiciones.length);
+    const result = transiciones.filter((t) => t.allowed_roles.some((role) => userRoles.includes(role)));
+    console.log('[getTransiciones] resultado:', result.map(r => r.label));
+    return result;
 }
 //# sourceMappingURL=index.js.map
