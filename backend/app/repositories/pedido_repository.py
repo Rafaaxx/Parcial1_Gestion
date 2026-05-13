@@ -265,6 +265,7 @@ class PedidoRepository(BaseRepository[Pedido]):
             .options(
                 selectinload(Pedido.detalles),
                 selectinload(Pedido.historial),
+                selectinload(Pedido.usuario),
             )
             .where(Pedido.id == pedido_id)
             .where(Pedido.deleted_at.is_(None))

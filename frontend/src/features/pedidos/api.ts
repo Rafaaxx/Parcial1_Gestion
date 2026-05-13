@@ -3,7 +3,8 @@
  * Handles all HTTP calls to the backend orders endpoints
  */
 
-import axios from 'axios'
+import { apiClient } from '@/shared/http/client'
+import { useAuthStore } from '@/features/auth/store'
 import {
   PedidosResponse,
   Pedido,
@@ -14,6 +15,25 @@ import {
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const API_VERSION = '/api/v1'
+
+/**
+ * Helper to get auth token directly from localStorage (bypass Zustand hydration issues)
+ */
+const getAuthHeaders = () => {
+  try {
+    const stored = localStorage.getItem('food-store-auth')
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      const token = parsed.state?.token
+      if (token) {
+        return { Authorization: `Bearer ${token}` }
+      }
+    }
+  } catch (e) {
+    console.error('[DEBUG] Error reading token:', e)
+  }
+  return {}
+}
 
 /**
  * Get list of orders with pagination and optional filters
@@ -38,27 +58,27 @@ export async function getPedidos(
       if (filtros.busqueda) params.busqueda = filtros.busqueda
     }
 
-    const response = await axios.get<PedidosResponse>(
+    const response = await apiClient.get<PedidosResponse>(
       `${API_BASE}${API_VERSION}/pedidos`,
-      { params }
+      { 
+        params,
+        headers: getAuthHeaders(),
+      }
     )
     return response.data
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const status = error.response?.status
-      const message = error.response?.data?.detail || error.message
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number; data?: { detail?: string } }; message?: string }
+    const status = err.response?.status
+    const message = err.response?.data?.detail || err.message
 
-      if (status === 403) {
-        throw new Error('No tienes permisos para ver pedidos')
-      }
-      if (status === 500) {
-        throw new Error('Error del servidor al obtener pedidos')
-      }
-
-      throw new Error(message || 'Error al obtener pedidos')
+    if (status === 403) {
+      throw new Error('No tienes permisos para ver pedidos')
+    }
+    if (status === 500) {
+      throw new Error('Error del servidor al obtener pedidos')
     }
 
-    throw error
+    throw new Error(message || 'Error al obtener pedidos')
   }
 }
 
@@ -68,28 +88,26 @@ export async function getPedidos(
  */
 export async function getPedidoDetail(id: number): Promise<Pedido> {
   try {
-    const response = await axios.get<Pedido>(
-      `${API_BASE}${API_VERSION}/pedidos/${id}`
+    const response = await apiClient.get<Pedido>(
+      `${API_BASE}${API_VERSION}/pedidos/${id}`,
+      { headers: getAuthHeaders() }
     )
     return response.data
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const status = error.response?.status
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number; data?: { detail?: string } }; message?: string }
+    const status = err.response?.status
 
-      if (status === 404) {
-        throw new Error('Pedido no encontrado')
-      }
-      if (status === 403) {
-        throw new Error('No tienes permisos para ver este pedido')
-      }
-      if (status === 500) {
-        throw new Error('Error del servidor al obtener el pedido')
-      }
-
-      throw new Error(error.response?.data?.detail || error.message || 'Error al obtener pedido')
+    if (status === 404) {
+      throw new Error('Pedido no encontrado')
+    }
+    if (status === 403) {
+      throw new Error('No tienes permisos para ver este pedido')
+    }
+    if (status === 500) {
+      throw new Error('Error del servidor al obtener el pedido')
     }
 
-    throw error
+    throw new Error(err.response?.data?.detail || err.message || 'Error al obtener pedido')
   }
 }
 
@@ -102,33 +120,31 @@ export async function transicionarEstado(
   data: TransicionRequest
 ): Promise<TransicionResponse> {
   try {
-    const response = await axios.patch<TransicionResponse>(
+    const response = await apiClient.patch<TransicionResponse>(
       `${API_BASE}${API_VERSION}/pedidos/${pedidoId}/estado`,
-      data
+      data,
+      { headers: getAuthHeaders() }
     )
     return response.data
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const status = error.response?.status
-      const message = error.response?.data?.detail || error.message
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number; data?: { detail?: string } }; message?: string }
+    const status = err.response?.status
+    const message = err.response?.data?.detail || err.message
 
-      if (status === 404) {
-        throw new Error('Pedido no encontrado')
-      }
-      if (status === 422) {
-        throw new Error(message || 'Transición no válida')
-      }
-      if (status === 403) {
-        throw new Error('No tienes permisos para esta transición')
-      }
-      if (status === 500) {
-        throw new Error('Error del servidor al cambiar estado')
-      }
-
-      throw new Error(message || 'Error al cambiar estado del pedido')
+    if (status === 404) {
+      throw new Error('Pedido no encontrado')
+    }
+    if (status === 422) {
+      throw new Error(message || 'Transición no válida')
+    }
+    if (status === 403) {
+      throw new Error('No tienes permisos para esta transición')
+    }
+    if (status === 500) {
+      throw new Error('Error del servidor al cambiar estado')
     }
 
-    throw error
+    throw new Error(message || 'Error al cambiar estado del pedido')
   }
 }
 
@@ -144,33 +160,33 @@ export async function cancelarPedido(
   motivo: string
 ): Promise<TransicionResponse> {
   try {
-    const response = await axios.delete<TransicionResponse>(
+    const response = await apiClient.delete<TransicionResponse>(
       `${API_BASE}${API_VERSION}/pedidos/${pedidoId}`,
-      { params: { motivo } }
+      { 
+        params: { motivo },
+        headers: getAuthHeaders(),
+      }
     )
     return response.data
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const status = error.response?.status
-      const message = error.response?.data?.detail || error.message
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number; data?: { detail?: string } }; message?: string }
+    const status = err.response?.status
+    const message = err.response?.data?.detail || err.message
 
-      if (status === 404) {
-        throw new Error('Pedido no encontrado')
-      }
-      if (status === 422) {
-        throw new Error(message || 'No se puede cancelar el pedido')
-      }
-      if (status === 403) {
-        throw new Error('No tienes permisos para cancelar este pedido')
-      }
-      if (status === 500) {
-        throw new Error('Error del servidor al cancelar pedido')
-      }
-
-      throw new Error(message || 'Error al cancelar pedido')
+    if (status === 404) {
+      throw new Error('Pedido no encontrado')
+    }
+    if (status === 422) {
+      throw new Error(message || 'No se puede cancelar el pedido')
+    }
+    if (status === 403) {
+      throw new Error('No tienes permisos para cancelar este pedido')
+    }
+    if (status === 500) {
+      throw new Error('Error del servidor al cancelar pedido')
     }
 
-    throw error
+    throw new Error(message || 'Error al cancelar pedido')
   }
 }
 
@@ -180,16 +196,15 @@ export async function cancelarPedido(
  */
 export async function getPedidoHistorial(pedidoId: number) {
   try {
-    const response = await axios.get(
-      `${API_BASE}${API_VERSION}/pedidos/${pedidoId}/historial`
+    const response = await apiClient.get(
+      `${API_BASE}${API_VERSION}/pedidos/${pedidoId}/historial`,
+      { headers: getAuthHeaders() }
     )
     return response.data
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(
-        error.response?.data?.detail || 'Error al obtener historial'
-      )
-    }
-    throw error
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { detail?: string } }; message?: string }
+    throw new Error(
+      err.response?.data?.detail || 'Error al obtener historial'
+    )
   }
 }

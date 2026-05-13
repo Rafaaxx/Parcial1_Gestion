@@ -61,9 +61,22 @@ export const AdminOrders: React.FC = () => {
   const [selectedPedidoId, setSelectedPedidoId] = useState<number | null>(null)
   const [detailModalOpen, setDetailModalOpen] = useState(false)
 
+  // DEBUG: Auto-open first pedido when data loads
+  React.useEffect(() => {
+    if (data?.items?.length && !selectedPedidoId && !detailModalOpen) {
+      console.log('[DEBUG] Auto-opening first pedido')
+      setSelectedPedidoId(data.items[0].id)
+      setDetailModalOpen(true)
+    }
+  }, [data, selectedPedidoId, detailModalOpen])
+
   // Queries
   const { data, isLoading, error, refetch } = usePedidos(skip, limit, filtros)
   const { data: pedidoDetalle, isLoading: detailLoading } = usePedidoDetail(selectedPedidoId || 0)
+  console.log('[DEBUG] pedidoDetalle:', pedidoDetalle)
+  console.log('[DEBUG] detailLoading:', detailLoading)
+  console.log('[DEBUG] selectedPedidoId:', selectedPedidoId)
+  console.log('[DEBUG] detailModalOpen:', detailModalOpen)
 
   const transicionMutation = useTransicionEstado()
   const cancelarMutation = useCancelarPedido()
@@ -98,6 +111,7 @@ export const AdminOrders: React.FC = () => {
 
   // Open detail modal
   const handleRowClick = (pedido: PedidoListItem) => {
+    alert('Click detected on pedido: ' + pedido.id)
     setSelectedPedidoId(pedido.id)
     setDetailModalOpen(true)
   }
@@ -190,7 +204,7 @@ export const AdminOrders: React.FC = () => {
                   <tr
                     key={pedido.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
-                    onClick={() => handleRowClick(pedido)}
+                    onClick={() => alert('Click on pedido ' + pedido.id)}
                   >
                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-50">
                       #{pedido.id}
@@ -246,7 +260,7 @@ export const AdminOrders: React.FC = () => {
 
       {/* Modal de detalle */}
       <OrderDetailModal
-        pedido={detailModalOpen && selectedPedidoId ? pedidoDetalle || null : null}
+        pedido={detailModalOpen && selectedPedidoId ? pedidoDetalle : null}
         open={detailModalOpen}
         onClose={handleCloseDetail}
       />
