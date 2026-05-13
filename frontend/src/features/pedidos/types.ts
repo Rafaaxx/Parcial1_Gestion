@@ -10,6 +10,12 @@ export type EstadoPedido =
   | 'ENTREGADO'
   | 'CANCELADO'
 
+export interface ClienteInfo {
+  id: number
+  nombre?: string | null
+  email: string
+}
+
 export interface DetallePedido {
   id: number
   producto_id: number
@@ -42,14 +48,17 @@ export interface Pedido {
   historial: HistorialEstado[]
   created_at: string
   updated_at: string
+  cliente?: ClienteInfo | null
 }
 
 export interface PedidoListItem {
   id: number
+  usuario_id: number
   estado_codigo: string
   total: number
   costo_envio: number
   created_at: string
+  cliente?: ClienteInfo | null
 }
 
 export interface PedidosResponse {
@@ -57,6 +66,14 @@ export interface PedidosResponse {
   total: number
   skip: number
   limit: number
+}
+
+// Filter types for order management
+export interface PedidoFilters {
+  estado?: string
+  desde?: string
+  hasta?: string
+  busqueda?: string
 }
 
 export interface TransicionRequest {

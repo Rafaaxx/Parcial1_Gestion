@@ -1,7 +1,8 @@
 """Business logic service for Pedido creation and retrieval with atomic UoW semantics"""
 import logging
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict, Any
 from decimal import Decimal
+from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy import select
 
@@ -15,6 +16,7 @@ from app.modules.pedidos.schemas import (
     PedidoDetail,
     DetallePedidoRead,
     HistorialEstadoPedidoRead,
+    ClienteInfo,
 )
 from app.modules.pedidos.fsm import (
     FSM_TRANSITION_MAP,
@@ -124,9 +126,10 @@ class PedidoService:
         roles: List[str],
         skip: int,
         limit: int,
+        filtros: Optional[Dict[str, Any]] = None,
     ) -> Tuple[List[Pedido], int]:
         """
-        List orders filtered by role.
+        List orders filtered by role and optional filters.
 
         CLIENT role: only own orders
         ADMIN/PEDIDOS roles: all orders
@@ -136,13 +139,19 @@ class PedidoService:
             roles: List of role names for the current user
             skip: Pagination offset
             limit: Max results per page
+            filtros: Optional dict with estado, desde, hasta, busqueda
 
         Returns:
-            Tuple of (list of Pedido, total count)
+            Tuple of (list of Pedido with cliente info, total count)
         """
+        filtros = filtros or {}
+        
         if "CLIENT" in roles:
-            return await self.uow.pedidos.get_for_user(usuario_id, skip, limit)
-        return await self.uow.pedidos.get_all_paginated(skip, limit)
+            # Client can only see their own orders, but can filter
+            return await self.uow.pedidos.get_for_user_with_filters(
+                usuario_id, skip, limit, filtros
+            )
+        return await self.uow.pedidos.get_all_with_filters(skip, limit, filtros)
 
     async def obtener_detalle(
         self,

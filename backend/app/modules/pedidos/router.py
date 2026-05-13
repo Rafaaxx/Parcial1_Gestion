@@ -16,6 +16,7 @@ from app.modules.pedidos.schemas import (
     HistorialEstadoPedidoRead,
     AvanzarEstadoRequest,
     TransicionResponse,
+    ClienteInfo,
 )
 from app.modules.pedidos.service import PedidoService
 
@@ -95,6 +96,10 @@ def _check_pedidos_role(
 async def listar_pedidos(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=20, ge=1, le=100),
+    estado: Optional[str] = Query(default=None, description="Filter by state code (e.g., PENDIENTE, CONFIRMADO, EN_PREP, EN_CAMINO, ENTREGADO, CANCELADO)"),
+    desde: Optional[str] = Query(default=None, description="Filter by creation date (start) - YYYY-MM-DD"),
+    hasta: Optional[str] = Query(default=None, description="Filter by creation date (end) - YYYY-MM-DD"),
+    busqueda: Optional[str] = Query(default=None, description="Search by order ID or customer name/email"),
     current_user: dict = Depends(_check_pedidos_role),
     uow: UnitOfWork = Depends(get_uow),
 ):
@@ -104,17 +109,49 @@ async def listar_pedidos(
     CLIENT role: only returns orders owned by the current user.
     ADMIN/PEDIDOS roles: returns all orders in the system.
 
-    Supports pagination with skip and limit query parameters.
+    Supports:
+    - Pagination with skip and limit query parameters
+    - Filter by state (estado)
+    - Filter by date range (desde, hasta)
+    - Search by order ID or customer name/email (busqueda)
     """
     service = PedidoService(uow)
+    filtros = {
+        "estado": estado,
+        "desde": desde,
+        "hasta": hasta,
+        "busqueda": busqueda,
+    }
     pedidos, total = await service.listar_pedidos(
         usuario_id=current_user["id"],
         roles=current_user["roles"],
         skip=skip,
         limit=limit,
+        filtros=filtros,
     )
+    # Build response with client info
+    items = []
+    for p in pedidos:
+        cliente = None
+        if p.usuario:
+            cliente = ClienteInfo(
+                id=p.usuario.id,
+                nombre=f"{p.usuario.nombre} {p.usuario.apellido}".strip() or None,
+                email=p.usuario.email,
+            )
+        pedido_read = PedidoRead(
+            id=p.id,
+            usuario_id=p.usuario_id,
+            estado_codigo=p.estado_codigo,
+            total=p.total,
+            costo_envio=p.costo_envio,
+            created_at=p.created_at,
+            cliente=cliente,
+        )
+        items.append(pedido_read)
+    
     return PedidoListResponse(
-        items=[PedidoRead.model_validate(p) for p in pedidos],
+        items=items,
         total=total,
         skip=skip,
         limit=limit,
@@ -155,6 +192,15 @@ async def obtener_pedido(
         )
     ]
 
+    # Build client info
+    cliente = None
+    if pedido.usuario:
+        cliente = ClienteInfo(
+            id=pedido.usuario.id,
+            nombre=f"{pedido.usuario.nombre} {pedido.usuario.apellido}".strip() or None,
+            email=pedido.usuario.email,
+        )
+
     return PedidoDetail(
         id=pedido.id,
         usuario_id=pedido.usuario_id,
@@ -168,6 +214,7 @@ async def obtener_pedido(
         historial=historial,
         created_at=pedido.created_at,
         updated_at=pedido.updated_at,
+        cliente=cliente,
     )
 
 

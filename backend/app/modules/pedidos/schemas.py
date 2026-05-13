@@ -46,6 +46,13 @@ class DetallePedidoRead(SQLModel):
     created_at: datetime
 
 
+class ClienteInfo(SQLModel):
+    """Customer info for order list endpoints."""
+    id: int
+    nombre: Optional[str]
+    email: str
+
+
 class HistorialEstadoPedidoRead(SQLModel):
     """State transition history record."""
     id: int
@@ -59,10 +66,12 @@ class HistorialEstadoPedidoRead(SQLModel):
 class PedidoRead(SQLModel):
     """Compact order response for list endpoints."""
     id: int
+    usuario_id: int
     estado_codigo: str
     total: Decimal
     costo_envio: Decimal
     created_at: datetime
+    cliente: Optional[ClienteInfo] = None
 
 
 class PedidoDetail(SQLModel):
@@ -79,6 +88,7 @@ class PedidoDetail(SQLModel):
     historial: List[HistorialEstadoPedidoRead]
     created_at: datetime
     updated_at: datetime
+    cliente: Optional[ClienteInfo] = None
 
 
 class PedidoListResponse(SQLModel):

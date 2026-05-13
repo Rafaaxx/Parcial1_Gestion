@@ -9,23 +9,38 @@ import {
   Pedido,
   TransicionRequest,
   TransicionResponse,
+  PedidoFilters,
 } from './types'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const API_VERSION = '/api/v1'
 
 /**
- * Get list of orders with pagination
+ * Get list of orders with pagination and optional filters
  * GET /api/v1/pedidos
  *
  * CLIENT role: returns only own orders
  * ADMIN/PEDIDOS roles: returns all orders
  */
-export async function getPedidos(skip = 0, limit = 20): Promise<PedidosResponse> {
+export async function getPedidos(
+  skip = 0,
+  limit = 20,
+  filtros?: PedidoFilters
+): Promise<PedidosResponse> {
   try {
+    const params: Record<string, string | number> = { skip, limit }
+    
+    // Add filters if provided
+    if (filtros) {
+      if (filtros.estado) params.estado = filtros.estado
+      if (filtros.desde) params.desde = filtros.desde
+      if (filtros.hasta) params.hasta = filtros.hasta
+      if (filtros.busqueda) params.busqueda = filtros.busqueda
+    }
+
     const response = await axios.get<PedidosResponse>(
       `${API_BASE}${API_VERSION}/pedidos`,
-      { params: { skip, limit } }
+      { params }
     )
     return response.data
   } catch (error) {

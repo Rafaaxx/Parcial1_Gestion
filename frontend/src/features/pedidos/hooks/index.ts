@@ -9,25 +9,25 @@ import {
   transicionarEstado,
   cancelarPedido,
 } from '../api'
-import { TransicionRequest } from '../types'
+import { TransicionRequest, PedidoFilters } from '../types'
 
 // Query keys
 export const pedidoKeys = {
   all: ['pedidos'] as const,
   lists: () => [...pedidoKeys.all, 'list'] as const,
-  list: (params: { skip?: number; limit?: number }) =>
+  list: (params: { skip?: number; limit?: number; filtros?: PedidoFilters }) =>
     [...pedidoKeys.lists(), params] as const,
   details: () => [...pedidoKeys.all, 'detail'] as const,
   detail: (id: number) => [...pedidoKeys.details(), id] as const,
 }
 
 /**
- * Hook to fetch list of orders
+ * Hook to fetch list of orders with optional filters
  */
-export function usePedidos(skip = 0, limit = 20) {
+export function usePedidos(skip = 0, limit = 20, filtros?: PedidoFilters) {
   return useQuery({
-    queryKey: pedidoKeys.list({ skip, limit }),
-    queryFn: () => getPedidos(skip, limit),
+    queryKey: pedidoKeys.list({ skip, limit, filtros }),
+    queryFn: () => getPedidos(skip, limit, filtros),
   })
 }
 
