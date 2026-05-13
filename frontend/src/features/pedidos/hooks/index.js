@@ -116,11 +116,7 @@ const TRANSICIONES_POR_ESTADO = {
     CANCELADO: [],
 };
 export function getTransicionesDisponibles(estadoActual, userRoles) {
-    console.log('[getTransiciones] userRoles recibidos:', userRoles, 'estado:', estadoActual);
     const transiciones = TRANSICIONES_POR_ESTADO[estadoActual] || [];
-    console.log('[getTransiciones] transiciones para este estado:', transiciones.length);
-    const result = transiciones.filter((t) => t.allowed_roles.some((role) => userRoles.includes(role)));
-    console.log('[getTransiciones] resultado:', result.map(r => r.label));
-    return result;
+    return transiciones.filter((t) => t.allowed_roles.some((role) => userRoles.includes(role)));
 }
 //# sourceMappingURL=index.js.map

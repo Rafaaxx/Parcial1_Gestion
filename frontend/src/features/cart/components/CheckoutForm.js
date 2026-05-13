@@ -1,7 +1,28 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
+/**
+ * CheckoutForm — payment initiation component
+ *
+ * This component:
+ * 1. Shows "Pagar con MercadoPago" button
+ * 2. Creates order + payment in one flow (crearPedidoYPagar)
+ * 3. Redirects to MP checkout (init_point)
+ *
+ * Note: We use checkout redirection, not direct card tokenization.
+ * This is simpler and more common for this use case.
+ */
+import { useEffect } from 'react';
 import { usePaymentStore } from '../stores/paymentStore';
 export const CheckoutForm = ({ items, onPaymentStart, onError, }) => {
-    const { crearPedidoYPagar, status, errorMessage } = usePaymentStore();
+    const { crearPedidoYPagar, status, errorMessage, initPoint, reset } = usePaymentStore();
+    // 3. Agrega este useEffect para limpiar estados colgados al montar el componente
+    useEffect(() => {
+        // Si el usuario llega a esta pantalla y por algún motivo el store
+        // había quedado guardado como "processing" o "error", lo limpiamos.
+        if (status !== 'idle') {
+            reset();
+        }
+    }, [reset, status]);
+    console.log('CheckoutForm render - status:', status, 'errorMessage:', errorMessage, 'initPoint:', initPoint);
     const isLoading = status === 'processing';
     const isDisabled = items.length === 0;
     const handlePayment = async () => {

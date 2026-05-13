@@ -10,6 +10,7 @@
  */
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+const token = localStorage.getItem('access_token');
 export const usePaymentStore = create()(persist((set, get) => ({
     // Initial state
     status: 'idle',
@@ -90,7 +91,6 @@ export const usePaymentStore = create()(persist((set, get) => ({
     },
     checkPaymentStatus: async (pedidoId) => {
         const { setApproved, setRejected, setError } = get();
-        const token = localStorage.getItem('access_token');
         const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
         try {
             const response = await fetch(`http://localhost:8000/api/v1/pagos/${pedidoId}`, {
@@ -129,7 +129,6 @@ export const usePaymentStore = create()(persist((set, get) => ({
     crearPedidoYPagar: async (items) => {
         const { setProcessing, setInitPoint, setError } = get();
         // Get auth token from localStorage
-        const token = localStorage.getItem('access_token');
         const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
         try {
             setProcessing(0);
