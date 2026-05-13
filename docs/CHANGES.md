@@ -328,7 +328,7 @@ CHANGE-00 (Infraestructura Base) [4 sub-changes]
 | **Dependencias** | CHANGE-09, CHANGE-01 |
 | **Duración estimada** | 18h |
 | **Estado** | ✅ COMPLETADO (2026-05-13) |
-| **Evidencia** | Engram archive report (#61) |
+| **Evidencia** | `openspec/changes/archive/2026-05-13-change-10-maquina-de-estados-fsm/` |
 
 **Estados**:
 ```
