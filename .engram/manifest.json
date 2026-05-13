@@ -2,6 +2,15 @@
   "version": 1,
   "chunks": [
     {
+      "id": "change-10-maquina-estados",
+      "created_by": "orchestrator",
+      "created_at": "2026-05-13T01:30:00Z",
+      "sessions": 1,
+      "memories": 9,
+      "prompts": 25,
+      "description": "CHANGE-10: Máquina de Estados FSM - 18 tareas completadas, archive completo"
+    },
+    {
       "id": "5fe13c92",
       "created_by": "lucas",
       "created_at": "2026-05-09T02:30:00Z",

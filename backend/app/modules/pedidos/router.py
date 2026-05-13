@@ -1,6 +1,6 @@
 """FastAPI router for Pedido endpoints"""
 import logging
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,6 +14,8 @@ from app.modules.pedidos.schemas import (
     PedidoListResponse,
     DetallePedidoRead,
     HistorialEstadoPedidoRead,
+    AvanzarEstadoRequest,
+    TransicionResponse,
 )
 from app.modules.pedidos.service import PedidoService
 
@@ -199,3 +201,148 @@ async def obtener_historial(
 
     historial = await service.obtener_historial(pedido_id)
     return [HistorialEstadoPedidoRead.model_validate(h) for h in historial]
+
+
+@router.patch("/{pedido_id}/estado", response_model=TransicionResponse)
+async def avanzar_estado(
+    pedido_id: int,
+    body: AvanzarEstadoRequest,
+    current_user: dict = Depends(_check_pedidos_role),
+    uow: UnitOfWork = Depends(get_uow),
+):
+    """
+    Transition an order to a new state.
+
+    Validates the transition against the FSM rules (state machine):
+    - PENDIENTE → CONFIRMADO (only SISTEMA role)
+    - PENDIENTE → CANCELADO (CLIENT, ADMIN, PEDIDOS with motivo)
+    - CONFIRMADO → EN_PREP (ADMIN, PEDIDOS)
+    - CONFIRMADO → CANCELADO (ADMIN, PEDIDOS with motivo)
+    - EN_PREP → EN_CAMINO (ADMIN, PEDIDOS)
+    - EN_PREP → CANCELADO (ADMIN with motivo)
+    - EN_CAMINO → ENTREGADO (ADMIN, PEDIDOS)
+
+    Stock is decremented on CONFIRMADO and restored on CANCELADO (from CONFIRMADO/EN_PREP).
+
+    Returns:
+        200 TransicionResponse on success
+        404 if order not found
+        422 if transition invalid
+        403 if role not allowed
+    """
+    service = PedidoService(uow)
+    try:
+        pedido = await service.transicionar_estado(
+            pedido_id=pedido_id,
+            nuevo_estado=body.nuevo_estado,
+            usuario_id=current_user["id"],
+            roles=current_user["roles"],
+            motivo=body.motivo,
+        )
+        return TransicionResponse(
+            id=pedido.id,
+            estado_codigo=pedido.estado_codigo,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error transitioning order state: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error interno al cambiar estado del pedido")
+
+
+@router.delete("/{pedido_id}", response_model=TransicionResponse)
+async def cancelar_pedido(
+    pedido_id: int,
+    motivo: Optional[str] = Query(
+        default=None,
+        description="Reason for cancellation (required for CANCELADO)",
+    ),
+    current_user: dict = Depends(get_current_user),
+    uow: UnitOfWork = Depends(get_uow),
+):
+    """
+    Cancel an order (convenience endpoint).
+
+    CLIENT can only cancel their own PENDIENTE orders.
+    ADMIN/PEDIDOS can cancel PENDIENTE or CONFIRMADO orders.
+
+    Stock is restored if the order was CONFIRMADO (stock was decremented).
+
+    Returns:
+        200 TransicionResponse with estado_codigo=CANCELADO on success
+        404 if order not found
+        422 if cancellation not allowed
+        403 if role not allowed or not own order (CLIENT)
+    """
+    # Get user roles
+    user_roles = set()
+    if hasattr(current_user, 'usuario_roles') and current_user.usuario_roles:
+        user_roles = {ur.rol_codigo for ur in current_user.usuario_roles}
+
+    service = PedidoService(uow)
+    try:
+        # Get current order state to determine allowed transitions
+        pedido = await service.obtener_detalle(
+            pedido_id=pedido_id,
+            usuario_id=current_user.id,
+            roles=list(user_roles),
+        )
+
+        if pedido is None:
+            raise HTTPException(status_code=404, detail="Pedido no encontrado")
+
+        # Determine target state based on role and current state
+        if "CLIENT" in user_roles:
+            # CLIENT can only cancel their own PENDIENTE orders
+            if pedido.estado_codigo != "PENDIENTE":
+                raise HTTPException(
+                    status_code=403,
+                    detail="Solo puedes cancelar pedidos en estado PENDIENTE",
+                )
+            if pedido.usuario_id != current_user.id:
+                raise HTTPException(
+                    status_code=403,
+                    detail="No puedes cancelar pedidos de otros usuarios",
+                )
+            # CLIENT can transition to CANCELADO from PENDIENTE
+            nuevo_estado = "CANCELADO"
+        elif "ADMIN" in user_roles or "PEDIDOS" in user_roles:
+            # ADMIN/PEDIDOS can cancel PENDIENTE or CONFIRMADO
+            if pedido.estado_codigo not in ("PENDIENTE", "CONFIRMADO"):
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"No se puede cancelar un pedido en estado {pedido.estado_codigo}",
+                )
+            nuevo_estado = "CANCELADO"
+        else:
+            raise HTTPException(
+                status_code=403,
+                detail="No tienes permisos para cancelar pedidos",
+            )
+
+        # Require motivo for cancellation
+        if not motivo:
+            raise HTTPException(
+                status_code=422,
+                detail="El motivo es obligatorio para cancelar",
+            )
+
+        # Execute transition
+        pedido = await service.transicionar_estado(
+            pedido_id=pedido_id,
+            nuevo_estado=nuevo_estado,
+            usuario_id=current_user.id,
+            roles=list(user_roles),
+            motivo=motivo,
+        )
+
+        return TransicionResponse(
+            id=pedido.id,
+            estado_codigo=pedido.estado_codigo,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error cancelling order: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error interno al cancelar el pedido")
