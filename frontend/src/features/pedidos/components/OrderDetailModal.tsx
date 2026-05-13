@@ -3,10 +3,10 @@
  */
 
 import React, { useState } from 'react'
-import { Modal, Button } from '@/shared/ui'
-import { Pedido, ESTADO_LABELS, ESTADO_COLORS, ClienteInfo, EstadoPedido } from '../types'
+import { Modal, Button, ModalAction } from '@/shared/ui'
+import { Pedido, ESTADO_LABELS, ESTADO_COLORS, ClienteInfo, EstadoPedido, TransicionAction } from '../types'
 import { HistorialTimeline } from './HistorialTimeline'
-import { TransicionAction, getTransicionesDisponibles } from '../hooks'
+import { getTransicionesDisponibles } from '../hooks'
 import { useAuthStore } from '@/features/auth/store'
 import { useTransicionEstado, useCancelarPedido } from '../hooks'
 
@@ -39,9 +39,19 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     error: '',
   })
 
-  if (!pedido) return null
+  // Handle loading state
+  if (pedido === undefined) {
+    return (
+      <Modal isOpen={open} onClose={onClose} title="Cargando...">
+        <div className="p-4 text-center">Cargando detalles del pedido...</div>
+      </Modal>
+    )
+  }
 
-  const userRoles = user?.roles || []
+  // Handle no pedido selected
+  if (pedido === null) return null
+
+  const userRoles = (user?.roles || []) as string[]
   const transiciones = getTransicionesDisponibles(pedido.estado_codigo, userRoles)
 
   const formatPrice = (price: number) => {
@@ -231,33 +241,28 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     }
   }
 
+  const modalActions: ModalAction[] = [
+    { label: 'Cerrar', onClick: onClose, variant: 'secondary' },
+    ...transiciones.map((t) => ({
+      label: t.label,
+      onClick: () => handleTransicion(t),
+      variant: t.nuevo_estado === 'CANCELADO' ? 'danger' as const : 'primary' as const,
+    })),
+  ]
+
+  const isMutating = transicionMutation.isPending || cancelarMutation.isPending
+
   return (
     <>
       <Modal
-        open={open}
+        isOpen={open}
         onClose={onClose}
         title={`Pedido #${pedido.id}`}
-        size="lg"
-        actions={
-          <>
-            <Button variant="outline" onClick={onClose}>
-              Cerrar
-            </Button>
-            {transiciones.map((t, idx) => (
-              <Button
-                key={idx}
-                variant={t.nuevo_estado === 'CANCELADO' ? 'danger' : 'primary'}
-                onClick={() => handleTransicion(t)}
-                disabled={transicionMutation.isPending || cancelarMutation.isPending}
-              >
-                {t.label}
-              </Button>
-            ))}
-          </>
-        }
+        actions={modalActions}
       >
-        {/* Tabs */}
-        <div className="flex border-b border-gray-200 dark:border-gray-700 mb-4">
+<div className={isMutating ? 'opacity-50 pointer-events-none' : ''}>
+          {/* Tabs */}
+          <div className="flex border-b border-gray-200 dark:border-gray-700 mb-4">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -274,31 +279,19 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
         </div>
 
         {/* Tab content */}
-        <div className="min-h-[300px]">{renderTabContent()}</div>
+          <div className="min-h-[300px]">{renderTabContent()}</div>
+        </div>
       </Modal>
 
       {/* Cancel modal */}
       <Modal
-        open={cancelModal.open}
+        isOpen={cancelModal.open}
         onClose={() => setCancelModal({ open: false, motivo: '', error: '' })}
         title="Cancelar Pedido"
-        actions={
-          <>
-            <Button
-              variant="outline"
-              onClick={() => setCancelModal({ open: false, motivo: '', error: '' })}
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="danger"
-              onClick={handleConfirmCancel}
-              disabled={cancelarMutation.isPending}
-            >
-              {cancelarMutation.isPending ? 'Cancelando...' : 'Confirmar'}
-            </Button>
-          </>
-        }
+        actions={[
+          { label: 'Cancelar', onClick: () => setCancelModal({ open: false, motivo: '', error: '' }), variant: 'secondary' },
+          { label: cancelarMutation.isPending ? 'Cancelando...' : 'Confirmar', onClick: handleConfirmCancel, variant: 'danger' },
+        ]}
       >
         <div className="space-y-4">
           <p className="text-gray-600 dark:text-gray-400">
