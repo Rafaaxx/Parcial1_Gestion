@@ -318,7 +318,7 @@ CHANGE-00 (Infraestructura Base) [4 sub-changes]
 
 ---
 
-#### CHANGE-10: Máquina de Estados (FSM)
+#### CHANGE-10: Máquina de Estados (FSM) ✅ ARCHIVADO
 
 | Campo | Valor |
 |-------|-------|
@@ -327,6 +327,8 @@ CHANGE-00 (Infraestructura Base) [4 sub-changes]
 | **Funcionalidad** | FSM 6 estados, validación estricta, decrement/restore stock |
 | **Dependencias** | CHANGE-09, CHANGE-01 |
 | **Duración estimada** | 18h |
+| **Estado** | ✅ COMPLETADO (2026-05-13) |
+| **Evidencia** | `openspec/changes/archive/2026-05-13-change-10-maquina-de-estados-fsm/` |
 
 **Estados**:
 ```

@@ -46,6 +46,13 @@ class DetallePedidoRead(SQLModel):
     created_at: datetime
 
 
+class ClienteInfo(SQLModel):
+    """Customer info for order list endpoints."""
+    id: int
+    nombre: Optional[str]
+    email: str
+
+
 class HistorialEstadoPedidoRead(SQLModel):
     """State transition history record."""
     id: int
@@ -59,10 +66,12 @@ class HistorialEstadoPedidoRead(SQLModel):
 class PedidoRead(SQLModel):
     """Compact order response for list endpoints."""
     id: int
+    usuario_id: int
     estado_codigo: str
     total: Decimal
     costo_envio: Decimal
     created_at: datetime
+    cliente: Optional[ClienteInfo] = None
 
 
 class PedidoDetail(SQLModel):
@@ -79,6 +88,7 @@ class PedidoDetail(SQLModel):
     historial: List[HistorialEstadoPedidoRead]
     created_at: datetime
     updated_at: datetime
+    cliente: Optional[ClienteInfo] = None
 
 
 class PedidoListResponse(SQLModel):
@@ -87,3 +97,27 @@ class PedidoListResponse(SQLModel):
     total: int
     skip: int
     limit: int
+
+
+class AvanzarEstadoRequest(SQLModel):
+    """
+    Request body for transitioning order state.
+
+    Required for PATCH /pedidos/{id}/estado
+    """
+    nuevo_estado: str = Field(
+        max_length=20,
+        description="Target state code (e.g., CONFIRMADO, EN_PREP, EN_CAMINO, ENTREGADO, CANCELADO)"
+    )
+    motivo: Optional[str] = Field(
+        default=None,
+        max_length=500,
+        description="Explanation for the transition (required for CANCELADO)"
+    )
+
+
+class TransicionResponse(SQLModel):
+    """Response for state transition."""
+    id: int
+    estado_codigo: str
+    mensaje: str = "Estado actualizado correctamente"

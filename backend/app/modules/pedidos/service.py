@@ -1,19 +1,29 @@
 """Business logic service for Pedido creation and retrieval with atomic UoW semantics"""
 import logging
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict, Any
 from decimal import Decimal
+from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy import select
 
 from app.uow import UnitOfWork
 from app.models.pedido import Pedido, DetallePedido, HistorialEstadoPedido
 from app.models.usuario import Usuario
+from app.models.producto import Producto
 from app.modules.pedidos.schemas import (
     CrearPedidoRequest,
     PedidoRead,
     PedidoDetail,
     DetallePedidoRead,
     HistorialEstadoPedidoRead,
+    ClienteInfo,
+)
+from app.modules.pedidos.fsm import (
+    FSM_TRANSITION_MAP,
+    Transition,
+    es_estado_terminal,
+    is_valid_state,
+    get_valid_transitions,
 )
 
 logger = logging.getLogger(__name__)
@@ -116,9 +126,10 @@ class PedidoService:
         roles: List[str],
         skip: int,
         limit: int,
+        filtros: Optional[Dict[str, Any]] = None,
     ) -> Tuple[List[Pedido], int]:
         """
-        List orders filtered by role.
+        List orders filtered by role and optional filters.
 
         CLIENT role: only own orders
         ADMIN/PEDIDOS roles: all orders
@@ -128,13 +139,19 @@ class PedidoService:
             roles: List of role names for the current user
             skip: Pagination offset
             limit: Max results per page
+            filtros: Optional dict with estado, desde, hasta, busqueda
 
         Returns:
-            Tuple of (list of Pedido, total count)
+            Tuple of (list of Pedido with cliente info, total count)
         """
+        filtros = filtros or {}
+        
         if "CLIENT" in roles:
-            return await self.uow.pedidos.get_for_user(usuario_id, skip, limit)
-        return await self.uow.pedidos.get_all_paginated(skip, limit)
+            # Client can only see their own orders, but can filter
+            return await self.uow.pedidos.get_for_user_with_filters(
+                usuario_id, skip, limit, filtros
+            )
+        return await self.uow.pedidos.get_all_with_filters(skip, limit, filtros)
 
     async def obtener_detalle(
         self,
@@ -350,78 +367,216 @@ class PedidoService:
         )
         self.uow.session.add(historial)
 
-    async def cambiar_estado(
+    # ── FSM State Transition Methods ─────────────────────────────────────────────
+
+    async def transicionar_estado(
         self,
         pedido_id: int,
         nuevo_estado: str,
-        observacion: str | None = None,
-        usuario_id: int | None = None,
+        usuario_id: int,
+        roles: List[str],
+        motivo: Optional[str] = None,
     ) -> Pedido:
         """
-        Change the state of an order (FSM transition).
-
-        Current implementation ( CHANGE-10 not yet done):
-        - PENDIENTE -> CONFIRMADO (payment approved)
-        - CONFIRMADO -> CANCELADO (admin only)
+        Transition an order to a new state following FSM rules.
 
         Args:
             pedido_id: Order ID to transition
             nuevo_estado: Target state code
-            observacion: Optional note about the transition
-            usuario_id: User performing the transition (None = system)
+            usuario_id: User triggering the transition
+            roles: List of user roles
+            motivo: Optional explanation (required for CANCELADO)
 
         Returns:
-            Updated Pedido
+            Updated Pedido with new state
 
         Raises:
-            HTTPException: 400 if transition is invalid
+            HTTPException 404: Order not found
+            HTTPException 422: Invalid transition
+            HTTPException 403: Role not allowed
         """
-        # Get current pedido
-        pedido = await self.uow.pedidos.find(pedido_id)
-        if not pedido:
-            raise HTTPException(status_code=404, detail="Pedido no encontrado")
+        async with self.uow:
+            # Get current order
+            pedido = await self.uow.pedidos.find(pedido_id)
+            if pedido is None or pedido.deleted_at is not None:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Pedido no encontrado",
+                )
 
-        estado_actual = pedido.estado_codigo
-        estado_nuevo = nuevo_estado
+            # Validate transition
+            is_valid, error_msg = self._validar_transicion(
+                estado_actual=pedido.estado_codigo,
+                nuevo_estado=nuevo_estado,
+                roles=roles,
+                motivo=motivo,
+            )
+            if not is_valid:
+                raise HTTPException(
+                    status_code=422,
+                    detail=error_msg,
+                )
 
-        # Validar transición según FSM simple
-        transiciones_permitidas = {
-            "PENDIENTE": ["CONFIRMADO", "CANCELADO"],
-            "CONFIRMADO": ["EN_PREPARACION", "CANCELADO"],
-            "EN_PREPARACION": ["EN_CAMINO", "CANCELADO"],
-            "EN_CAMINO": ["ENTREGADO"],
-            "CANCELADO": [],  # Terminal
-            "ENTREGADO": [],  # Terminal
-        }
+            # Handle stock operations
+            if nuevo_estado == "CONFIRMADO":
+                await self._decrementar_stock_en_pedido(pedido_id)
+            elif nuevo_estado == "CANCELADO" and pedido.estado_codigo in ("CONFIRMADO", "EN_PREP"):
+                await self._restaurar_stock_en_pedido(pedido_id)
 
-        permitidas = transiciones_permitidas.get(estado_actual, [])
-        if estado_nuevo not in permitidas:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Transición inválida: {estado_actual} -> {estado_nuevo}. "
-                       f"Estados permitidos: {permitidas or 'ninguno'}",
+            # Update order state
+            old_estado = pedido.estado_codigo
+            pedido.estado_codigo = nuevo_estado
+
+            # Create history record
+            historial = HistorialEstadoPedido(
+                pedido_id=pedido_id,
+                estado_desde=old_estado,
+                estado_hacia=nuevo_estado,
+                observacion=motivo,
+                usuario_id=usuario_id,
+            )
+            self.uow.session.add(historial)
+
+            logger.info(
+                f"Pedido {pedido_id} transitioned from {old_estado} to {nuevo_estado} "
+                f"by user {usuario_id}"
+            )
+            return pedido
+
+    def _validar_transicion(
+        self,
+        estado_actual: str,
+        nuevo_estado: str,
+        roles: List[str],
+        motivo: Optional[str] = None,
+    ) -> Tuple[bool, Optional[str]]:
+        """
+        Validate if a state transition is allowed.
+
+        Args:
+            estado_actual: Current state code
+            nuevo_estado: Target state code
+            roles: User roles
+            motivo: Optional explanation for CANCELADO
+
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
+        # Check if current state exists in FSM
+        if not is_valid_state(estado_actual):
+            return False, f"Estado actual inválido: {estado_actual}"
+
+        # Check if target state exists
+        if not is_valid_state(nuevo_estado):
+            return False, f"Estado destino inválido: {nuevo_estado}"
+
+        # Check terminal state (FSM-TRANS-02)
+        if es_estado_terminal(estado_actual):
+            return False, f"Estado terminal '{estado_actual}': no se permiten transiciones"
+
+        # Get valid transitions for current state
+        valid_transitions = get_valid_transitions(estado_actual)
+
+        # Find matching transition
+        matching_transition: Optional[Transition] = None
+        for transition in valid_transitions:
+            if transition.target == nuevo_estado:
+                matching_transition = transition
+                break
+
+        if matching_transition is None:
+            return False, f"Transición no válida: {estado_actual} → {nuevo_estado}"
+
+        # Check role permissions (FSM-TRANS-03)
+        role_set = set(roles)
+        allowed_set = set(matching_transition.allowed_roles)
+        if not role_set.intersection(allowed_set):
+            return False, "No tienes permisos para esta transición"
+
+        # Check motivo requirement for CANCELADO
+        if matching_transition.requires_motivo and not motivo:
+            return False, "El motivo es obligatorio para cancelar"
+
+        return True, None
+
+    def _es_estado_terminal(self, estado: str) -> bool:
+        """
+        Check if a state is terminal (ENTREGADO or CANCELADO).
+
+        Args:
+            estado: State code to check
+
+        Returns:
+            True if terminal, False otherwise
+        """
+        return es_estado_terminal(estado)
+
+    async def _decrementar_stock_en_pedido(self, pedido_id: int) -> None:
+        """
+        Decrement stock for all items in an order using SELECT FOR UPDATE.
+
+        Called when transitioning to CONFIRMADO state.
+        Uses SELECT FOR UPDATE to prevent race conditions.
+
+        Args:
+            pedido_id: Order ID to decrement stock for
+
+        Raises:
+            HTTPException 422: If insufficient stock
+        """
+        # Get all details with product lock
+        detalles = await self.uow.detalles_pedido.list_by_pedido(pedido_id)
+
+        for detalle in detalles:
+            producto = await self.uow.productos.get_for_update(detalle.producto_id)
+            if producto is None:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Producto ID {detalle.producto_id} no encontrado",
+                )
+
+            # Check stock availability
+            if producto.stock_cantidad < detalle.cantidad:
+                raise HTTPException(
+                    status_code=422,
+                    detail=(
+                        f"Stock insuficiente para producto '{producto.nombre}': "
+                        f"solicitado {detalle.cantidad}, disponible {producto.stock_cantidad}"
+                    ),
+                )
+
+            # Decrement stock
+            producto.stock_cantidad -= detalle.cantidad
+            logger.info(
+                f"Decremented stock for producto {producto.id} by {detalle.cantidad}, "
+                f"new stock: {producto.stock_cantidad}"
             )
 
-        # Validar que no sea transición a terminal sin autorización especial
-        if estado_nuevo in ("CANCELADO", "ENTREGADO") and usuario_id is None:
-            # Solo permitir si es transición automática por sistema (pago aprobado)
-            # Por ahora permitir
-            pass
+    async def _restaurar_stock_en_pedido(self, pedido_id: int) -> None:
+        """
+        Restore stock for all items in an order.
 
-        # Actualizar estado
-        pedido.estado_codigo = estado_nuevo
-        self.uow.session.add(pedido)
-        await self.uow.session.flush()
+        Called when transitioning to CANCELADO from CONFIRMADO or EN_PREP.
+        No-op for PENDIENTE → CANCELADO (stock never decremented).
 
-        # Crear historial de transición
-        historial = HistorialEstadoPedido(
-            pedido_id=pedido_id,
-            estado_desde=estado_actual,
-            estado_hacia=estado_nuevo,
-            observacion=observacion,
-            usuario_id=usuario_id,
-        )
-        self.uow.session.add(historial)
+        Args:
+            pedido_id: Order ID to restore stock for
+        """
+        # Get all details
+        detalles = await self.uow.detalles_pedido.list_by_pedido(pedido_id)
 
-        logger.info(f"Pedido {pedido_id} transitioned: {estado_actual} -> {estado_nuevo}")
-        return pedido
+        for detalle in detalles:
+            producto = await self.uow.productos.get_for_update(detalle.producto_id)
+            if producto is None:
+                logger.warning(
+                    f"Producto ID {detalle.producto_id} not found when restoring stock "
+                    f"for pedido {pedido_id}"
+                )
+                continue
+
+            # Restore stock
+            producto.stock_cantidad += detalle.cantidad
+            logger.info(
+                f"Restored stock for producto {producto.id} by {detalle.cantidad}, "
+                f"new stock: {producto.stock_cantidad}"
+            )
