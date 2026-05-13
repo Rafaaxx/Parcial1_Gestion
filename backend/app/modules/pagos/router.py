@@ -1,6 +1,8 @@
-"""FastAPI router for Pagos endpoints — MercadoPago integration"""
+"""FastAPI router for Pagos endpoints — MercadoPago integration with webhook support"""
+import asyncio
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi.background import BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -15,6 +17,7 @@ from app.modules.pagos.schemas import (
     WebhookResponse,
 )
 from app.modules.pagos.service import PagoService
+from app.modules.pagos import mp_client
 
 logger = logging.getLogger(__name__)
 
@@ -97,33 +100,120 @@ async def get_pago(
     )
 
 
+async def _procesar_webhook_background(topic: str, resource_id: str) -> None:
+    """
+    Background task to process webhook asynchronously.
+
+    This runs after the HTTP 200 response is sent to MercadoPago.
+    Uses a separate database session to avoid conflicts.
+    """
+    logger.info(f"[WEBHOOK BG] Processing background task: topic={topic}, id={resource_id}")
+
+    try:
+        async for session in get_db():
+            uow = UnitOfWork(session)
+            service = PagoService(uow)
+            result = await service.procesar_webhook(topic=topic, resource_id=resource_id)
+            logger.info(f"[WEBHOOK BG] Result: {result}")
+            await session.close()
+            return
+    except Exception as e:
+        logger.error(f"[WEBHOOK BG] Error processing webhook: {e}")
+
+
 @router.post("/webhook", response_model=WebhookResponse)
 async def webhook(
     topic: str = Query(..., description="Webhook topic from MP"),
     id: str = Query(..., description="MP payment ID"),
-    uow: UnitOfWork = Depends(get_uow),
+    background_tasks: BackgroundTasks = None,
+    x_signature: str = Query(None, description="X-Signature header from MP"),
+    x_request_id: str = Query(None, description="X-Request-Id header from MP"),
 ):
     """
     MercadoPago webhook endpoint (IPN - Instant Payment Notification).
 
-    IMPORTANT:
-    - This endpoint is PUBLIC (no auth) - MP sends the webhook
-    - We ALWAYS validate against MP API, never trust webhook payload alone
-    - Idempotency: duplicate webhooks are ignored
+    CRITICAL FLOW:
+    1. Validate X-Signature header (security)
+    2. Respond HTTP 200 IMMEDIATELY (before any processing)
+    3. Process webhook in background task
 
-    Query params come from MP:
+    MercadoPago reintenta webhooks if no 200 response within ~30 seconds.
+    We respond immediately and process asynchronously.
+
+    Headers from MP:
+    - X-Signature: HMAC signature for validation
+    - X-Request-Id: Unique request ID
+
+    Query params from MP:
     - topic: "payment"
     - id: MP payment ID
 
     Returns:
-        HTTP 200 with processing result
+        HTTP 200 with status "ok" immediately (processing happens in background)
     """
-    logger.info(f"Received webhook: topic={topic}, id={id}")
+    logger.info(f"[WEBHOOK] Received: topic={topic}, id={id}, signature={x_signature[:40] if x_signature else 'None'}...")
 
-    service = PagoService(uow)
-    result = await service.procesar_webhook(topic=topic, resource_id=id)
+    # Validate signature (security)
+    if x_signature:
+        if not mp_client.validar_firma_webhook(id, x_signature, x_request_id):
+            logger.warning(f"[WEBHOOK] Invalid signature for payment {id}")
+            raise HTTPException(status_code=403, detail="Invalid webhook signature")
+
+    # Process only payment topics
+    if topic != "payment":
+        logger.info(f"[WEBHOOK] Ignoring non-payment topic: {topic}")
+        return WebhookResponse(message="Ignored (unsupported topic)", processed=False)
+
+    # ⚡ RESPONDER HTTP 200 INMEDIATAMENTE
+    # MercadoPago necesita este 200 rápido para no reintentar
+    logger.info(f"[WEBHOOK] Sending HTTP 200 immediately for payment {id}")
+
+    # Programar procesamiento en background (después de enviar respuesta)
+    if background_tasks:
+        background_tasks.add_task(_procesar_webhook_background, topic, id)
 
     return WebhookResponse(
-        message=result.get("message", "Processed"),
-        processed=result.get("processed", False),
+        message="ok",
+        processed=True,
+    )
+
+
+@router.post("/webhook-legacy", response_model=WebhookResponse)
+async def webhook_legacy(
+    payload: WebhookPayload,
+    background_tasks: BackgroundTasks = None,
+    x_signature: str = Query(None, description="X-Signature header from MP"),
+    x_request_id: str = Query(None, description="X-Request-Id header from MP"),
+):
+    """
+    Legacy webhook endpoint for MercadoPago (form-encoded POST body).
+
+    Same flow as /webhook but accepts JSON body instead of query params.
+    """
+    topic = payload.topic
+    resource_id = payload.action_id or payload.resource or ""
+
+    logger.info(f"[WEBHOOK LEGACY] Received: topic={topic}, id={resource_id}")
+
+    # Validate signature (security)
+    if x_signature and resource_id:
+        if not mp_client.validar_firma_webhook(resource_id, x_signature, x_request_id):
+            logger.warning(f"[WEBHOOK LEGACY] Invalid signature for payment {resource_id}")
+            raise HTTPException(status_code=403, detail="Invalid webhook signature")
+
+    # Process only payment topics
+    if topic != "payment":
+        logger.info(f"[WEBHOOK LEGACY] Ignoring non-payment topic: {topic}")
+        return WebhookResponse(message="Ignored (unsupported topic)", processed=False)
+
+    # ⚡ RESPONDER HTTP 200 INMEDIATAMENTE
+    logger.info(f"[WEBHOOK LEGACY] Sending HTTP 200 immediately for payment {resource_id}")
+
+    # Programar procesamiento en background (después de enviar respuesta)
+    if background_tasks and resource_id:
+        background_tasks.add_task(_procesar_webhook_background, topic, resource_id)
+
+    return WebhookResponse(
+        message="ok",
+        processed=True,
     )
