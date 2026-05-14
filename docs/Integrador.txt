@@ -32,6 +32,7 @@ OBJ-06	Sistema	Procesar y registrar pagos a través de la pasarela MercadoPago d
 •	Pasarela de pagos MercadoPago Checkout API: tarjeta de crédito/débito, Rapipago, Pago Fácil
 •	Notificaciones webhook IPN de MercadoPago para confirmación automática de pagos
 •	Módulo DireccionEntrega: CRUD completo con dirección principal por usuario
+•	Pantalla de perfil del cliente: visualización y edición de datos personales, gestión de direcciones y contraseñas
 •	Panel de administración: dashboard con recharts, CRUD de entidades, gestión de pedidos y stock
 •	Rate limiting con slowapi: máximo 5 intentos fallidos por IP en 15 minutos en el login
 •	CORS configurado correctamente con CORSMiddleware para la separación frontend/backend
@@ -336,7 +337,7 @@ Número de tarjeta	Red	Resultado	CVV	Vencimiento
  
 9. Gestión de Estado con Zustand
 Zustand es la librería de gestión de estado global del frontend. Food Store requiere cuatro stores con responsabilidades claramente separadas.
-[DIAGRAMA: Arquitectura Frontend - Feature-Sliced Design] Capas del frontend con flujo de imports de arriba hacia abajo: Pages a Features a Hook/Store a API a Types, sin cross-imports entre features. (1) Pages/pages/: solo define la ruta y delega a los features. (2) Cuatro features: feature/auth (LoginForm, RegisterForm, ProtectedRoute HOC), feature/store (CatalogoGrid, CartDrawer, CheckoutForm), feature/pedidos (PedidosList, PedidoDetail, HistorialTimeline, PaymentStatus), feature/admin (Dashboard, CRUDs, GestionPedidos, StockTable). (3) Hooks con TanStack Query: useAuth, useProductos, usePedidos, useAdmin. Stores Zustand: authStore, cartStore, paymentStore, uiStore. (4) API/Axios con interceptores JWT. (5) Types con strict:true sin any. Al pie: Components compartidos y React Router DOM.
+[DIAGRAMA: Arquitectura Frontend - Feature-Sliced Design] Capas del frontend con flujo de imports de arriba hacia abajo: Pages a Features a Hook/Store a API a Types, sin cross-imports entre features. (1) Pages/pages/: solo define la ruta y delega a los features. (2) Cinco features: feature/auth (LoginForm, RegisterForm, ProtectedRoute HOC), feature/store (CatalogoGrid, CartDrawer, CheckoutForm), feature/pedidos (PedidosList, PedidoDetail, HistorialTimeline, PaymentStatus), feature/admin (Dashboard, CRUDs, GestionPedidos, StockTable), feature/perfil (PerfilCliente, MisDirecciones, EditPassword). (3) Hooks con TanStack Query: useAuth, useProductos, usePedidos, useAdmin, usePerfil. Stores Zustand: authStore, cartStore, paymentStore, uiStore. (4) API/Axios con interceptores JWT. (5) Types con strict:true sin any. Al pie: Components compartidos y React Router DOM.
 Figura 6 — Los cuatro stores Zustand y sus responsabilidades. Persistencia selectiva por store.
 
 Store	Archivo	Estado que gestiona	Middleware	Persiste
@@ -402,7 +403,7 @@ Backend — MercadoPago	15	SDK Python configurado con idempotency_key UUID. Webh
 Frontend — Estructura y TypeScript	10	Feature-sliced: pages/features/components/hooks/store/api/types. Sin cross-imports. strict: true, no any.	Estructura presente, algunos módulos mezclados.	Estructura plana.	Sin estructura.
 Frontend — Zustand	10	4 stores implementados y tipados. persist correcto por store. Suscripción por slice.	3 stores correctos.	Solo authStore y cartStore básicos.	Sin Zustand.
 Frontend — TanStack Query	15	useQuery/useMutation para todo el fetch. queryKeys descriptivos. Invalidación tras mutaciones. Interceptor refresh 401 automático.	TanStack Query presente, invalidación parcial.	Fetch directo con useEffect.	Sin TanStack Query.
-Frontend — Funcionalidades Cliente	15	Catálogo con debounce/filtros/paginación/skeleton. Carrito persist. Checkout con CardPayment de MP. Timeline con polling 30s.	Funcional con algunas carencias.	Lista sin filtros ni paginación.	Sin funcionalidades.
+Frontend — Funcionalidades Cliente	15	Catálogo con debounce/filtros/paginación/skeleton. Carrito persist. Checkout con CardPayment de MP. Timeline con polling 30s. Pantalla de perfil y direcciones.	Funcional con algunas carencias.	Lista sin filtros ni paginación.	Sin funcionalidades.
 Frontend — Panel Admin	15	Dashboard KPIs + recharts. CRUD categorías/productos con relaciones. Gestión pedidos con FSM. Gestión stock.	CRUD funcional, falta alguna feature.	Solo visualización.	Sin panel admin.
 UI/UX y Diseño	10	Sistema de diseño consistente. Mobile-first. Skeleton loaders, toasts, modales de confirmación, estados vacíos.	Diseño consistente con pequeñas inconsistencias.	Diseño básico sin sistema.	Sin diseño coherente.
 Calidad de Código	10	snake_case/camelCase/PascalCase. Funciones < 50 líneas. SRP. Docstrings. JSDoc. README.md completo.	Nomenclatura correcta, algunas funciones largas.	Mezcla de convenciones.	Sin convenciones.
