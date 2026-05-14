@@ -6,7 +6,7 @@ Food Store es un sistema de comercio electrónico diseñado específicamente par
 
 El sistema contempla cinco actores principales que interactúan con la plataforma de maneras distintas y complementarias:
 
-- **Cliente**: Es el usuario final de la tienda. Puede registrarse, iniciar sesión, navegar el catálogo de productos, agregar ítems a su carrito, crear pedidos, seleccionar una dirección de entrega, realizar pagos mediante MercadoPago y consultar el historial de sus pedidos. El cliente tiene visibilidad únicamente sobre sus propios datos y operaciones.
+- **Cliente**: Es el usuario final de la tienda. Puede registrarse, iniciar sesión, navegar el catálogo de productos, agregar ítems a su carrito, crear pedidos, seleccionar una dirección de entrega, realizar pagos mediante MercadoPago y consultar el historial de sus pedidos. Además, cuenta con una Pantalla de Perfil donde puede visualizar y actualizar sus datos, cambiar su contraseña y gestionar sus direcciones. El cliente tiene visibilidad únicamente sobre sus propios datos y operaciones.
 
 - **Administrador (Admin)**: Posee control total sobre el sistema. Puede gestionar usuarios (crear, editar, desactivar), asignar roles, administrar el catálogo completo de productos y categorías, supervisar todos los pedidos sin importar su estado, acceder al panel de métricas y configurar parámetros globales del sistema como formas de pago y estados de pedido.
 
@@ -588,7 +588,7 @@ La evaluación del sistema Food Store se realiza sobre un total de **200 puntos*
 
 **Integración MercadoPago** evalúa la correcta implementación del flujo de pagos. Se verifica la creación de preferencias con datos correctos, el procesamiento de webhooks IPN, la idempotencia de pagos, el manejo correcto de cada estado de pago, la tokenización PCI SAQ-A en el frontend, y el correcto uso del entorno Sandbox para pruebas.
 
-**Frontend** evalúa la implementación de la interfaz de usuario. Se verifica la arquitectura Feature-Sliced Design, la separación correcta de estado cliente (Zustand) vs estado servidor (TanStack Query), la implementación de los cuatro stores con persistencia, la configuración del interceptor de Axios, el uso de custom hooks, y la calidad visual y de UX de la interfaz.
+**Frontend** evalúa la implementación de la interfaz de usuario. Se verifica la arquitectura Feature-Sliced Design, la separación correcta de estado cliente (Zustand) vs estado servidor (TanStack Query), la implementación de los cuatro stores con persistencia, la configuración del interceptor de Axios, el uso de custom hooks, la inclusión de una Pantalla de Perfil completa para el cliente, y la calidad visual y de UX de la interfaz.
 
 **Patrones y arquitectura** evalúa la correcta aplicación de los patrones descritos en la sección 13. Se verifica que cada patrón esté implementado correctamente y no solo mencionado en la documentación. Se penalizan las implementaciones que nombran un patrón pero no lo aplican realmente.
 

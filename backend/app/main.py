@@ -20,6 +20,7 @@ from app.modules.productos.router import router as productos_router
 from app.modules.direcciones.router import router as router_direcciones
 from app.modules.pedidos.router import router as pedidos_router
 from app.modules.pagos.router import router as pagos_router
+from app.modules.admin.router import router as admin_router
 
 # Configure logging
 setup_logging()
@@ -31,26 +32,26 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Application lifespan context manager"""
     # Startup
-    logger.info(f"🚀 {settings.app_name} v{settings.app_version} starting...")
-    logger.info(f"📊 Environment: {settings.environment}")
-    logger.info(f"🔍 Debug mode: {settings.debug}")
+    logger.info(f"[STARTUP] {settings.app_name} v{settings.app_version} starting...")
+    logger.info(f"[STARTUP] Environment: {settings.environment}")
+    logger.info(f"[STARTUP] Debug mode: {settings.debug}")
     
     # Log CORS configuration
-    logger.info(f"🔐 CORS origins: {settings.cors_origins}")
+    logger.info(f"[STARTUP] CORS origins: {settings.cors_origins}")
     
     # Log rate limiting configuration
     if settings.rate_limit_enabled:
-        logger.info(f"⏱️  Rate limiting ENABLED")
-        logger.info(f"   - General limit: {settings.rate_limit_general_limit}")
-        logger.info(f"   - Auth limit: {settings.rate_limit_auth_limit}")
-        logger.info(f"   - Refresh limit: {settings.rate_limit_refresh_limit}")
+        logger.info(f"[STARTUP] Rate limiting ENABLED")
+        logger.info(f"[STARTUP]   - General limit: {settings.rate_limit_general_limit}")
+        logger.info(f"[STARTUP]   - Auth limit: {settings.rate_limit_auth_limit}")
+        logger.info(f"[STARTUP]   - Refresh limit: {settings.rate_limit_refresh_limit}")
     else:
-        logger.info(f"⏱️  Rate limiting DISABLED")
+        logger.info(f"[STARTUP] Rate limiting DISABLED")
     
     yield
     
     # Shutdown
-    logger.info("🛑 Application shutting down...")
+    logger.info("[SHUTDOWN] Application shutting down...")
     await engine.dispose()
 
 
@@ -119,6 +120,10 @@ app.include_router(pedidos_router, prefix="/api/v1")
 
 # ── Pagos Router ───────────────────────────────────────────────────────────────
 app.include_router(pagos_router, prefix="/api/v1")
+
+# ── Admin Router ───────────────────────────────────────────────────────────────
+# Note: admin_router already has prefix="/api/v1/admin" in its definition
+app.include_router(admin_router)
 
 
 if __name__ == "__main__":

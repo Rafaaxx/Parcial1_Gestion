@@ -2,8 +2,8 @@
  * LoginPage — Authentication form
  */
 
-import React, { useState } from 'react'
-import { Link, useNavigate, useSearchParams, Navigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { useAuthStore } from '@/features/auth/store'
 import { apiClient } from '@/shared/http/client'
@@ -30,21 +30,28 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const redirect = searchParams.get('redirect') || '/'
-  const { isAuthenticated, rehydrated, setTokens, setUser } = useAuthStore()
+  const { isAuthenticated, rehydrated, setTokens, setUser, logout } = useAuthStore()
+
+  // If already authenticated, force logout so the user can log in fresh
+  // This prevents stale sessions (e.g., old admin JWT) from silently persisting.
+  // IMPORTANT: Only run ONCE on mount (ref guard). Without it, this effect also
+  // fires after login (isAuthenticated → true) and immediately calls logout()
+  // again, clearing the token before /auth/me can use it → 403 Forbidden.
+  const hasClearedSession = React.useRef(false)
+  useEffect(() => {
+    if (hasClearedSession.current) return
+    if (rehydrated && isAuthenticated) {
+      hasClearedSession.current = true
+      logout()
+    }
+  }, [rehydrated, isAuthenticated, logout])
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  // If already authenticated, redirect (use Navigate component, not navigate() side-effect)
-  if (rehydrated && isAuthenticated) {
-    console.log("isAuthenticades: ",isAuthenticated);
-    console.log("rehydrated", rehydrated);
-    
-    
-    //return <Navigate to="/" replace />
-  }
-
+  // IMPORTANT: useMutation must be BEFORE any early return
+  // to avoid "Rendered fewer hooks than expected" error
   const loginMutation = useMutation({
     mutationFn: async (data: { email: string; password: string }) => {
       const tokenResp = await apiClient.post<TokenResponse>('/auth/login', data)
@@ -67,7 +74,16 @@ export const LoginPage: React.FC = () => {
       return tokenResp.data
     },
     onSuccess: () => {
-      navigate(redirect, { replace: true })
+      // Redirect admin/stock/pedidos users to admin panel
+      const { user } = useAuthStore.getState()
+      const isStaff = user?.roles.some(r => ['ADMIN', 'STOCK', 'PEDIDOS'].includes(r))
+      if (isStaff) {
+        navigate('/admin', { replace: true })
+      } else {
+        // Never redirect non-staff users to admin pages
+        const safeRedirect = redirect.startsWith('/admin') ? '/' : redirect
+        navigate(safeRedirect, { replace: true })
+      }
     },
     onError: (error: unknown) => {
       const axiosError = error as { response?: { data?: { detail?: string } } }

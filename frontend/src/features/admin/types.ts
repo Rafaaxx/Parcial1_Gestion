@@ -31,7 +31,7 @@ export interface VentaPeriodo {
   cantidad_pedidos: number
 }
 
-// ── User Management ────────────────────────────────────────────────────────
+// ── User Management ───────────────────────────────────────────────────────
 
 export interface UsuarioAdmin {
   id: number

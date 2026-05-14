@@ -82,6 +82,15 @@ export const UserDropdown: React.FC = () => {
             >
               Mi Perfil
             </Link>
+            {user.roles.some(r => ['ADMIN', 'STOCK', 'PEDIDOS'].includes(r)) && (
+              <Link
+                to="/admin"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                Panel Admin
+              </Link>
+            )}
           </div>
 
           <div className="border-t border-gray-100 dark:border-gray-700 py-1">

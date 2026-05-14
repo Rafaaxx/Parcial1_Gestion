@@ -4,7 +4,7 @@
 
 import React from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useAuthStore, type Role } from '@/features/auth/store'
+import { useAuthStore, userHasRole, type Role } from '@/features/auth/store'
 import { Skeleton } from '@/shared/ui/Skeleton'
 
 interface ProtectedRouteProps {
@@ -13,12 +13,26 @@ interface ProtectedRouteProps {
   fallback?: React.ReactNode
 }
 
+/**
+ * ProtectedRoute: guards routes by authentication + role.
+ *
+ * 1. Waits for rehydration (prevents flash).
+ * 2. Checks authentication — redirects to login with return URL.
+ * 3. If roles are required, checks user has at least one — shows ForbiddenAccess otherwise.
+ * 4. Renders children or Outlet.
+ *
+ * IMPORTANT: isAuthenticated can be true BEFORE user data loads
+ * (token rehydrated from localStorage but /auth/me not yet called).
+ * We use the standalone userHasRole(user, roles) which safely handles null user.
+ */
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   requiredRoles,
   fallback,
 }) => {
-  const { isAuthenticated, rehydrated, user, hasRole } = useAuthStore()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const rehydrated = useAuthStore((s) => s.rehydrated)
+  const user = useAuthStore((s) => s.user)
   const location = useLocation()
 
   // Prevent flash: wait for rehydrated before checking auth
@@ -33,15 +47,15 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     )
   }
 
-  // Not authenticated → redirect to login with return URL
-  if (!isAuthenticated) {
+  // Not authenticated or no user data yet → redirect to login with return URL
+  if (!isAuthenticated || !user) {
     const redirectParam = encodeURIComponent(location.pathname + location.search)
     return <Navigate to={`/auth/login?redirect=${redirectParam}`} replace />
   }
 
   // Authenticated but missing required role → show 403
   if (requiredRoles && requiredRoles.length > 0) {
-    const hasRequiredRole = requiredRoles.some((role) => hasRole(role))
+    const hasRequiredRole = userHasRole(user, requiredRoles)
     if (!hasRequiredRole) {
       if (fallback) {
         return <>{fallback}</>
