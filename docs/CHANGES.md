@@ -417,7 +417,7 @@ PENDIENTE ──[pago aprobado]──→ CONFIRMADO ──[gestión]──→ EN
 
 ---
 
-#### CHANGE-13: Webhook IPN (MercadoPago)
+#### CHANGE-13: Webhook IPN (MercadoPago) ✅ ARCHIVADO
 
 | Campo | Valor |
 |-------|-------|
@@ -426,6 +426,8 @@ PENDIENTE ──[pago aprobado]──→ CONFIRMADO ──[gestión]──→ EN
 | **Funcionalidad** | POST /pagos/webhook, validar firma, confirmar status, auto-transicionar pedido |
 | **Dependencias** | CHANGE-12, CHANGE-10 |
 | **Duración estimada** | 14h |
+| **Estado** | ✅ Hecho (archivado 2026-05-13) |
+| **Evidencia** | `openspec/changes/archive/2026-05-13-change-13-mercadopago-webhook-ipn/` |
 
 **Flujo**:
 1. MP envía webhook IPN → topic=payment, resource_id={mp_payment_id}
