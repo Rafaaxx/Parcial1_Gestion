@@ -1,12 +1,8 @@
 """Auth router — 5 endpoints for authentication and token management."""
 
 from fastapi import APIRouter, Depends, status, Request
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
-from app.config import settings
 from app.dependencies import get_uow, get_current_user
-from app.middleware.rate_limiter import limiter
 from app.uow import UnitOfWork
 from app.models.usuario import Usuario
 
@@ -62,7 +58,6 @@ async def register(
     "/login",
     response_model=TokenResponse,
 )
-@limiter.limit(settings.rate_limit_auth_limit)
 async def login(
     request: Request,
     login_data: LoginRequest,
@@ -70,7 +65,7 @@ async def login(
     auth_repo: AuthRepository = Depends(_get_auth_repo),
     auth_service: AuthService = Depends(_get_auth_service),
 ):
-    """Authenticate user and return tokens. Rate limited."""
+    """Authenticate user and return tokens."""
     async with uow:
         result = await auth_service.login(
             request=login_data, uow=uow, auth_repo=auth_repo
@@ -85,7 +80,6 @@ async def login(
     "/refresh",
     response_model=TokenResponse,
 )
-@limiter.limit(settings.rate_limit_refresh_limit)
 async def refresh(
     request: Request,
     refresh_data: RefreshRequest,
@@ -93,7 +87,7 @@ async def refresh(
     auth_repo: AuthRepository = Depends(_get_auth_repo),
     auth_service: AuthService = Depends(_get_auth_service),
 ):
-    """Rotate a refresh token. Rate limited."""
+    """Rotate a refresh token."""
     async with uow:
         result = await auth_service.refresh(
             refresh_token=refresh_data.refresh_token,

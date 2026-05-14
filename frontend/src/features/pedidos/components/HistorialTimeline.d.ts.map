@@ -1,1 +1,0 @@
-{"version":3,"file":"HistorialTimeline.d.ts","sourceRoot":"","sources":["HistorialTimeline.tsx"],"names":[],"mappings":"AAAA;;GAEG;AAEH,OAAO,KAAK,MAAM,OAAO,CAAA;AACzB,OAAO,EAAE,eAAe,EAA+B,MAAM,UAAU,CAAA;AAEvE,UAAU,sBAAsB;IAC9B,SAAS,EAAE,eAAe,EAAE,CAAA;CAC7B;AAED,eAAO,MAAM,iBAAiB,EAAE,KAAK,CAAC,EAAE,CAAC,sBAAsB,CAiG9D,CAAA;AAED,eAAe,iBAAiB,CAAA"}

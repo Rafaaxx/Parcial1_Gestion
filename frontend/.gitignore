@@ -30,3 +30,9 @@ dist-ssr
 
 # Build
 build/
+
+# Compiled artifacts (tsc output in same dir as .ts/.tsx)
+src/**/*.js
+src/**/*.js.map
+src/**/*.d.ts
+src/**/*.d.ts.map
