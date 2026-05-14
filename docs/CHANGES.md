@@ -482,7 +482,7 @@ PENDIENTE ──[pago aprobado]──→ CONFIRMADO ──[gestión]──→ EN
 
 ### DOMINIO 6: Calidad y Documentación
 
-#### CHANGE-15: Validación Global y Manejo de Errores
+#### CHANGE-15: Validación Global y Manejo de Errores ✅ ARCHIVADO
 
 | Campo | Valor |
 |-------|-------|
@@ -491,6 +491,8 @@ PENDIENTE ──[pago aprobado]──→ CONFIRMADO ──[gestión]──→ EN
 | **Funcionalidad** | RFC 7807 errors, middleware global, logging, sanitización |
 | **Dependencias** | CHANGE-00 |
 | **Duración estimada** | 12h |
+| **Estado** | ✅ Hecho (archivado 2026-05-13) |
+| **Evidencia** | `openspec/changes/archive/2026-05-13-change-15-validation-error-handling/` |
 
 **Formato RFC 7807**:
 ```json
@@ -586,6 +588,17 @@ Para marcar como **completado y archivado**:
 
 ---
 
+## Ya realizado (archivado en OPSX)
+
+| # | Change | Nombre | Fecha Archive | Evidencia |
+|--|--------|--------|---------------|-----------|
+| 1 | CHANGE-07 | Catálogo Público | 2026-05-12 | `openspec/changes/archive/2026-05-12-change-07-catalog-listing-search/` |
+| 2 | CHANGE-10 | Máquina de Estados (FSM) | 2026-05-13 | `openspec/changes/archive/2026-05-13-change-10-maquina-de-estados-fsm/` |
+| 3 | CHANGE-12 | MercadoPago Checkout | 2026-05-12 | `openspec/changes/archive/2026-05-12-change-12-mercadopago-checkout/` |
+| 4 | CHANGE-15 | Validación Global y Manejo de Errores | 2026-05-13 | `openspec/changes/archive/2026-05-13-change-15-validation-error-handling/` |
+
+---
+
 ## 🚀 Próximos Pasos
 
 1. **Revisar este mapa**: ¿Está de acuerdo con el orden? ¿Falta algún change?
@@ -594,5 +607,5 @@ Para marcar como **completado y archivado**:
 
 ---
 
-**Última actualización**: 2026-05-12
+**Última actualización**: 2026-05-13
 **Generado**: 2026-03-31 | **Especificación**: Food Store v5.0 | **Metodología**: SDD

@@ -86,5 +86,5 @@
 - [x] 10.1 Add docstrings to all new modules and functions
 - [x] 10.2 Run flake8 and black to ensure code style
 - [x] 10.3 Run mypy for type checking (sin errores críticos)
-- [ ] 10.4 Update backend/README.md if needed
-- [ ] 10.5 Create a quick reference guide for using custom exceptions
+- [x] 10.4 Update backend/README.md if needed
+- [x] 10.5 Create a quick reference guide for using custom exceptions
