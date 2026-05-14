@@ -230,8 +230,8 @@ export function useUpdateProductoStock() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, cantidad }: { id: number; cantidad: number }) =>
-      updateProductoStock(id, cantidad),
+    mutationFn: ({ id, stock_cantidad }: { id: number; stock_cantidad: number }) =>
+      updateProductoStock(id, stock_cantidad),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminProductsKeys.all })
     },

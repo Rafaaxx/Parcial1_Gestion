@@ -22,8 +22,8 @@ export const AdminProducts: React.FC = () => {
   const [form, setForm] = useState({
     nombre: '',
     descripcion: '',
-    precio: '',
-    stock: '',
+    precio_base: '',
+    stock_cantidad: '',
     disponible: true,
     categoria_id: 0,
   })
@@ -37,7 +37,7 @@ export const AdminProducts: React.FC = () => {
 
   const handleOpenCreate = () => {
     setEditingProduct(null)
-    setForm({ nombre: '', descripcion: '', precio: '', stock: '', disponible: true, categoria_id: 0 })
+    setForm({ nombre: '', descripcion: '', precio_base: '', stock_cantidad: '', disponible: true, categoria_id: 0 })
     setShowModal(true)
   }
 
@@ -46,8 +46,8 @@ export const AdminProducts: React.FC = () => {
     setForm({
       nombre: product.nombre,
       descripcion: product.descripcion,
-      precio: product.precio_base,
-      stock: String(product.stock_cantidad),
+      precio_base: product.precio_base,
+      stock_cantidad: product.stock_cantidad,
       disponible: product.disponible,
       categoria_id: product.categoria_id,
     })
@@ -58,8 +58,8 @@ export const AdminProducts: React.FC = () => {
     const data = {
       nombre: form.nombre,
       descripcion: form.descripcion,
-      precio: parseFloat(form.precio),
-      stock: parseInt(form.stock),
+      precio_base: parseFloat(form.precio_base),
+      stock_cantidad: parseInt(form.stock_cantidad),
       disponible: form.disponible,
       categoria_id: form.categoria_id,
     }
@@ -91,7 +91,7 @@ export const AdminProducts: React.FC = () => {
 
     const diff = stockValue - showStockModal.stock_cantidad
     if (diff !== 0) {
-      await updateStock.mutateAsync({ id: showStockModal.id, cantidad: diff })
+      await updateStock.mutateAsync({ id: showStockModal.id, stock_cantidad: diff })
     }
     setShowStockModal(null)
     refetch()
@@ -140,7 +140,7 @@ export const AdminProducts: React.FC = () => {
                   <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{product.id}</td>
                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{product.nombre}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{formatCurrency(product.precio_base)}</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{product.precio_base}</td>
                     <td className="px-4 py-3 text-sm">
                       <button
                         onClick={() => handleOpenStock(product)}
@@ -210,8 +210,8 @@ export const AdminProducts: React.FC = () => {
                   <input
                     type="number"
                     step="0.01"
-                    value={form.precio}
-                    onChange={(e) => setForm({ ...form, precio: e.target.value })}
+                    value={form.precio_base}
+                    onChange={(e) => setForm({ ...form, precio_base: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
                   />
                 </div>
@@ -219,8 +219,8 @@ export const AdminProducts: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock</label>
                   <input
                     type="number"
-                    value={form.stock}
-                    onChange={(e) => setForm({ ...form, stock: e.target.value })}
+                    value={form.stock_cantidad}
+                    onChange={(e) => setForm({ ...form, stock_cantidad: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
                   />
                 </div>

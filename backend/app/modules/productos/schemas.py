@@ -124,6 +124,7 @@ class ProductoUpdate(BaseModel):
         None, ge=Decimal("0.00"), decimal_places=2,
         description="Precio base del producto"
     )
+    stock_cantidad: Optional[int] = Field(None, description="Cantidad en stock (solo para admin)")
     disponible: Optional[bool] = Field(
         None,
         description="¿Está disponible para venta?"
@@ -169,6 +170,7 @@ class ProductoRead(BaseModel):
     nombre: str = Field(..., description="Nombre del producto")
     descripcion: Optional[str] = Field(None, description="Descripción")
     precio_base: Decimal = Field(..., description="Precio base")
+    stock_cantidad: Optional[int] = Field(None, description="Cantidad en stock (solo para admin)")
     disponible: bool = Field(..., description="¿Está disponible?")
     imagen: Optional[str] = Field(None, description="URL de imagen")
     created_at: datetime = Field(..., description="Fecha de creación")
@@ -217,6 +219,7 @@ class ProductoListItem(BaseModel):
     nombre: str = Field(..., description="Nombre del producto")
     descripcion: Optional[str] = Field(None, description="Descripción")
     precio_base: Decimal = Field(..., description="Precio base")
+    stock_cantidad: Optional[int] = Field(None, description="Cantidad en stock (solo para admin)")
     disponible: bool = Field(..., description="¿Está disponible?")
     imagen: Optional[str] = Field(None, description="URL de imagen")
     categorias: List[CategoriaBasica] = Field(

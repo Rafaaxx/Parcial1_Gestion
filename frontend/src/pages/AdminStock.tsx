@@ -24,7 +24,7 @@ export const AdminStock: React.FC = () => {
 
     const diff = stockValue - editingStock.stock_cantidad
     if (diff !== 0) {
-      await updateStock.mutateAsync({ id: editingStock.id, cantidad: diff })
+      await updateStock.mutateAsync({ id: editingStock.id, stock_cantidad: diff })
     }
     setEditingStock(null)
     refetch()

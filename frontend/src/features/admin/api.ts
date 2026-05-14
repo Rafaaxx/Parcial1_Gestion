@@ -186,7 +186,7 @@ export interface ProductoAdmin {
   id: number
   nombre: string
   descripcion: string
-  precio_base: string
+  precio_base: number
   disponible: boolean
   stock_cantidad: number
   categoria_id: number
@@ -205,8 +205,8 @@ export interface ProductoListResponse {
 export interface CreateProductoRequest {
   nombre: string
   descripcion: string
-  precio: number
-  stock: number
+  precio_base: number
+  stock_cantidad: number
   disponible: boolean
   categoria_id: number
   ingrediente_ids?: number[]
@@ -215,8 +215,8 @@ export interface CreateProductoRequest {
 export interface UpdateProductoRequest {
   nombre?: string
   descripcion?: string
-  precio?: number
-  stock?: number
+  precio_base?: number
+  stock_cantidad?: number
   disponible?: boolean
   categoria_id?: number
   ingrediente_ids?: number[]
@@ -298,14 +298,15 @@ export async function deleteProducto(id: number): Promise<void> {
 /**
  * Update product stock
  * PATCH /api/v1/productos/{id}/stock
+ * Backend expects StockUpdate schema: { stock_cantidad: number }
  */
 export async function updateProductoStock(
   id: number,
-  cantidad: number
+  stock_cantidad: number
 ): Promise<ProductoAdmin> {
   const response = await apiClient.patch<ProductoAdmin>(
     `${API_BASE}${API_VERSION}/productos/${id}/stock`,
-    { cantidad },
+    { stock_cantidad },
     { headers: getAuthHeaders() }
   )
   return response.data
