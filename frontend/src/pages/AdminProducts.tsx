@@ -46,8 +46,8 @@ export const AdminProducts: React.FC = () => {
     setForm({
       nombre: product.nombre,
       descripcion: product.descripcion,
-      precio: product.precio,
-      stock: String(product.stock),
+      precio: product.precio_base,
+      stock: String(product.stock_cantidad),
       disponible: product.disponible,
       categoria_id: product.categoria_id,
     })
@@ -83,13 +83,13 @@ export const AdminProducts: React.FC = () => {
 
   const handleOpenStock = (product: ProductoAdmin) => {
     setShowStockModal(product)
-    setStockValue(product.stock)
+    setStockValue(product.stock_cantidad)
   }
 
   const handleUpdateStock = async () => {
     if (!showStockModal) return
 
-    const diff = stockValue - showStockModal.stock
+    const diff = stockValue - showStockModal.stock_cantidad
     if (diff !== 0) {
       await updateStock.mutateAsync({ id: showStockModal.id, cantidad: diff })
     }
@@ -140,13 +140,13 @@ export const AdminProducts: React.FC = () => {
                   <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{product.id}</td>
                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{product.nombre}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{formatCurrency(product.precio)}</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{formatCurrency(product.precio_base)}</td>
                     <td className="px-4 py-3 text-sm">
                       <button
                         onClick={() => handleOpenStock(product)}
-                        className={`font-medium hover:underline ${product.stock <= 5 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'}`}
+                        className={`font-medium hover:underline ${product.stock_cantidad <= 5 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'}`}
                       >
-                        {product.stock} unidades
+                        {product.stock_cantidad} unidades
                       </button>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{product.categoria_nombre || '-'}</td>
@@ -271,7 +271,7 @@ export const AdminProducts: React.FC = () => {
               Actualizar Stock: {showStockModal.nombre}
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Stock actual: {showStockModal.stock} unidades
+              Stock actual: {showStockModal.stock_cantidad} unidades
             </p>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nuevo stock total</label>

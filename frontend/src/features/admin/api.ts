@@ -186,9 +186,9 @@ export interface ProductoAdmin {
   id: number
   nombre: string
   descripcion: string
-  precio: string
+  precio_base: string
   disponible: boolean
-  stock: number
+  stock_cantidad: number
   categoria_id: number
   categoria_nombre?: string
   creado_en: string

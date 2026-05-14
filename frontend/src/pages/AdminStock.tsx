@@ -7,22 +7,22 @@ import { useProductos, useCategorias, useUpdateProductoStock } from '@/features/
 
 export const AdminStock: React.FC = () => {
   const [filterStock, setFilterStock] = useState<'all' | 'low'>('all')
-  const [editingStock, setEditingStock] = useState<{ id: number; nombre: string; stock: number } | null>(null)
+  const [editingStock, setEditingStock] = useState<{ id: number; nombre: string; stock_cantidad: number } | null>(null)
   const [stockValue, setStockValue] = useState(0)
 
   const { data: productos, isLoading, refetch } = useProductos(0, 100)
   const { data: categorias } = useCategorias()
   const updateStock = useUpdateProductoStock()
 
-  const handleEditStock = (product: { id: number; nombre: string; stock: number }) => {
+  const handleEditStock = (product: { id: number; nombre: string; stock_cantidad: number }) => {
     setEditingStock(product)
-    setStockValue(product.stock)
+    setStockValue(product.stock_cantidad)
   }
 
   const handleSaveStock = async () => {
     if (!editingStock) return
 
-    const diff = stockValue - editingStock.stock
+    const diff = stockValue - editingStock.stock_cantidad
     if (diff !== 0) {
       await updateStock.mutateAsync({ id: editingStock.id, cantidad: diff })
     }
@@ -32,7 +32,7 @@ export const AdminStock: React.FC = () => {
 
   // Filtrar productos
   const filteredProducts = productos?.items.filter((p) => {
-    if (filterStock === 'low') return p.stock <= 10
+    if (filterStock === 'low') return p.stock_cantidad <= 10
     return true
   }) || []
 
@@ -99,10 +99,10 @@ export const AdminStock: React.FC = () => {
                       <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                         <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{product.id}</td>
                         <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{product.nombre}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{formatCurrency(product.precio)}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{formatCurrency(product.precio_base)}</td>
                         <td className="px-4 py-3">
-                          <span className={`font-medium ${product.stock <= 5 ? 'text-red-600 dark:text-red-400' : product.stock <= 10 ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-900 dark:text-gray-100'}`}>
-                            {product.stock} unidades
+                          <span className={`font-medium ${product.stock_cantidad <= 5 ? 'text-red-600 dark:text-red-400' : product.stock_cantidad <= 10 ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-900 dark:text-gray-100'}`}>
+                            {product.stock_cantidad} unidades
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -131,7 +131,7 @@ export const AdminStock: React.FC = () => {
               Actualizar Stock: {editingStock.nombre}
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Stock actual: {editingStock.stock} unidades
+              Stock actual: {editingStock.stock_cantidad} unidades
             </p>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nuevo stock total</label>
