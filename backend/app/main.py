@@ -100,30 +100,26 @@ async def root():
 
 
 # ── Auth Router ──────────────────────────────────────────────────────────────
-
 app.include_router(auth_router)
 
-
 # ── Categorias Router ─────────────────────────────────────────────────────────
-
 app.include_router(categorias_router)
 
-
 # ── Ingredientes Router ───────────────────────────────────────────────────────────
-
 app.include_router(ingredientes_router)
 
-
 # ── Productos Router ───────────────────────────────────────────────────────────
-
 app.include_router(productos_router)
+
 # ── Direcciones Router ────────────────────────────────────────────────────────────
-
 app.include_router(router_direcciones)
-# ── Pedidos Router ───────────────────────────────────────────────────────────────
 
+# ── Pedidos Router ───────────────────────────────────────────────────────────────
 app.include_router(pedidos_router, prefix="/api/v1")
+
+# ── Pagos Router ───────────────────────────────────────────────────────────────
 app.include_router(pagos_router, prefix="/api/v1")
+
 
 if __name__ == "__main__":
     import uvicorn

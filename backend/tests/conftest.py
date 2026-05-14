@@ -232,6 +232,47 @@ async def pg_client(pg_session):
 # ── Auth helper fixtures ──────────────────────────────────────────────────────────
 
 @pytest.fixture
+def user_token():
+    """
+    Generate a valid JWT token for testing.
+
+    This fixture creates a test user and returns their access token.
+    Used for authenticated endpoint tests.
+    """
+    from datetime import datetime, timedelta
+    from jose import jwt
+    from app.config import settings
+
+    payload = {
+        "sub": "test@test.com",
+        "user_id": 1,
+        "email": "test@test.com",
+        "roles": ["CLIENT"],
+        "exp": datetime.utcnow() + timedelta(hours=1),
+    }
+    token = jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    return token
+
+
+@pytest.fixture
+def admin_token():
+    """Generate admin JWT token for testing admin endpoints."""
+    from datetime import datetime, timedelta
+    from jose import jwt
+    from app.config import settings
+
+    payload = {
+        "sub": "admin@test.com",
+        "user_id": 999,
+        "email": "admin@test.com",
+        "roles": ["ADMIN"],
+        "exp": datetime.utcnow() + timedelta(hours=1),
+    }
+    token = jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    return token
+
+
+@pytest.fixture
 def sync_client(client):
     """Create synchronous test client (deprecated, use async client)."""
     return client
