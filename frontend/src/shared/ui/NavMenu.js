@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/shared/hooks/useAuth';
 const PUBLIC_ITEMS = [
     { label: 'Catálogo', path: '/productos' },
+    { label: 'Registrarse', path: '/auth/register' },
 ];
 const AUTH_ITEMS = [
     { label: 'Catálogo', path: '/productos' },

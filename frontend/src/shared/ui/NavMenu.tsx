@@ -16,6 +16,7 @@ interface NavItemConfig {
 
 const PUBLIC_ITEMS: NavItemConfig[] = [
   { label: 'Catálogo', path: '/productos' },
+  { label: 'Registrarse', path: '/auth/register' },
 ]
 
 const AUTH_ITEMS: NavItemConfig[] = [
