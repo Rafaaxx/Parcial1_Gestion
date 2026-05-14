@@ -128,7 +128,8 @@ async def pg_engine():
     This fixture is SESSION-scoped to reuse the same test database
     across all postgres-marked tests.
     """
-    db_url = os.environ.get("DATABASE_URL", "")
+    # Use TEST_DATABASE_URL if available, otherwise fall back to DATABASE_URL
+    db_url = os.environ.get("TEST_DATABASE_URL", "") or os.environ.get("DATABASE_URL", "")
 
     # Check if DATABASE_URL is PostgreSQL
     if "postgresql" not in db_url and "postgres" not in db_url:
@@ -214,12 +215,12 @@ async def pg_session(pg_engine):
             
             # 5. Direcciones (child of usuarios)
             await conn.execute(text("""
-                DELETE FROM direcciones WHERE usuario_id = ANY(:user_ids)
+                DELETE FROM direcciones_entrega WHERE usuario_id = ANY(:user_ids)
             """), {"user_ids": user_ids})
             
             # 6. Usuario roles (child of usuarios)
             await conn.execute(text("""
-                DELETE FROM usuario_roles WHERE usuario_id = ANY(:user_ids)
+                DELETE FROM usuarios_roles WHERE usuario_id = ANY(:user_ids)
             """), {"user_ids": user_ids})
             
             # 7. Finally users
