@@ -372,6 +372,7 @@ class TestCrearPedido:
         headers = _get_auth_headers(user)
 
         direccion_id = await _create_test_address(pg_session, user["id"])
+        await pg_session.commit()  # Commit the address so it's visible to the API
 
         body = {
             "items": [{"producto_id": producto["id"], "cantidad": 1}],

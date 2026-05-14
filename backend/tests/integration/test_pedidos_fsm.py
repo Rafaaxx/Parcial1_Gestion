@@ -223,6 +223,8 @@ class TestValidTransitions:
         self, pg_client: AsyncClient, pg_session: AsyncSession
     ):
         """Test PENDIENTE -> CONFIRMADO transition by ADMIN."""
+        from app.security import create_access_token
+
         # Setup: create user, product, order
         admin = await _create_test_user_with_roles(pg_session, "admin@test.com", ["ADMIN"])
         producto = await _create_test_producto(pg_session, "Pizza Test", Decimal("100.00"), 50)
@@ -230,10 +232,16 @@ class TestValidTransitions:
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 2)
         await pg_session.commit()
 
+        # Generate token for admin
+        token = create_access_token(
+            {"sub": str(admin["id"]), "email": admin["email"], "roles": ["ADMIN"]}
+        )
+
         # Execute transition
         response = await pg_client.patch(
             f"/api/v1/pedidos/{pedido['id']}/estado",
             json={"nuevo_estado": "CONFIRMADO"},
+            headers={"Authorization": f"Bearer {token}"},
         )
 
         assert (
@@ -247,15 +255,23 @@ class TestValidTransitions:
         self, pg_client: AsyncClient, pg_session: AsyncSession
     ):
         """Test CONFIRMADO -> EN_PREP transition."""
+        from app.security import create_access_token
+
         admin = await _create_test_user_with_roles(pg_session, "admin@test.com", ["ADMIN"])
         producto = await _create_test_producto(pg_session, "Pizza Test", Decimal("100.00"), 50)
         pedido = await _create_test_pedido(pg_session, admin["id"], "CONFIRMADO")
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 1)
         await pg_session.commit()
 
+        # Generate token for admin
+        token = create_access_token(
+            {"sub": str(admin["id"]), "email": admin["email"], "roles": ["ADMIN"]}
+        )
+
         response = await pg_client.patch(
             f"/api/v1/pedidos/{pedido['id']}/estado",
             json={"nuevo_estado": "EN_PREP"},
+            headers={"Authorization": f"Bearer {token}"},
         )
 
         assert (
@@ -269,15 +285,23 @@ class TestValidTransitions:
         self, pg_client: AsyncClient, pg_session: AsyncSession
     ):
         """Test EN_PREP -> EN_CAMINO transition."""
+        from app.security import create_access_token
+
         admin = await _create_test_user_with_roles(pg_session, "admin@test.com", ["ADMIN"])
         producto = await _create_test_producto(pg_session, "Pizza Test", Decimal("100.00"), 50)
         pedido = await _create_test_pedido(pg_session, admin["id"], "EN_PREP")
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 1)
         await pg_session.commit()
 
+        # Generate token for admin
+        token = create_access_token(
+            {"sub": str(admin["id"]), "email": admin["email"], "roles": ["ADMIN"]}
+        )
+
         response = await pg_client.patch(
             f"/api/v1/pedidos/{pedido['id']}/estado",
             json={"nuevo_estado": "EN_CAMINO"},
+            headers={"Authorization": f"Bearer {token}"},
         )
 
         assert (
@@ -291,15 +315,23 @@ class TestValidTransitions:
         self, pg_client: AsyncClient, pg_session: AsyncSession
     ):
         """Test EN_CAMINO -> ENTREGADO transition."""
+        from app.security import create_access_token
+
         admin = await _create_test_user_with_roles(pg_session, "admin@test.com", ["ADMIN"])
         producto = await _create_test_producto(pg_session, "Pizza Test", Decimal("100.00"), 50)
         pedido = await _create_test_pedido(pg_session, admin["id"], "EN_CAMINO")
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 1)
         await pg_session.commit()
 
+        # Generate token for admin
+        token = create_access_token(
+            {"sub": str(admin["id"]), "email": admin["email"], "roles": ["ADMIN"]}
+        )
+
         response = await pg_client.patch(
             f"/api/v1/pedidos/{pedido['id']}/estado",
             json={"nuevo_estado": "ENTREGADO"},
+            headers={"Authorization": f"Bearer {token}"},
         )
 
         assert (
@@ -320,15 +352,22 @@ class TestInvalidTransitions:
         self, pg_client: AsyncClient, pg_session: AsyncSession
     ):
         """Test PENDIENTE -> EN_CAMINO is invalid (skipping CONFIRMADO and EN_PREP)."""
+        from app.security import create_access_token
+
         admin = await _create_test_user_with_roles(pg_session, "admin@test.com", ["ADMIN"])
         producto = await _create_test_producto(pg_session, "Pizza Test", Decimal("100.00"), 50)
         pedido = await _create_test_pedido(pg_session, admin["id"], "PENDIENTE")
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 1)
         await pg_session.commit()
 
+        token = create_access_token(
+            {"sub": str(admin["id"]), "email": admin["email"], "roles": ["ADMIN"]}
+        )
+
         response = await pg_client.patch(
             f"/api/v1/pedidos/{pedido['id']}/estado",
             json={"nuevo_estado": "EN_CAMINO"},
+            headers={"Authorization": f"Bearer {token}"},
         )
 
         assert response.status_code == 422, f"Expected 422, got {response.status_code}"
@@ -339,15 +378,22 @@ class TestInvalidTransitions:
         self, pg_client: AsyncClient, pg_session: AsyncSession
     ):
         """Test CONFIRMADO -> ENTREGADO is invalid (skipping EN_PREP and EN_CAMINO)."""
+        from app.security import create_access_token
+
         admin = await _create_test_user_with_roles(pg_session, "admin@test.com", ["ADMIN"])
         producto = await _create_test_producto(pg_session, "Pizza Test", Decimal("100.00"), 50)
         pedido = await _create_test_pedido(pg_session, admin["id"], "CONFIRMADO")
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 1)
         await pg_session.commit()
 
+        token = create_access_token(
+            {"sub": str(admin["id"]), "email": admin["email"], "roles": ["ADMIN"]}
+        )
+
         response = await pg_client.patch(
             f"/api/v1/pedidos/{pedido['id']}/estado",
             json={"nuevo_estado": "ENTREGADO"},
+            headers={"Authorization": f"Bearer {token}"},
         )
 
         assert response.status_code == 422
@@ -358,15 +404,22 @@ class TestInvalidTransitions:
         self, pg_client: AsyncClient, pg_session: AsyncSession
     ):
         """Test backward transition (EN_CAMINO -> EN_PREP) is invalid."""
+        from app.security import create_access_token
+
         admin = await _create_test_user_with_roles(pg_session, "admin@test.com", ["ADMIN"])
         producto = await _create_test_producto(pg_session, "Pizza Test", Decimal("100.00"), 50)
         pedido = await _create_test_pedido(pg_session, admin["id"], "EN_CAMINO")
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 1)
         await pg_session.commit()
 
+        token = create_access_token(
+            {"sub": str(admin["id"]), "email": admin["email"], "roles": ["ADMIN"]}
+        )
+
         response = await pg_client.patch(
             f"/api/v1/pedidos/{pedido['id']}/estado",
             json={"nuevo_estado": "EN_PREP"},
+            headers={"Authorization": f"Bearer {token}"},
         )
 
         assert response.status_code == 422
@@ -386,10 +439,10 @@ class TestInvalidTransitions:
         await pg_session.commit()
 
         # Login as PEDIDOS
-        from app.dependencies import create_access_token
+        from app.security import create_access_token
 
         token = create_access_token(
-            {"sub": pedidos_user["email"], "id": pedidos_user["id"], "roles": ["PEDIDOS"]}
+            {"sub": str(pedidos_user["id"]), "email": pedidos_user["email"], "roles": ["PEDIDOS"]}
         )
 
         response = await pg_client.patch(
@@ -413,15 +466,22 @@ class TestTerminalStateRejection:
         self, pg_client: AsyncClient, pg_session: AsyncSession
     ):
         """Test ENTREGADO (terminal) rejects any transition."""
+        from app.security import create_access_token
+
         admin = await _create_test_user_with_roles(pg_session, "admin@test.com", ["ADMIN"])
         producto = await _create_test_producto(pg_session, "Pizza Test", Decimal("100.00"), 50)
         pedido = await _create_test_pedido(pg_session, admin["id"], "ENTREGADO")
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 1)
         await pg_session.commit()
 
+        token = create_access_token(
+            {"sub": str(admin["id"]), "email": admin["email"], "roles": ["ADMIN"]}
+        )
+
         response = await pg_client.patch(
             f"/api/v1/pedidos/{pedido['id']}/estado",
             json={"nuevo_estado": "CANCELADO"},
+            headers={"Authorization": f"Bearer {token}"},
         )
 
         assert response.status_code == 422
@@ -432,15 +492,22 @@ class TestTerminalStateRejection:
         self, pg_client: AsyncClient, pg_session: AsyncSession
     ):
         """Test CANCELADO (terminal) rejects any transition."""
+        from app.security import create_access_token
+
         admin = await _create_test_user_with_roles(pg_session, "admin@test.com", ["ADMIN"])
         producto = await _create_test_producto(pg_session, "Pizza Test", Decimal("100.00"), 50)
         pedido = await _create_test_pedido(pg_session, admin["id"], "CANCELADO")
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 1)
         await pg_session.commit()
 
+        token = create_access_token(
+            {"sub": str(admin["id"]), "email": admin["email"], "roles": ["ADMIN"]}
+        )
+
         response = await pg_client.patch(
             f"/api/v1/pedidos/{pedido['id']}/estado",
             json={"nuevo_estado": "CONFIRMADO"},
+            headers={"Authorization": f"Bearer {token}"},
         )
 
         assert response.status_code == 422
@@ -464,10 +531,10 @@ class TestRoleBasedPermissions:
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 1)
         await pg_session.commit()
 
-        from app.dependencies import create_access_token
+        from app.security import create_access_token
 
         token = create_access_token(
-            {"sub": client["email"], "id": client["id"], "roles": ["CLIENT"]}
+            {"sub": str(client["id"]), "email": client["email"], "roles": ["CLIENT"]}
         )
 
         response = await pg_client.delete(
@@ -493,10 +560,10 @@ class TestRoleBasedPermissions:
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 1)
         await pg_session.commit()
 
-        from app.dependencies import create_access_token
+        from app.security import create_access_token
 
         token = create_access_token(
-            {"sub": client["email"], "id": client["id"], "roles": ["CLIENT"]}
+            {"sub": str(client["id"]), "email": client["email"], "roles": ["CLIENT"]}
         )
 
         response = await pg_client.delete(
@@ -517,10 +584,10 @@ class TestRoleBasedPermissions:
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 1)
         await pg_session.commit()
 
-        from app.dependencies import create_access_token
+        from app.security import create_access_token
 
         token = create_access_token(
-            {"sub": client["email"], "id": client["id"], "roles": ["CLIENT"]}
+            {"sub": str(client["id"]), "email": client["email"], "roles": ["CLIENT"]}
         )
 
         response = await pg_client.delete(
@@ -550,9 +617,16 @@ class TestStockOperations:
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 5)  # Order 5 units
         await pg_session.commit()
 
+        from app.security import create_access_token
+
+        token = create_access_token(
+            {"sub": str(admin["id"]), "email": admin["email"], "roles": ["ADMIN"]}
+        )
+
         response = await pg_client.patch(
             f"/api/v1/pedidos/{pedido['id']}/estado",
             json={"nuevo_estado": "CONFIRMADO"},
+            headers={"Authorization": f"Bearer {token}"},
         )
 
         assert response.status_code == 200
@@ -583,10 +657,17 @@ class TestStockOperations:
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 3)
         await pg_session.commit()
 
+        from app.security import create_access_token
+
+        token = create_access_token(
+            {"sub": str(admin["id"]), "email": admin["email"], "roles": ["ADMIN"]}
+        )
+
         # Transition to CANCELADO
         response = await pg_client.patch(
             f"/api/v1/pedidos/{pedido['id']}/estado",
             json={"nuevo_estado": "CANCELADO", "motivo": "Test cancellation"},
+            headers={"Authorization": f"Bearer {token}"},
         )
 
         assert response.status_code == 200
@@ -609,10 +690,10 @@ class TestStockOperations:
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 2)
         await pg_session.commit()
 
-        from app.dependencies import create_access_token
+        from app.security import create_access_token
 
         token = create_access_token(
-            {"sub": client["email"], "id": client["id"], "roles": ["CLIENT"]}
+            {"sub": str(client["id"]), "email": client["email"], "roles": ["CLIENT"]}
         )
 
         # Cancel from PENDIENTE
@@ -647,10 +728,17 @@ class TestMotivoRequirement:
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 1)
         await pg_session.commit()
 
+        from app.security import create_access_token
+
+        token = create_access_token(
+            {"sub": str(admin["id"]), "email": admin["email"], "roles": ["ADMIN"]}
+        )
+
         # Try to cancel without motivo
         response = await pg_client.patch(
             f"/api/v1/pedidos/{pedido['id']}/estado",
             json={"nuevo_estado": "CANCELADO"},  # No motivo!
+            headers={"Authorization": f"Bearer {token}"},
         )
 
         assert response.status_code == 422
@@ -667,10 +755,10 @@ class TestMotivoRequirement:
         await _add_detalle_pedido(pg_session, pedido["id"], producto["id"], 1)
         await pg_session.commit()
 
-        from app.dependencies import create_access_token
+        from app.security import create_access_token
 
         token = create_access_token(
-            {"sub": client["email"], "id": client["id"], "roles": ["CLIENT"]}
+            {"sub": str(client["id"]), "email": client["email"], "roles": ["CLIENT"]}
         )
 
         # Try to cancel without motivo
