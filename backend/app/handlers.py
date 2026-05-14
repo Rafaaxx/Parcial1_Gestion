@@ -42,13 +42,25 @@ def format_rfc7807_error(
     request_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Format error response according to RFC 7807"""
-    error_type = f"{BASE_ERROR_URL}/{title.lower().replace(' ', '-')}"
+    # Handle case where title or detail might be a dict (from FastAPI/Starlette)
+    if isinstance(title, dict):
+        title_str = title.get("detail", title.get("code", "Error"))
+    else:
+        title_str = str(title) if title else "Error"
+    
+    # Handle detail that might also be a dict
+    if isinstance(detail, dict):
+        detail_str = detail.get("detail", str(detail))
+    else:
+        detail_str = str(detail) if detail else f"HTTP {status}"
+    
+    error_type = f"{BASE_ERROR_URL}/{title_str.lower().replace(' ', '-')}"
     
     response = {
         "type": error_type,
-        "title": title,
+        "title": title_str,
         "status": status,
-        "detail": detail,
+        "detail": detail_str,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "instance": str(request.url.path) if request else None,
     }

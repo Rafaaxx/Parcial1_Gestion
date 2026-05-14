@@ -176,32 +176,54 @@ async def pg_session(pg_engine):
     )
 
     # Clean up test data using a dedicated connection
+    # Order matters: child tables first, then parent tables (respecting FK constraints)
     async with pg_engine.begin() as conn:
-        await conn.execute(text("""
-            DELETE FROM historial_estado_pedido
-            WHERE pedido_id IN (
-                SELECT p.id FROM pedidos p
-                WHERE p.usuario_id IN (
-                    SELECT id FROM usuarios WHERE email LIKE '%@test.com'
+        # First get user IDs for cleanup
+        user_ids_result = await conn.execute(
+            text("SELECT id FROM usuarios WHERE email LIKE '%@test.com'")
+        )
+        user_ids = [row[0] for row in user_ids_result.fetchall()]
+        
+        if user_ids:
+            # Delete related records in proper order
+            # 1. Historial estado pedido (child of pedidos)
+            await conn.execute(text("""
+                DELETE FROM historial_estado_pedido
+                WHERE pedido_id IN (
+                    SELECT id FROM pedidos WHERE usuario_id = ANY(:user_ids)
                 )
-            )
-        """))
-        await conn.execute(text("""
-            DELETE FROM detalles_pedido
-            WHERE pedido_id IN (
-                SELECT id FROM pedidos
-                WHERE usuario_id IN (
-                    SELECT id FROM usuarios WHERE email LIKE '%@test.com'
+            """), {"user_ids": user_ids})
+            
+            # 2. Detalles pedido (child of pedidos)
+            await conn.execute(text("""
+                DELETE FROM detalles_pedido
+                WHERE pedido_id IN (
+                    SELECT id FROM pedidos WHERE usuario_id = ANY(:user_ids)
                 )
-            )
-        """))
-        await conn.execute(text("""
-            DELETE FROM pedidos
-            WHERE usuario_id IN (
-                SELECT id FROM usuarios WHERE email LIKE '%@test.com'
-            )
-        """))
-        await conn.execute(text("DELETE FROM usuarios WHERE email LIKE '%@test.com'"))
+            """), {"user_ids": user_ids})
+            
+            # 3. Pedidos (child of usuarios)
+            await conn.execute(text("""
+                DELETE FROM pedidos WHERE usuario_id = ANY(:user_ids)
+            """), {"user_ids": user_ids})
+            
+            # 4. Refresh tokens (child of usuarios) - ADDED THIS
+            await conn.execute(text("""
+                DELETE FROM refresh_tokens WHERE usuario_id = ANY(:user_ids)
+            """), {"user_ids": user_ids})
+            
+            # 5. Direcciones (child of usuarios)
+            await conn.execute(text("""
+                DELETE FROM direcciones WHERE usuario_id = ANY(:user_ids)
+            """), {"user_ids": user_ids})
+            
+            # 6. Usuario roles (child of usuarios)
+            await conn.execute(text("""
+                DELETE FROM usuario_roles WHERE usuario_id = ANY(:user_ids)
+            """), {"user_ids": user_ids})
+            
+            # 7. Finally users
+            await conn.execute(text("DELETE FROM usuarios WHERE email LIKE '%@test.com'"))
 
     async with async_session_maker() as session:
         yield session
