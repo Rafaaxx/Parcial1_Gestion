@@ -22,8 +22,8 @@ export const AdminProducts: React.FC = () => {
   const [form, setForm] = useState({
     nombre: '',
     descripcion: '',
-    precio_base: '',
-    stock_cantidad: '',
+    precio_base: 0,
+    stock_cantidad: 0,
     disponible: true,
     categoria_id: 0,
   })
@@ -37,7 +37,7 @@ export const AdminProducts: React.FC = () => {
 
   const handleOpenCreate = () => {
     setEditingProduct(null)
-    setForm({ nombre: '', descripcion: '', precio_base: '', stock_cantidad: '', disponible: true, categoria_id: 0 })
+    setForm({ nombre: '', descripcion: '', precio_base: 0, stock_cantidad: 0, disponible: true, categoria_id: 0 })
     setShowModal(true)
   }
 
@@ -58,8 +58,8 @@ export const AdminProducts: React.FC = () => {
     const data = {
       nombre: form.nombre,
       descripcion: form.descripcion,
-      precio_base: parseFloat(form.precio_base),
-      stock_cantidad: parseInt(form.stock_cantidad),
+      precio_base: form.precio_base,
+      stock_cantidad: form.stock_cantidad,
       disponible: form.disponible,
       categoria_id: form.categoria_id,
     }
@@ -89,7 +89,7 @@ export const AdminProducts: React.FC = () => {
   const handleUpdateStock = async () => {
     if (!showStockModal) return
 
-    const diff = stockValue - showStockModal.stock_cantidad
+    const diff = stockValue
     if (diff !== 0) {
       await updateStock.mutateAsync({ id: showStockModal.id, stock_cantidad: diff })
     }
@@ -211,7 +211,7 @@ export const AdminProducts: React.FC = () => {
                     type="number"
                     step="0.01"
                     value={form.precio_base}
-                    onChange={(e) => setForm({ ...form, precio_base: e.target.value })}
+                    onChange={(e) => setForm({ ...form, precio_base: parseFloat(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
                   />
                 </div>
@@ -220,7 +220,7 @@ export const AdminProducts: React.FC = () => {
                   <input
                     type="number"
                     value={form.stock_cantidad}
-                    onChange={(e) => setForm({ ...form, stock_cantidad: e.target.value })}
+                    onChange={(e) => setForm({ ...form, stock_cantidad: parseInt(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
                   />
                 </div>

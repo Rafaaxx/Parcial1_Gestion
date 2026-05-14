@@ -116,13 +116,15 @@ async def list_productos(
     precio_desde: Optional[Decimal] = Query(None, ge=0, description="Minimum price"),
     precio_hasta: Optional[Decimal] = Query(None, ge=0, description="Maximum price"),
     excluirAlergenos: Optional[str] = Query(None, description="Exclude products with allergen IDs (comma-separated, e.g. 1,3,7)"),
+    include_stock: bool = Query(False, description="Include stock_cantidad in response (ADMIN/STOCK only)"),
     uow: UnitOfWork = Depends(get_uow),
 ) -> ProductoListResponse:
     """
     List all active products with optional filters and pagination.
-    
+
     **Public endpoint** — no authentication required.
-    
+    `include_stock=true` exposes stock_cantidad (intended for ADMIN/STOCK callers).
+
     **Query Parameters**:
     - `skip` (optional): Offset for pagination (default: 0)
     - `limit` (optional): Max items per page (default: 20, max: 100)
@@ -132,14 +134,13 @@ async def list_productos(
     - `precio_desde` (optional): Minimum price filter
     - `precio_hasta` (optional): Maximum price filter
     - `excluirAlergenos` (optional): Exclude products with specific ingredient IDs (comma-separated)
-    
-    **Note**: Public endpoint hides stock_cantidad (per spec: "No revelar stock exacto")
-    
+    - `include_stock` (optional): If true, includes stock_cantidad per product (default: false)
+
     **Allergen Exclusion**:
     - Format: `excluirAlergenos=5` or `excluirAlergenos=1,3,7`
     - Products containing ANY of these ingredient IDs are excluded
     - Invalid IDs are silently ignored
-    
+
     **Responses**:
     - 200: Returns ProductoListResponse with items, total, pagination
     """
@@ -151,7 +152,7 @@ async def list_productos(
         except ValueError:
             # Silently ignore invalid IDs
             allergen_ids = []
-    
+
     try:
         service = ProductoService(uow.session)
         return await service.list_productos(
@@ -163,7 +164,7 @@ async def list_productos(
             precio_desde=precio_desde,
             precio_hasta=precio_hasta,
             allergen_ids=allergen_ids,
-            include_stock=False,  # Public endpoint hides stock
+            include_stock=include_stock,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

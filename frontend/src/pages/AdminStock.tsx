@@ -22,7 +22,7 @@ export const AdminStock: React.FC = () => {
   const handleSaveStock = async () => {
     if (!editingStock) return
 
-    const diff = stockValue - editingStock.stock_cantidad
+    const diff = stockValue
     if (diff !== 0) {
       await updateStock.mutateAsync({ id: editingStock.id, stock_cantidad: diff })
     }
@@ -99,7 +99,7 @@ export const AdminStock: React.FC = () => {
                       <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                         <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{product.id}</td>
                         <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{product.nombre}</td>
-                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{formatCurrency(product.precio_base)}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{product.precio_base}</td>
                         <td className="px-4 py-3">
                           <span className={`font-medium ${product.stock_cantidad <= 5 ? 'text-red-600 dark:text-red-400' : product.stock_cantidad <= 10 ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-900 dark:text-gray-100'}`}>
                             {product.stock_cantidad} unidades

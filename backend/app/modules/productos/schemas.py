@@ -219,7 +219,7 @@ class ProductoListItem(BaseModel):
     nombre: str = Field(..., description="Nombre del producto")
     descripcion: Optional[str] = Field(None, description="Descripción")
     precio_base: Decimal = Field(..., description="Precio base")
-    stock_cantidad: Optional[int] = Field(None, description="Cantidad en stock (solo para admin)")
+    stock_cantidad: int = Field(None, description="Cantidad en stock")
     disponible: bool = Field(..., description="¿Está disponible?")
     imagen: Optional[str] = Field(None, description="URL de imagen")
     categorias: List[CategoriaBasica] = Field(

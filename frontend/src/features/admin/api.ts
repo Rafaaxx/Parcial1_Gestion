@@ -224,15 +224,17 @@ export interface UpdateProductoRequest {
 
 /**
  * List products (stock/admin role)
- * GET /api/v1/productos
+ * GET /api/v1/productos?include_stock=true
+ * include_stock=true is required for admin to receive stock_cantidad
  */
 export async function getProductos(
   skip: number = 0,
   limit: number = 50,
   categoria_id?: number,
-  disponible?: boolean
+  disponible?: boolean,
+  include_stock: boolean = true
 ): Promise<ProductoListResponse> {
-  const params: Record<string, string | number | boolean> = { skip, limit }
+  const params: Record<string, string | number | boolean> = { skip, limit, include_stock }
   if (categoria_id) params.categoria_id = categoria_id
   if (disponible !== undefined) params.disponible = disponible
 
