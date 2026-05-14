@@ -135,10 +135,10 @@ def setup_logging():
         maxBytes=10 * 1024 * 1024,  # 10 MB
         backupCount=5,  # Keep 5 backup files
     )
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(JSONFormatter())
-    file_handler.addFilter(SensitiveDataFilter())
-    root_logger.addHandler(file_handler)
+    # file_handler.setLevel(logging.DEBUG)
+    # file_handler.setFormatter(JSONFormatter())
+    # file_handler.addFilter(SensitiveDataFilter())
+    # root_logger.addHandler(file_handler)
     
     # Suppress verbose logs from third-party libraries
     logging.getLogger("sqlalchemy").setLevel(logging.WARNING)

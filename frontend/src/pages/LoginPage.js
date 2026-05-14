@@ -3,7 +3,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * LoginPage — Authentication form
  */
 import { useState } from 'react';
-import { Link, useNavigate, useSearchParams, Navigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '@/features/auth/store';
 import { apiClient } from '@/shared/http/client';
@@ -19,7 +19,9 @@ export const LoginPage = () => {
     const [error, setError] = useState(null);
     // If already authenticated, redirect (use Navigate component, not navigate() side-effect)
     if (rehydrated && isAuthenticated) {
-        return _jsx(Navigate, { to: "/", replace: true });
+        console.log("isAuthenticades: ", isAuthenticated);
+        console.log("rehydrated", rehydrated);
+        //return <Navigate to="/" replace />
     }
     const loginMutation = useMutation({
         mutationFn: async (data) => {

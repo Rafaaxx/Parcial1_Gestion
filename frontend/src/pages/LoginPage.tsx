@@ -38,7 +38,11 @@ export const LoginPage: React.FC = () => {
 
   // If already authenticated, redirect (use Navigate component, not navigate() side-effect)
   if (rehydrated && isAuthenticated) {
-    return <Navigate to="/" replace />
+    console.log("isAuthenticades: ",isAuthenticated);
+    console.log("rehydrated", rehydrated);
+    
+    
+    //return <Navigate to="/" replace />
   }
 
   const loginMutation = useMutation({
