@@ -578,6 +578,31 @@ RATE_LIMIT_ENABLED=false
 
 If behind a load balancer, configure `X-Forwarded-For` header handling to ensure rate limits work correctly with multiple server IPs.
 
+### Custom Exceptions (CHANGE-15)
+
+El proyecto implementa manejo de errores global con formato RFC 7807 (Problem Details).
+
+**Quick Reference**: Ver `docs/exceptions-quick-reference.md` para ejemplos de uso.
+
+**Features implementados**:
+- Custom exceptions (ValidationError, NotFoundError, ConflictError, UnauthorizedError, ForbiddenError, RateLimitError, DatabaseError)
+- Exception handlers con formato RFC 7807
+- Request ID middleware (cada request tiene un UUID único en header `X-Request-ID`)
+- Sanitización de input (XSS prevention)
+- Structured logging con JSON
+
+**Archivos clave**:
+- `app/exceptions.py` — Clases de excepciones personalizadas
+- `app/handlers.py` — Handlers que convierten excepciones a RFC 7807
+- `app/sanitization.py` — Funciones de sanitización
+- `app/middleware/request_id.py` — Middleware para request IDs
+- `tests/test_error_handling/` — Tests unitarios
+
+**Tests**:
+```bash
+pytest backend/tests/test_error_handling/ -v
+```
+
 ### Create a New API Endpoint
 
 1. Define model in `app/models/<feature>.py`

@@ -2,15 +2,17 @@
 
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+
+from fastapi import FastAPI
 from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.database import engine, Base
-from app.exceptions import AppException, app_exception_to_http_exception
+from app.handlers import register_exception_handlers
+from app.logging_config import setup_logging
 from app.middleware.cors import setup_cors_middleware
 from app.middleware.rate_limiter import limiter, rate_limit_error_handler
+from app.middleware.request_id import RequestIDMiddleware
 from app.modules.auth.router import router as auth_router
 from app.modules.categorias.router import router as categorias_router
 from app.modules.ingredientes.router import router as ingredientes_router
@@ -20,7 +22,7 @@ from app.modules.pedidos.router import router as pedidos_router
 from app.modules.pagos.router import router as pagos_router
 
 # Configure logging
-logging.basicConfig(level=settings.log_level)
+setup_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -70,30 +72,14 @@ app.state.limiter = limiter
 # Setup CORS middleware (must be first in the stack to handle preflight)
 setup_cors_middleware(app, settings)
 
-# Register rate limit exception handler
+# Add Request ID middleware for tracing
+app.add_middleware(RequestIDMiddleware)
+
+# Register rate limit exception handler (for slowapi)
 app.add_exception_handler(RateLimitExceeded, rate_limit_error_handler)
 
-
-# Register exception handlers
-@app.exception_handler(AppException)
-async def app_exception_handler(request: Request, exc: AppException):
-    """Handle custom application exceptions"""
-    logger.error(f"AppException: {exc.message}", exc_info=exc)
-    http_exc = app_exception_to_http_exception(exc)
-    return JSONResponse(
-        status_code=http_exc.status_code,
-        content=http_exc.detail,
-    )
-
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    """Global exception handler for unhandled exceptions"""
-    logger.error(f"Unhandled exception: {str(exc)}", exc_info=exc)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal server error", "code": "INTERNAL_SERVER_ERROR"},
-    )
+# Register RFC 7807 exception handlers
+register_exception_handlers(app)
 
 
 # Health check endpoint
