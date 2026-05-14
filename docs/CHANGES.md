@@ -462,6 +462,8 @@ PENDIENTE ──[pago aprobado]──→ CONFIRMADO ──[gestión]──→ EN
 | **Funcionalidad** | KPIs, gráficos, CRUD categorías/productos/usuarios, stock |
 | **Dependencias** | CHANGE-10, CHANGE-06, CHANGE-02 |
 | **Duración estimada** | 20h |
+| **Estado** | ✅ Hecho (archivado 2026-05-14) |
+| **Evidencia** | `openspec/changes/archive/2026-05-14-change-14-admin-dashboard/` |
 
 **Páginas**:
 - `/admin/dashboard` → KPIs + gráficos
@@ -596,5 +598,5 @@ Para marcar como **completado y archivado**:
 
 ---
 
-**Última actualización**: 2026-05-13
+**Última actualización**: 2026-05-14
 **Generado**: 2026-03-31 | **Especificación**: Food Store v5.0 | **Metodología**: SDD
