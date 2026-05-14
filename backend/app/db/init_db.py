@@ -4,6 +4,7 @@ import asyncio
 import logging
 import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Add backend to Python path
@@ -16,16 +17,17 @@ load_dotenv(env_file)
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import SQLModel
 
+from app.config import settings
+from app.models.categoria import Categoria
+from app.models.estado_pedido import EstadoPedido
+from app.models.forma_pago import FormaPago
+from app.models.ingrediente import Ingrediente
+from app.models.rol import Rol
+
 # Import all models to register them with SQLModel.metadata
 from app.models.usuario import Usuario
 from app.models.usuario_rol import UsuarioRol
-from app.models.rol import Rol
-from app.models.categoria import Categoria
-from app.models.ingrediente import Ingrediente
-from app.models.estado_pedido import EstadoPedido
-from app.models.forma_pago import FormaPago
 from app.modules.pagos.model import Pago
-from app.config import settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -34,13 +36,13 @@ logger = logging.getLogger(__name__)
 async def init_db():
     """Create all tables in the database"""
     logger.info("Initializing database schema...")
-    
+
     # Create async engine
     engine = create_async_engine(
         settings.database_url,
         echo=False,
     )
-    
+
     try:
         async with engine.begin() as conn:
             # Create all tables from SQLModel metadata

@@ -1,7 +1,9 @@
 """Pago model — MercadoPago payment entity with idempotency support"""
+
 from decimal import Decimal
-from typing import Optional, TYPE_CHECKING
-from sqlmodel import SQLModel, Field, Relationship
+from typing import TYPE_CHECKING, Optional
+
+from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.mixins import BaseModel
 
@@ -30,6 +32,7 @@ class Pago(BaseModel, table=True):
     - RN-02: mp_payment_id is set only after successful MP API call
     - RN-03: Only one unpaid payment per order (enforced at service layer)
     """
+
     __tablename__ = "pagos"
 
     id: Optional[int] = Field(default=None, primary_key=True)

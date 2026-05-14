@@ -10,18 +10,19 @@ Implements 5 REST endpoints for ingredient operations:
 All endpoints use soft-delete pattern and return RFC 7807 error responses.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import Optional
 
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from app.dependencies import get_uow, require_role
 from app.modules.ingredientes.schemas import (
     IngredienteCreate,
-    IngredienteUpdate,
-    IngredienteRead,
     IngredienteListResponse,
+    IngredienteRead,
+    IngredienteUpdate,
 )
 from app.modules.ingredientes.service import IngredienteService
 from app.uow import UnitOfWork
-from app.dependencies import get_uow, require_role
 
 # Create router with prefix and tag for Swagger grouping
 router = APIRouter(prefix="/api/v1/ingredientes", tags=["ingredientes"])
@@ -84,9 +85,7 @@ async def create_ingrediente(
 async def list_ingredientes(
     skip: int = Query(0, ge=0, description="Pagination offset"),
     limit: int = Query(100, ge=1, le=1000, description="Pagination limit"),
-    es_alergeno: Optional[bool] = Query(
-        None, description="Filter by allergen status (optional)"
-    ),
+    es_alergeno: Optional[bool] = Query(None, description="Filter by allergen status (optional)"),
     uow: UnitOfWork = Depends(get_uow),
 ) -> IngredienteListResponse:
     """

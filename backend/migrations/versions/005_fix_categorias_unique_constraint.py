@@ -11,10 +11,11 @@ This allows:
 - After deleting "Comidas", creating "Comidas" again
 - Soft-deleted categories don't block new ones with same name
 """
+
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "005_fix_cat_unique_constraint"
@@ -27,7 +28,7 @@ def upgrade() -> None:
     """Replace UNIQUE constraint with partial index on non-deleted categories."""
     # Drop the global UNIQUE constraint
     op.drop_constraint("uq_categorias_nombre", "categorias", type_="unique")
-    
+
     # Create partial unique index: only enforce uniqueness for non-soft-deleted rows
     op.create_index(
         "uq_categorias_nombre_not_deleted",
@@ -42,7 +43,7 @@ def downgrade() -> None:
     """Restore the global UNIQUE constraint."""
     # Drop partial index
     op.drop_index("uq_categorias_nombre_not_deleted", table_name="categorias")
-    
+
     # Restore UNIQUE constraint
     op.create_unique_constraint(
         "uq_categorias_nombre",

@@ -1,24 +1,23 @@
 """Auth router — 5 endpoints for authentication and token management."""
 
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from app.config import settings
-from app.dependencies import get_uow, get_current_user
+from app.dependencies import get_current_user, get_uow
 from app.middleware.rate_limiter import limiter
-from app.uow import UnitOfWork
 from app.models.usuario import Usuario
-
+from app.modules.auth.repository import AuthRepository
 from app.modules.auth.schemas import (
     LoginRequest,
+    RefreshRequest,
     RegisterRequest,
     TokenResponse,
-    RefreshRequest,
     UserResponse,
 )
 from app.modules.auth.service import AuthService
-from app.modules.auth.repository import AuthRepository
+from app.uow import UnitOfWork
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Auth"])
 
@@ -49,9 +48,7 @@ async def register(
 ):
     """Register a new user with CLIENT role and return tokens."""
     async with uow:
-        result = await auth_service.register(
-            request=request, uow=uow, auth_repo=auth_repo
-        )
+        result = await auth_service.register(request=request, uow=uow, auth_repo=auth_repo)
     return result
 
 
@@ -72,9 +69,7 @@ async def login(
 ):
     """Authenticate user and return tokens. Rate limited."""
     async with uow:
-        result = await auth_service.login(
-            request=login_data, uow=uow, auth_repo=auth_repo
-        )
+        result = await auth_service.login(request=login_data, uow=uow, auth_repo=auth_repo)
     return result
 
 

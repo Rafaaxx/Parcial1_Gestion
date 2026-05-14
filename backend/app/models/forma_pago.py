@@ -1,6 +1,9 @@
 """FormaPago model — payment methods catalog"""
+
 from typing import TYPE_CHECKING, List
-from sqlmodel import SQLModel, Field, Relationship
+
+from sqlmodel import Field, Relationship, SQLModel
+
 from app.models.mixins import TimestampMixin
 
 if TYPE_CHECKING:

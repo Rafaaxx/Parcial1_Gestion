@@ -1,7 +1,10 @@
 """UsuarioRol model — M:N user-role pivot with audit trail"""
-from typing import Optional, TYPE_CHECKING
-from sqlalchemy import Column, BigInteger, ForeignKey, String
-from sqlmodel import SQLModel, Field, Relationship
+
+from typing import TYPE_CHECKING, Optional
+
+from sqlalchemy import BigInteger, Column, ForeignKey, String
+from sqlmodel import Field, Relationship, SQLModel
+
 from app.models.mixins import TimestampMixin
 
 if TYPE_CHECKING:

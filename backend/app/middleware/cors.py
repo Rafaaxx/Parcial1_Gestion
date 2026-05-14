@@ -1,8 +1,9 @@
 """CORS middleware configuration using FastAPI/Starlette"""
 
-from fastapi.middleware.cors import CORSMiddleware
-from typing import List
 import logging
+from typing import List
+
+from fastapi.middleware.cors import CORSMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -10,15 +11,15 @@ logger = logging.getLogger(__name__)
 def setup_cors_middleware(app, settings) -> None:
     """
     Configure CORS middleware for the FastAPI application.
-    
+
     Args:
         app: FastAPI application instance
         settings: Application settings containing CORS configuration
     """
-    
+
     # Parse CORS_ORIGINS from settings
     cors_origins = settings.cors_origins
-    
+
     # Validate CORS configuration in production
     if settings.environment == "production":
         if not cors_origins:
@@ -33,9 +34,9 @@ def setup_cors_middleware(app, settings) -> None:
                 "This is a security risk. "
                 "Please specify explicit origins in CORS_ORIGINS."
             )
-    
+
     logger.info(f"Setting up CORS middleware with origins: {cors_origins}")
-    
+
     # Add CORSMiddleware to the app
     app.add_middleware(
         CORSMiddleware,
@@ -55,5 +56,5 @@ def setup_cors_middleware(app, settings) -> None:
         expose_headers=settings.cors_expose_headers,
         max_age=3600,  # 1 hour
     )
-    
+
     logger.info("CORS middleware configured successfully")

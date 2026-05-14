@@ -1,7 +1,9 @@
 """Integration tests for Pagos API endpoints"""
-import pytest
-from unittest.mock import patch, AsyncMock
+
 from decimal import Decimal
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 
 class TestPagosCrearEndpoint:
@@ -21,9 +23,7 @@ class TestPagosCrearEndpoint:
         """Test: 404 when order doesn't exist"""
         with patch("app.modules.pagos.service.PagoService") as mock_service:
             mock_instance = AsyncMock()
-            mock_instance.crear_pago.side_effect = Exception(
-                "404: Pedido no encontrado"
-            )
+            mock_instance.crear_pago.side_effect = Exception("404: Pedido no encontrado")
             mock_service.return_value = mock_instance
 
             response = await client.post(
@@ -83,8 +83,9 @@ class TestPagoModel:
 
     def test_pago_model_creation(self):
         """Test: Pago model can be instantiated"""
-        from app.modules.pagos.model import Pago
         from decimal import Decimal
+
+        from app.modules.pagos.model import Pago
 
         pago = Pago(
             pedido_id=1,

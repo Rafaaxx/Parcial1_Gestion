@@ -3,6 +3,7 @@
 This module defines the state transition map for the pedido lifecycle.
 Validates transitions based on origin state, target state, and user roles.
 """
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Dict, List, Optional
@@ -10,6 +11,7 @@ from typing import Callable, Dict, List, Optional
 
 class EstadoPedido(str, Enum):
     """Valid order states."""
+
     PENDIENTE = "PENDIENTE"
     CONFIRMADO = "CONFIRMADO"
     EN_PREP = "EN_PREP"
@@ -26,6 +28,7 @@ class EstadoPedido(str, Enum):
 # Role constants
 class RolUsuario(str, Enum):
     """Valid user roles for FSM transitions."""
+
     CLIENT = "CLIENT"
     ADMIN = "ADMIN"
     PEDIDOS = "PEDIDOS"
@@ -44,6 +47,7 @@ class Transition:
         stock_action: Optional function to execute on stock (decrement/restore)
         is_system: Whether this is a system-only transition (no manual trigger)
     """
+
     target: str
     allowed_roles: frozenset
     requires_motivo: bool = False
@@ -66,15 +70,16 @@ FSM_TRANSITION_MAP: Dict[str, List[Transition]] = {
         ),
         Transition(
             target=EstadoPedido.CANCELADO.value,
-            allowed_roles=frozenset({
-                RolUsuario.CLIENT.value,
-                RolUsuario.ADMIN.value,
-                RolUsuario.PEDIDOS.value,
-            }),
+            allowed_roles=frozenset(
+                {
+                    RolUsuario.CLIENT.value,
+                    RolUsuario.ADMIN.value,
+                    RolUsuario.PEDIDOS.value,
+                }
+            ),
             requires_motivo=True,
         ),
     ],
-
     # CONFIRMADO can transition to EN_PREP or CANCELADO
     EstadoPedido.CONFIRMADO.value: [
         Transition(
@@ -88,7 +93,6 @@ FSM_TRANSITION_MAP: Dict[str, List[Transition]] = {
             stock_action="restore",  # Restore stock on cancel
         ),
     ],
-
     # EN_PREP can transition to EN_CAMINO or CANCELADO (admin only)
     EstadoPedido.EN_PREP.value: [
         Transition(
@@ -102,7 +106,6 @@ FSM_TRANSITION_MAP: Dict[str, List[Transition]] = {
             stock_action="restore",
         ),
     ],
-
     # EN_CAMINO can only transition to ENTREGADO
     EstadoPedido.EN_CAMINO.value: [
         Transition(
@@ -110,7 +113,6 @@ FSM_TRANSITION_MAP: Dict[str, List[Transition]] = {
             allowed_roles=frozenset({RolUsuario.ADMIN.value, RolUsuario.PEDIDOS.value}),
         ),
     ],
-
     # Terminal states: no transitions allowed
     EstadoPedido.ENTREGADO.value: [],
     EstadoPedido.CANCELADO.value: [],

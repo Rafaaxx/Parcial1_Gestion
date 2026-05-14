@@ -5,10 +5,11 @@ Revises: 003_add_refresh_token
 Create Date: 2026-05-09 00:00:00.000000
 
 """
+
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "004_add_categorias_table"
@@ -47,7 +48,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("nombre", name="uq_categorias_nombre"),
     )
-    
+
     # Create indexes for performance: parent_id for FK traversal, (parent_id, deleted_at) for tree queries
     op.create_index(
         op.f("ix_categorias_parent_id"),
@@ -59,7 +60,7 @@ def upgrade() -> None:
         "categorias",
         ["parent_id", "deleted_at"],
     )
-    
+
     # Seed root categories
     op.execute(
         "INSERT INTO categorias (nombre, descripcion, parent_id, created_at, updated_at) "

@@ -1,6 +1,6 @@
 """Auth Pydantic schemas for request/response validation."""
 
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class LoginRequest(BaseModel):

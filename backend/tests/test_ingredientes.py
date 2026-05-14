@@ -1,16 +1,16 @@
 """Integration tests for ingredientes endpoints"""
 
 import pytest
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.pool import StaticPool
-from sqlmodel import SQLModel, Session
+from sqlmodel import Session, SQLModel
 
-from app.main import app
 from app.database import Base
 from app.dependencies import get_uow
-from app.uow import UnitOfWork
+from app.main import app
 from app.models import Ingrediente
+from app.uow import UnitOfWork
 
 
 # Create in-memory SQLite for testing
@@ -22,10 +22,10 @@ async def test_db():
         echo=False,
         poolclass=StaticPool,
     )
-    
+
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
-    
+
     yield engine
     await engine.dispose()
 
@@ -47,6 +47,7 @@ def test_uow(test_session):
 def override_get_uow(uow):
     def _get_uow():
         return uow
+
     return _get_uow
 
 
@@ -61,6 +62,7 @@ async def client(test_uow):
 
 
 # ── Test POST /api/v1/ingredientes ──────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_create_ingrediente_success(client, test_session, test_uow):
@@ -83,6 +85,7 @@ async def test_create_ingrediente_duplicate(client):
 
 # ── Test GET /api/v1/ingredientes ──────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_list_ingredientes_empty(client):
     """Test listing empty ingredientes"""
@@ -95,6 +98,7 @@ async def test_list_ingredientes_empty(client):
 
 # ── Test GET /api/v1/ingredientes/{id} ──────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_get_ingrediente_not_found(client):
     """Test getting non-existent ingredient"""
@@ -103,6 +107,7 @@ async def test_get_ingrediente_not_found(client):
 
 
 # ── Test DELETE /api/v1/ingredientes/{id} ──────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_delete_ingrediente_not_found(client):

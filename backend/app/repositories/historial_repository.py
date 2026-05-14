@@ -4,8 +4,10 @@ This repository intentionally exposes ONLY find() and create() methods.
 NO update() or delete() methods are implemented.
 This enforces the append-only semantics (RN-03) at the repository layer.
 """
+
 import logging
 from typing import List
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 

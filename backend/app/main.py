@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
-from app.database import engine, Base
+from app.database import Base, engine
 from app.handlers import register_exception_handlers
 from app.logging_config import setup_logging
 from app.middleware.cors import setup_cors_middleware
@@ -15,11 +15,11 @@ from app.middleware.rate_limiter import limiter, rate_limit_error_handler
 from app.middleware.request_id import RequestIDMiddleware
 from app.modules.auth.router import router as auth_router
 from app.modules.categorias.router import router as categorias_router
-from app.modules.ingredientes.router import router as ingredientes_router
-from app.modules.productos.router import router as productos_router
 from app.modules.direcciones.router import router as router_direcciones
-from app.modules.pedidos.router import router as pedidos_router
+from app.modules.ingredientes.router import router as ingredientes_router
 from app.modules.pagos.router import router as pagos_router
+from app.modules.pedidos.router import router as pedidos_router
+from app.modules.productos.router import router as productos_router
 
 # Configure logging
 setup_logging()
@@ -34,10 +34,10 @@ async def lifespan(app: FastAPI):
     logger.info(f"🚀 {settings.app_name} v{settings.app_version} starting...")
     logger.info(f"📊 Environment: {settings.environment}")
     logger.info(f"🔍 Debug mode: {settings.debug}")
-    
+
     # Log CORS configuration
     logger.info(f"🔐 CORS origins: {settings.cors_origins}")
-    
+
     # Log rate limiting configuration
     if settings.rate_limit_enabled:
         logger.info(f"⏱️  Rate limiting ENABLED")
@@ -46,9 +46,9 @@ async def lifespan(app: FastAPI):
         logger.info(f"   - Refresh limit: {settings.rate_limit_refresh_limit}")
     else:
         logger.info(f"⏱️  Rate limiting DISABLED")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("🛑 Application shutting down...")
     await engine.dispose()
@@ -95,7 +95,7 @@ async def root():
     return {
         "message": f"Welcome to {settings.app_name}",
         "version": settings.app_version,
-        "documentation": "/docs"
+        "documentation": "/docs",
     }
 
 
@@ -123,7 +123,7 @@ app.include_router(pagos_router, prefix="/api/v1")
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",

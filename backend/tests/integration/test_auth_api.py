@@ -3,16 +3,18 @@
 Covers register, login, refresh, logout, me, and RBAC scenarios.
 Uses httpx AsyncClient against the actual FastAPI app with overridden DB.
 """
-import pytest
+
 import uuid
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+
+import pytest
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import selectinload
 
-from app.main import app
-from app.database import Base, get_db
 from app.config import settings
+from app.database import Base, get_db
+from app.main import app
 from app.models.rol import Rol
 from app.models.usuario import Usuario
 from app.models.usuario_rol import UsuarioRol
@@ -58,9 +60,7 @@ async def test_engine():
 @pytest.fixture
 async def db_session(test_engine):
     """Fresh session per test, rolled back after."""
-    async_session = async_sessionmaker(
-        test_engine, class_=AsyncSession, expire_on_commit=False
-    )
+    async_session = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as session:
         yield session
         await session.rollback()
@@ -69,8 +69,10 @@ async def db_session(test_engine):
 @pytest.fixture
 def override_get_db(db_session):
     """Override get_db with the test session."""
+
     async def _override():
         yield db_session
+
     return _override
 
 
@@ -127,9 +129,7 @@ class TestRegister:
         assert body["expires_in"] == 1800
 
         # Verify user exists in DB
-        result = await db_session.execute(
-            select(Usuario).where(Usuario.email == unique_email)
-        )
+        result = await db_session.execute(select(Usuario).where(Usuario.email == unique_email))
         user = result.scalar_one_or_none()
         assert user is not None
         assert user.nombre == "Test"
@@ -199,9 +199,7 @@ async def _register_and_login(client, email, password=DEFAULT_PASSWORD):
     reg_resp = await client.post(REGISTER_URL, json=reg_data)
     assert reg_resp.status_code == 201, f"Register failed: {reg_resp.text}"
 
-    login_resp = await client.post(
-        LOGIN_URL, json={"email": email, "password": password}
-    )
+    login_resp = await client.post(LOGIN_URL, json={"email": email, "password": password})
     assert login_resp.status_code == 200, f"Login failed: {login_resp.text}"
     body = login_resp.json()
     return body["access_token"], body["refresh_token"], body
@@ -212,9 +210,7 @@ class TestLogin:
 
     async def test_login_full_flow(self, client, db_session, unique_email):
         """LOG-01: Login returns 200 + TokenResponse with tokens."""
-        access_token, refresh_token, body = await _register_and_login(
-            client, unique_email
-        )
+        access_token, refresh_token, body = await _register_and_login(client, unique_email)
 
         assert body["token_type"] == "bearer"
         assert body["expires_in"] == 1800
@@ -255,9 +251,7 @@ class TestLogin:
         await _register_and_login(client, unique_email)
 
         # Deactivate the user
-        result = await db_session.execute(
-            select(Usuario).where(Usuario.email == unique_email)
-        )
+        result = await db_session.execute(select(Usuario).where(Usuario.email == unique_email))
         user = result.scalar_one()
         user.activo = False
         await db_session.commit()
@@ -276,9 +270,7 @@ class TestRefresh:
 
     async def test_refresh_rotation(self, client, db_session, unique_email):
         """REF-01: Refresh rotates tokens — old one revoked."""
-        access_token, refresh_token, _ = await _register_and_login(
-            client, unique_email
-        )
+        access_token, refresh_token, _ = await _register_and_login(client, unique_email)
 
         # Refresh
         resp = await client.post(REFRESH_URL, json={"refresh_token": refresh_token})
@@ -315,9 +307,7 @@ class TestRefresh:
 
         # Second refresh with same token: replay detection — should return 401
         resp2 = await client.post(REFRESH_URL, json={"refresh_token": refresh_token})
-        assert resp2.status_code == 401, (
-            f"Expected 401 for replay, got {resp2.status_code}"
-        )
+        assert resp2.status_code == 401, f"Expected 401 for replay, got {resp2.status_code}"
 
 
 # ── Logout Tests ─────────────────────────────────────────────────────────────
@@ -328,9 +318,7 @@ class TestLogout:
 
     async def test_logout_flow(self, client, db_session, unique_email):
         """LOGOUT-01: Logout returns 204 and revokes token."""
-        access_token, refresh_token, _ = await _register_and_login(
-            client, unique_email
-        )
+        access_token, refresh_token, _ = await _register_and_login(client, unique_email)
 
         resp = await client.post(
             LOGOUT_URL,
@@ -350,9 +338,7 @@ class TestLogout:
 
     async def test_logout_already_revoked(self, client, unique_email):
         """LOGOUT-02: Already revoked token returns 401."""
-        access_token, refresh_token, _ = await _register_and_login(
-            client, unique_email
-        )
+        access_token, refresh_token, _ = await _register_and_login(client, unique_email)
 
         # First logout — should succeed
         resp1 = await client.post(
@@ -372,9 +358,7 @@ class TestLogout:
 
     async def test_logout_no_auth(self, client):
         """LOGOUT-03: Without Bearer token returns 401 (no token = unauthorized)."""
-        resp = await client.post(
-            LOGOUT_URL, json={"refresh_token": "some-token"}
-        )
+        resp = await client.post(LOGOUT_URL, json={"refresh_token": "some-token"})
         assert resp.status_code == 401, f"Expected 401, got {resp.status_code}"
 
 
@@ -412,6 +396,7 @@ class TestMe:
     async def test_me_expired_token(self, client):
         """ME-03: Expired JWT returns 401."""
         from datetime import datetime, timedelta, timezone
+
         from jose import jwt
 
         expired_payload = {
