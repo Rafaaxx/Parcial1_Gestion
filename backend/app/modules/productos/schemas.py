@@ -118,7 +118,7 @@ class ProductoUpdate(BaseModel):
         decimal_places=2,
         description="Precio base del producto",
     )
-      stock_cantidad: Optional[int] = Field(None, description="Cantidad en stock (solo para admin)")
+    stock_cantidad: Optional[int] = Field(None, description="Cantidad en stock (solo para admin)")
     disponible: Optional[bool] = Field(None, description="¿Está disponible para venta?")
     imagen: Optional[str] = Field(None, max_length=500, description="URL de la imagen del producto")
 
