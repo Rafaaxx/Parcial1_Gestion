@@ -1,13 +1,14 @@
 """AuthRepository — extends BaseRepository[Usuario] with auth-specific queries."""
 
 from typing import Optional
+
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqlmodel import SQLModel
 
-from app.repositories.base import BaseRepository
 from app.models.usuario import Usuario
 from app.models.usuario_rol import UsuarioRol
+from app.repositories.base import BaseRepository
 
 
 class AuthRepository(BaseRepository[Usuario]):

@@ -1,12 +1,14 @@
 """PedidoRepository — repository for Pedido model with user-scoped and admin queries"""
-import logging
-from typing import Optional, List, Tuple, Dict, Any
-from datetime import datetime
-from sqlalchemy import select, func, and_, or_
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, joinedload
 
-from app.models.pedido import Pedido, DetallePedido, HistorialEstadoPedido
+import logging
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+
+from sqlalchemy import and_, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload, selectinload
+
+from app.models.pedido import DetallePedido, HistorialEstadoPedido, Pedido
 from app.models.usuario import Usuario
 from app.repositories.base import BaseRepository
 
@@ -63,9 +65,7 @@ class PedidoRepository(BaseRepository[Pedido]):
 
         return pedidos, total
 
-    async def get_all_paginated(
-        self, skip: int = 0, limit: int = 20
-    ) -> Tuple[List[Pedido], int]:
+    async def get_all_paginated(self, skip: int = 0, limit: int = 20) -> Tuple[List[Pedido], int]:
         """
         Get all orders (ADMIN/PEDIDOS roles).
 
@@ -86,11 +86,7 @@ class PedidoRepository(BaseRepository[Pedido]):
         result = await self.session.execute(query)
         pedidos = list(result.scalars().all())
 
-        count_query = (
-            select(func.count())
-            .select_from(Pedido)
-            .where(Pedido.deleted_at.is_(None))
-        )
+        count_query = select(func.count()).select_from(Pedido).where(Pedido.deleted_at.is_(None))
         count_result = await self.session.execute(count_query)
         total = count_result.scalar() or 0
 
@@ -116,24 +112,24 @@ class PedidoRepository(BaseRepository[Pedido]):
             Tuple of (list of Pedido with joined user, total count)
         """
         filtros = filtros or {}
-        
+
         # Build base query with user join
         conditions = [
             Pedido.usuario_id == usuario_id,
             Pedido.deleted_at.is_(None),
         ]
-        
+
         # Apply filters
         if filtros.get("estado"):
             conditions.append(Pedido.estado_codigo == filtros["estado"])
-        
+
         if filtros.get("desde"):
             try:
                 desde_date = datetime.strptime(filtros["desde"], "%Y-%m-%d")
                 conditions.append(Pedido.created_at >= desde_date)
             except ValueError:
                 logger.warning(f"Invalid desde date format: {filtros['desde']}")
-        
+
         if filtros.get("hasta"):
             try:
                 hasta_date = datetime.strptime(filtros["hasta"], "%Y-%m-%d")
@@ -142,7 +138,7 @@ class PedidoRepository(BaseRepository[Pedido]):
                 conditions.append(Pedido.created_at <= hasta_date)
             except ValueError:
                 logger.warning(f"Invalid hasta date format: {filtros['hasta']}")
-        
+
         query = (
             select(Pedido)
             .join(Usuario, Pedido.usuario_id == Usuario.id)
@@ -162,12 +158,8 @@ class PedidoRepository(BaseRepository[Pedido]):
         ]
         if filtros.get("estado"):
             count_conditions.append(Pedido.estado_codigo == filtros["estado"])
-        
-        count_query = (
-            select(func.count())
-            .select_from(Pedido)
-            .where(and_(*count_conditions))
-        )
+
+        count_query = select(func.count()).select_from(Pedido).where(and_(*count_conditions))
         count_result = await self.session.execute(count_query)
         total = count_result.scalar() or 0
 
@@ -191,21 +183,21 @@ class PedidoRepository(BaseRepository[Pedido]):
             Tuple of (list of Pedido with joined user, total count)
         """
         filtros = filtros or {}
-        
+
         # Build conditions
         conditions = [Pedido.deleted_at.is_(None)]
-        
+
         # Apply filters
         if filtros.get("estado"):
             conditions.append(Pedido.estado_codigo == filtros["estado"])
-        
+
         if filtros.get("desde"):
             try:
                 desde_date = datetime.strptime(filtros["desde"], "%Y-%m-%d")
                 conditions.append(Pedido.created_at >= desde_date)
             except ValueError:
                 logger.warning(f"Invalid desde date format: {filtros['desde']}")
-        
+
         if filtros.get("hasta"):
             try:
                 hasta_date = datetime.strptime(filtros["hasta"], "%Y-%m-%d")
@@ -213,7 +205,7 @@ class PedidoRepository(BaseRepository[Pedido]):
                 conditions.append(Pedido.created_at <= hasta_date)
             except ValueError:
                 logger.warning(f"Invalid hasta date format: {filtros['hasta']}")
-        
+
         # Search by order ID or customer name/email
         busqueda = filtros.get("busqueda")
         if busqueda:
@@ -225,7 +217,7 @@ class PedidoRepository(BaseRepository[Pedido]):
                     Usuario.email.ilike(f"%{busqueda}%"),
                 )
             )
-        
+
         query = (
             select(Pedido)
             .join(Usuario, Pedido.usuario_id == Usuario.id)

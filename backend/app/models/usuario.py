@@ -1,12 +1,16 @@
 """Usuario model — system users with soft delete"""
-from typing import Optional, TYPE_CHECKING, List
-from sqlmodel import SQLModel, Field, Relationship
+
+from typing import TYPE_CHECKING, List, Optional
+
+from sqlmodel import Field, Relationship, SQLModel
+
 from app.models.mixins import BaseModel
 
 if TYPE_CHECKING:
-    from app.modules.refreshtokens.model import RefreshToken
-    from app.models.usuario_rol import UsuarioRol
     from app.models.direccion_entrega import DireccionEntrega
+    from app.models.pedido import Pedido
+    from app.models.usuario_rol import UsuarioRol
+    from app.modules.refreshtokens.model import RefreshToken
 
 
 class Usuario(BaseModel, table=True):

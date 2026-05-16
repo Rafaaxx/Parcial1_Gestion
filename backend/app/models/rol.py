@@ -1,5 +1,7 @@
 """Rol model — RBAC roles catalog"""
-from sqlmodel import SQLModel, Field
+
+from sqlmodel import Field, SQLModel
+
 from app.models.mixins import TimestampMixin
 
 

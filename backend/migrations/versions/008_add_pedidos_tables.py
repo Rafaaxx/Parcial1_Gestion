@@ -5,10 +5,11 @@ Revises: 007_add_direcciones_table
 Create Date: 2026-05-12
 
 """
+
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
@@ -122,9 +123,7 @@ def upgrade() -> None:
     )
 
     op.create_index("ix_detalles_pedido_pedido_id", "detalles_pedido", ["pedido_id"])
-    op.create_index(
-        "ix_detalles_pedido_producto_id", "detalles_pedido", ["producto_id"]
-    )
+    op.create_index("ix_detalles_pedido_producto_id", "detalles_pedido", ["producto_id"])
 
     op.create_foreign_key(
         "fk_detalles_pedido_pedido_id",

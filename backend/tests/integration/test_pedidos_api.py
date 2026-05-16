@@ -6,11 +6,13 @@ for stock validation. SQLite does NOT support SELECT FOR UPDATE.
 All tests in this module are marked with @pytest.mark.postgres and will
 be skipped if PostgreSQL is not available.
 """
-import pytest
+
 from decimal import Decimal
+
+import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import SQLModel
 
 # Mark all tests in this module to require PostgreSQL
@@ -19,12 +21,14 @@ pytestmark = pytest.mark.postgres
 
 # ── Test data helpers ────────────────────────────────────────────────────────────
 
+
 async def _create_test_user(session: AsyncSession, email: str = "test@example.com") -> dict:
     """Create a test user with CLIENT role."""
-    from app.models.usuario import Usuario
-    from app.models.rol import Rol
-    from app.models.usuario_rol import UsuarioRol
     from passlib.context import CryptContext
+
+    from app.models.rol import Rol
+    from app.models.usuario import Usuario
+    from app.models.usuario_rol import UsuarioRol
 
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -56,10 +60,11 @@ async def _create_test_user(session: AsyncSession, email: str = "test@example.co
 
 async def _create_test_admin(session: AsyncSession) -> dict:
     """Create a test user with ADMIN role."""
-    from app.models.usuario import Usuario
-    from app.models.rol import Rol
-    from app.models.usuario_rol import UsuarioRol
     from passlib.context import CryptContext
+
+    from app.models.rol import Rol
+    from app.models.usuario import Usuario
+    from app.models.usuario_rol import UsuarioRol
 
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -88,7 +93,12 @@ async def _create_test_admin(session: AsyncSession) -> dict:
     return {"id": usuario.id, "email": "admin@test.com", "roles": ["ADMIN"]}
 
 
-async def _create_test_producto(session: AsyncSession, nombre: str = "Test Pizza", precio: Decimal = Decimal("100.00"), stock: int = 50) -> dict:
+async def _create_test_producto(
+    session: AsyncSession,
+    nombre: str = "Test Pizza",
+    precio: Decimal = Decimal("100.00"),
+    stock: int = 50,
+) -> dict:
     """Create a test product."""
     from app.models.producto import Producto
 
@@ -135,6 +145,7 @@ def _get_auth_headers(user: dict) -> dict:
 
 
 # ── Test class: Pedido creation ─────────────────────────────────────────────────
+
 
 @pytest.mark.postgres
 class TestCrearPedido:
@@ -194,9 +205,8 @@ class TestCrearPedido:
 
         # Verify Pedido exists in DB
         from app.models.pedido import Pedido
-        pedido_result = await pg_session.execute(
-            select(Pedido).where(Pedido.id == data["id"])
-        )
+
+        pedido_result = await pg_session.execute(select(Pedido).where(Pedido.id == data["id"]))
         pedido = pedido_result.scalar_one()
         assert pedido.usuario_id == user["id"]
         assert pedido.estado_codigo == "PENDIENTE"
@@ -204,6 +214,7 @@ class TestCrearPedido:
 
         # Verify DetallePedido has snapshots
         from app.models.pedido import DetallePedido
+
         detalles_result = await pg_session.execute(
             select(DetallePedido).where(DetallePedido.pedido_id == pedido.id)
         )
@@ -215,10 +226,9 @@ class TestCrearPedido:
 
         # Verify HistorialEstadoPedido with estado_desde=NULL
         from app.models.pedido import HistorialEstadoPedido
+
         historial_result = await pg_session.execute(
-            select(HistorialEstadoPedido).where(
-                HistorialEstadoPedido.pedido_id == pedido.id
-            )
+            select(HistorialEstadoPedido).where(HistorialEstadoPedido.pedido_id == pedido.id)
         )
         historial = list(historial_result.scalars().all())
         assert len(historial) == 1
@@ -260,6 +270,7 @@ class TestCrearPedido:
 
         # Verify NO Pedido created in DB
         from app.models.pedido import Pedido
+
         count_result = await pg_session.execute(
             select(Pedido).where(Pedido.usuario_id == user["id"])
         )
@@ -331,9 +342,7 @@ class TestCrearPedido:
         headers = _get_auth_headers(user)
 
         # Create address for a different user
-        otra_direccion = await _create_test_address(
-            pg_session, usuario_id=other_user["id"]
-        )
+        otra_direccion = await _create_test_address(pg_session, usuario_id=other_user["id"])
 
         body = {
             "items": [{"producto_id": producto["id"], "cantidad": 1}],
@@ -363,6 +372,7 @@ class TestCrearPedido:
         headers = _get_auth_headers(user)
 
         direccion_id = await _create_test_address(pg_session, user["id"])
+        await pg_session.commit()  # Commit the address so it's visible to the API
 
         body = {
             "items": [{"producto_id": producto["id"], "cantidad": 1}],
@@ -401,6 +411,7 @@ class TestCrearPedido:
 
 
 # ── Test class: Listar Pedidos ─────────────────────────────────────────────────
+
 
 @pytest.mark.postgres
 class TestListarPedidos:
@@ -447,9 +458,7 @@ class TestListarPedidos:
         assert list_resp.status_code == 200
         data = list_resp.json()
         assert data["total"] == 1
-        assert all(
-            item["id"] == resp1.json()["id"] for item in data["items"]
-        )
+        assert all(item["id"] == resp1.json()["id"] for item in data["items"])
 
     @pytest.mark.asyncio
     async def test_admin_ve_todos_los_pedidos(
@@ -514,6 +523,7 @@ class TestListarPedidos:
 
 
 # ── Test class: Ver Detalle de Pedido ──────────────────────────────────────────
+
 
 @pytest.mark.postgres
 class TestObtenerPedido:
@@ -590,6 +600,7 @@ class TestObtenerPedido:
 
 # ── Test class: Historial de Estados ───────────────────────────────────────────
 
+
 @pytest.mark.postgres
 class TestHistorialEstados:
     """Tests for GET /api/v1/pedidos/{id}/historial — state history."""
@@ -615,9 +626,7 @@ class TestHistorialEstados:
         pedido_id = resp.json()["id"]
 
         # Get history
-        hist_resp = await pg_client.get(
-            f"/api/v1/pedidos/{pedido_id}/historial", headers=headers
-        )
+        hist_resp = await pg_client.get(f"/api/v1/pedidos/{pedido_id}/historial", headers=headers)
         assert hist_resp.status_code == 200
         historial = hist_resp.json()
 
@@ -627,6 +636,7 @@ class TestHistorialEstados:
 
 
 # ── Test class: SELECT FOR UPDATE (PostgreSQL-specific) ─────────────────────────
+
 
 @pytest.mark.postgres
 class TestSelectForUpdate:

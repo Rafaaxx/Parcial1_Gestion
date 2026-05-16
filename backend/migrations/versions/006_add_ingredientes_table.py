@@ -5,10 +5,11 @@ Revises: 005_fix_cat_unique_constraint
 Create Date: 2026-05-11 00:00:00.000000
 
 """
+
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "006_add_ingredientes_table"
@@ -39,7 +40,7 @@ def upgrade() -> None:
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
-    
+
     # Create partial unique constraint: UNIQUE (nombre) WHERE deleted_at IS NULL
     # This allows reusing ingredient names after soft-delete
     op.create_index(
@@ -49,7 +50,7 @@ def upgrade() -> None:
         unique=True,
         postgresql_where=sa.text("deleted_at IS NULL"),
     )
-    
+
     # Create indexes for query performance
     op.create_index(
         op.f("ix_ingredientes_nombre"),

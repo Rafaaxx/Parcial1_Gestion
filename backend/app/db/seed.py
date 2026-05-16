@@ -7,6 +7,7 @@ This must be run once after ``alembic upgrade head``.
 Without it, the application will not work: no roles, order states,
 or payment methods exist.
 """
+
 import asyncio
 import logging
 import os
@@ -83,6 +84,7 @@ INSERT_ADMIN_ROLE = text("""
 
 # ── Seed logic ───────────────────────────────────────────────────────────────
 
+
 async def seed_all(session_factory=None):
     """Execute seed data insertion.
 
@@ -125,14 +127,18 @@ async def seed_all(session_factory=None):
         for codigo, descripcion, habilitado in FORMAS_PAGO:
             await session.execute(
                 INSERT_FORMAS_PAGO,
-                {"codigo": codigo, "descripcion": descripcion, "habilitado": habilitado},
+                {
+                    "codigo": codigo,
+                    "descripcion": descripcion,
+                    "habilitado": habilitado,
+                },
             )
         logger.info("  ✅  %d formas de pago inserted", len(FORMAS_PAGO))
 
         # 4. Admin user ───────────────────────────────────────────────────────
         salt = bcrypt.gensalt()
-        password_bytes = ADMIN_PASSWORD.encode('utf-8')
-        password_hash = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
+        password_bytes = ADMIN_PASSWORD.encode("utf-8")
+        password_hash = bcrypt.hashpw(password_bytes, salt).decode("utf-8")
         await session.execute(
             INSERT_ADMIN_USER,
             {

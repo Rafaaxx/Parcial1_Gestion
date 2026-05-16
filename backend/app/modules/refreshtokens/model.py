@@ -3,11 +3,12 @@
 NOTE: This model does NOT inherit from BaseModel (no SoftDeleteMixin).
 Refresh tokens use ``revoked_at`` with revokation semantics, not soft-delete.
 """
-from typing import Optional, TYPE_CHECKING
+
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import DateTime
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.mixins import TimestampMixin
 
@@ -50,9 +51,7 @@ class RefreshToken(TimestampMixin, SQLModel, table=True):
     @property
     def is_expired(self) -> bool:
         """Check if the token has expired (expires_at past UTC now)."""
-        return self.expires_at.replace(tzinfo=timezone.utc) < datetime.now(
-            timezone.utc
-        )
+        return self.expires_at.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc)
 
     @property
     def is_revoked(self) -> bool:

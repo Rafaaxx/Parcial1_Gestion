@@ -7,25 +7,26 @@ They use the real domain models (Rol, EstadoPedido, etc.) so those tables
 are automatically created by ``Base.metadata.create_all`` in the session
 fixture.
 """
-import pytest
-from pytest import mark
-from sqlalchemy import select, func
-from passlib.hash import bcrypt
 
-from app.models.rol import Rol
-from app.models.estado_pedido import EstadoPedido
-from app.models.forma_pago import FormaPago
-from app.models.usuario import Usuario
-from app.models.usuario_rol import UsuarioRol
+import pytest
+from passlib.hash import bcrypt
+from pytest import mark
+from sqlalchemy import func, select
+
 from app.db.seed import (
-    ROLES,
+    ADMIN_APELLIDO,
+    ADMIN_EMAIL,
+    ADMIN_NOMBRE,
+    ADMIN_PASSWORD,
     ESTADOS_PEDIDO,
     FORMAS_PAGO,
-    ADMIN_EMAIL,
-    ADMIN_PASSWORD,
-    ADMIN_NOMBRE,
-    ADMIN_APELLIDO,
+    ROLES,
 )
+from app.models.estado_pedido import EstadoPedido
+from app.models.forma_pago import FormaPago
+from app.models.rol import Rol
+from app.models.usuario import Usuario
+from app.models.usuario_rol import UsuarioRol
 
 pytestmark = mark.asyncio
 
@@ -60,17 +61,13 @@ async def _seed_formas_pago(session):
     for codigo, descripcion, habilitado in FORMAS_PAGO:
         existing = await session.get(FormaPago, codigo)
         if existing is None:
-            session.add(
-                FormaPago(codigo=codigo, descripcion=descripcion, habilitado=habilitado)
-            )
+            session.add(FormaPago(codigo=codigo, descripcion=descripcion, habilitado=habilitado))
     await session.flush()
 
 
 async def _seed_admin(session):
     """Insert admin user with ADMIN role."""
-    result = await session.execute(
-        select(Usuario).where(Usuario.email == ADMIN_EMAIL)
-    )
+    result = await session.execute(select(Usuario).where(Usuario.email == ADMIN_EMAIL))
     user = result.scalar_one_or_none()
     if user is None:
         password_hash = bcrypt.hash(ADMIN_PASSWORD)
@@ -103,9 +100,7 @@ async def test_roles_exist(test_db_session):
 async def test_estados_exist(test_db_session):
     """After seeding, all 6 estado_pedido records exist."""
     await _seed_estados(test_db_session)
-    result = await test_db_session.execute(
-        select(func.count()).select_from(EstadoPedido)
-    )
+    result = await test_db_session.execute(select(func.count()).select_from(EstadoPedido))
     count = result.scalar()
     assert count == 6, f"Expected 6 estados, got {count}"
 
@@ -113,9 +108,7 @@ async def test_estados_exist(test_db_session):
 async def test_formas_pago_exist(test_db_session):
     """After seeding, all 3 formas_pago records exist."""
     await _seed_formas_pago(test_db_session)
-    result = await test_db_session.execute(
-        select(func.count()).select_from(FormaPago)
-    )
+    result = await test_db_session.execute(select(func.count()).select_from(FormaPago))
     count = result.scalar()
     assert count == 3, f"Expected 3 formas de pago, got {count}"
 
@@ -125,9 +118,7 @@ async def test_admin_user_exists(test_db_session):
     await _seed_admin(test_db_session)
 
     # Verify user
-    result = await test_db_session.execute(
-        select(Usuario).where(Usuario.email == ADMIN_EMAIL)
-    )
+    result = await test_db_session.execute(select(Usuario).where(Usuario.email == ADMIN_EMAIL))
     user = result.scalar_one_or_none()
     assert user is not None, "Admin user not found"
     assert user.nombre == ADMIN_NOMBRE
@@ -135,9 +126,7 @@ async def test_admin_user_exists(test_db_session):
     assert user.activo is True
 
     # Verify password hash
-    assert bcrypt.verify(ADMIN_PASSWORD, user.password_hash), (
-        "Password hash does not match"
-    )
+    assert bcrypt.verify(ADMIN_PASSWORD, user.password_hash), "Password hash does not match"
 
     # Verify ADMIN role assigned
     result = await test_db_session.execute(
@@ -168,10 +157,8 @@ async def test_idempotency(test_db_session):
         (EstadoPedido, 6),
         (FormaPago, 3),
     ]:
-        result = await test_db_session.execute(
-            select(func.count()).select_from(model)
-        )
+        result = await test_db_session.execute(select(func.count()).select_from(model))
         count = result.scalar()
-        assert count == expected, (
-            f"Idempotency failed for {model.__name__}: expected {expected}, got {count}"
-        )
+        assert (
+            count == expected
+        ), f"Idempotency failed for {model.__name__}: expected {expected}, got {count}"

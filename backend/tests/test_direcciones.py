@@ -13,25 +13,25 @@ Auth strategy:
   - Original get_current_user runs in auth_client, loading user from DB each time
 """
 
-import pytest
-import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.pool import StaticPool
-from sqlmodel import SQLModel
 from datetime import datetime, timedelta, timezone
 
+import pytest
+import pytest_asyncio
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.pool import StaticPool
+from sqlmodel import SQLModel
+
+from app.dependencies import get_current_user, get_uow, oauth2_scheme
 from app.main import app
-from app.dependencies import get_uow, get_current_user, oauth2_scheme
-from app.uow import UnitOfWork
 from app.models import DireccionEntrega, Usuario
 from app.modules.direcciones.schemas import (
     DireccionCreate,
-    DireccionRead,
     DireccionListResponse,
+    DireccionRead,
 )
 from app.security import create_access_token
-
+from app.uow import UnitOfWork
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Fixtures
@@ -106,21 +106,25 @@ async def otro_usuario(test_session):
 @pytest_asyncio.fixture
 def token_cliente(usuario_cliente):
     """Create a valid JWT for usuario_cliente with CLIENT role."""
-    return create_access_token({
-        "sub": str(usuario_cliente.id),
-        "email": usuario_cliente.email,
-        "roles": ["CLIENT"],
-    })
+    return create_access_token(
+        {
+            "sub": str(usuario_cliente.id),
+            "email": usuario_cliente.email,
+            "roles": ["CLIENT"],
+        }
+    )
 
 
 @pytest_asyncio.fixture
 def token_otro(otro_usuario):
     """Create a valid JWT for otro_usuario with CLIENT role."""
-    return create_access_token({
-        "sub": str(otro_usuario.id),
-        "email": otro_usuario.email,
-        "roles": ["CLIENT"],
-    })
+    return create_access_token(
+        {
+            "sub": str(otro_usuario.id),
+            "email": otro_usuario.email,
+            "roles": ["CLIENT"],
+        }
+    )
 
 
 # ── HTTP Client Fixtures ──────────────────────────────────────────────────────
@@ -198,9 +202,9 @@ async def _crear_direccion_via_api(
         json=payload,
         headers={"Authorization": f"Bearer {token}"},
     )
-    assert response.status_code == 201, (
-        f"Failed to create address: {response.status_code} {response.text}"
-    )
+    assert (
+        response.status_code == 201
+    ), f"Failed to create address: {response.status_code} {response.text}"
     return response.json()
 
 
@@ -238,14 +242,10 @@ class TestCrearDireccion:
         )
         assert response.status_code == 201
         data = response.json()
-        assert data["es_principal"] is True, (
-            "La primera dirección debe ser la predeterminada"
-        )
+        assert data["es_principal"] is True, "La primera dirección debe ser la predeterminada"
 
     @pytest.mark.asyncio
-    async def test_create_direccion_second_not_principal(
-        self, auth_client, token_cliente
-    ):
+    async def test_create_direccion_second_not_principal(self, auth_client, token_cliente):
         """Segunda dirección NO debe ser predeterminada."""
         # Create first address
         await _crear_direccion_via_api(
@@ -260,9 +260,7 @@ class TestCrearDireccion:
         )
         assert response.status_code == 201
         data = response.json()
-        assert data["es_principal"] is False, (
-            "La segunda dirección NO debe ser predeterminada"
-        )
+        assert data["es_principal"] is False, "La segunda dirección NO debe ser predeterminada"
 
     @pytest.mark.asyncio
     async def test_create_direccion_empty_linea1(self, auth_client, token_cliente):
@@ -318,12 +316,8 @@ class TestListarDirecciones:
     @pytest.mark.asyncio
     async def test_list_direcciones_with_data(self, auth_client, token_cliente):
         """Crear 2 direcciones, listar → 2 items."""
-        await _crear_direccion_via_api(
-            auth_client, token_cliente, linea1="Dir 1", alias="Casa"
-        )
-        await _crear_direccion_via_api(
-            auth_client, token_cliente, linea1="Dir 2", alias="Trabajo"
-        )
+        await _crear_direccion_via_api(auth_client, token_cliente, linea1="Dir 1", alias="Casa")
+        await _crear_direccion_via_api(auth_client, token_cliente, linea1="Dir 2", alias="Trabajo")
 
         response = await auth_client.get(
             "/api/v1/direcciones",
@@ -338,9 +332,7 @@ class TestListarDirecciones:
     async def test_list_direcciones_pagination(self, auth_client, token_cliente):
         """Crear 3, limit=2 → 2 items, total=3."""
         for i in range(3):
-            await _crear_direccion_via_api(
-                auth_client, token_cliente, linea1=f"Dir {i + 1}"
-            )
+            await _crear_direccion_via_api(auth_client, token_cliente, linea1=f"Dir {i + 1}")
 
         response = await auth_client.get(
             "/api/v1/direcciones?skip=0&limit=2",
@@ -354,13 +346,9 @@ class TestListarDirecciones:
         assert data["limit"] == 2
 
     @pytest.mark.asyncio
-    async def test_list_direcciones_other_user(
-        self, auth_client, token_cliente, token_otro
-    ):
+    async def test_list_direcciones_other_user(self, auth_client, token_cliente, token_otro):
         """Crear como user A, listar como user B → vacío."""
-        await _crear_direccion_via_api(
-            auth_client, token_cliente, linea1="Dir de usuario A"
-        )
+        await _crear_direccion_via_api(auth_client, token_cliente, linea1="Dir de usuario A")
 
         response = await auth_client.get(
             "/api/v1/direcciones",
@@ -421,9 +409,7 @@ class TestEditarDireccion:
         assert data["alias"] == "Casa"  # unchanged
 
     @pytest.mark.asyncio
-    async def test_update_direccion_not_owner(
-        self, auth_client, token_cliente, token_otro
-    ):
+    async def test_update_direccion_not_owner(self, auth_client, token_cliente, token_otro):
         """User A edita dirección de user B → 404."""
         # Create address as user A
         created = await _crear_direccion_via_api(
@@ -469,9 +455,7 @@ class TestEliminarDireccion:
     @pytest.mark.asyncio
     async def test_delete_direccion_success(self, auth_client, token_cliente):
         """Eliminar → 204."""
-        created = await _crear_direccion_via_api(
-            auth_client, token_cliente, linea1="A eliminar"
-        )
+        created = await _crear_direccion_via_api(auth_client, token_cliente, linea1="A eliminar")
 
         response = await auth_client.delete(
             f"/api/v1/direcciones/{created['id']}",
@@ -487,9 +471,7 @@ class TestEliminarDireccion:
         assert list_resp.json()["total"] == 0
 
     @pytest.mark.asyncio
-    async def test_delete_direccion_not_owner(
-        self, auth_client, token_cliente, token_otro
-    ):
+    async def test_delete_direccion_not_owner(self, auth_client, token_cliente, token_otro):
         """User A elimina dirección de user B → 404."""
         created = await _crear_direccion_via_api(
             auth_client, token_cliente, linea1="Dirección de A"
@@ -570,8 +552,7 @@ class TestEliminarDireccion:
         dirs = {d["id"]: d for d in data["items"]}
         assert dirs[dir2_id]["es_principal"] is False
         assert dirs[dir3_id]["es_principal"] is True, (
-            "La dirección más reciente debe volverse predeterminada "
-            "tras eliminar la anterior"
+            "La dirección más reciente debe volverse predeterminada " "tras eliminar la anterior"
         )
 
 
@@ -605,9 +586,7 @@ class TestSetPredeterminada:
         assert data["alias"] == "Trabajo"
 
     @pytest.mark.asyncio
-    async def test_set_predeterminada_switches_previous(
-        self, auth_client, token_cliente
-    ):
+    async def test_set_predeterminada_switches_previous(self, auth_client, token_cliente):
         """A es principal, PATCH B → A ya no es principal, B sí."""
         dir1 = await _crear_direccion_via_api(
             auth_client, token_cliente, linea1="Dir 1", alias="Casa"
@@ -636,9 +615,7 @@ class TestSetPredeterminada:
     async def test_set_predeterminada_idempotent(self, auth_client, token_cliente):
         """PATCH sobre la misma dirección ya predeterminada → 200 sin error."""
         # First address is auto-set as default
-        dir1 = await _crear_direccion_via_api(
-            auth_client, token_cliente, linea1="Dir 1"
-        )
+        dir1 = await _crear_direccion_via_api(auth_client, token_cliente, linea1="Dir 1")
         assert dir1["es_principal"] is True
 
         # PATCH the same address as predeterminada (already is)
@@ -652,9 +629,7 @@ class TestSetPredeterminada:
         assert data["id"] == dir1["id"]
 
     @pytest.mark.asyncio
-    async def test_set_predeterminada_not_owner(
-        self, auth_client, token_cliente, token_otro
-    ):
+    async def test_set_predeterminada_not_owner(self, auth_client, token_cliente, token_otro):
         """User A PATCH la dirección de user B → 404."""
         created = await _crear_direccion_via_api(
             auth_client, token_cliente, linea1="Dirección de A"
@@ -709,12 +684,8 @@ class TestEdgeCases:
     async def test_soft_deleted_not_in_list(self, auth_client, token_cliente):
         """Dirección eliminada no aparece en GET."""
         # Create 2 addresses
-        d1 = await _crear_direccion_via_api(
-            auth_client, token_cliente, linea1="Dir 1"
-        )
-        await _crear_direccion_via_api(
-            auth_client, token_cliente, linea1="Dir 2"
-        )
+        d1 = await _crear_direccion_via_api(auth_client, token_cliente, linea1="Dir 1")
+        await _crear_direccion_via_api(auth_client, token_cliente, linea1="Dir 2")
 
         # Delete one
         await auth_client.delete(
@@ -729,24 +700,16 @@ class TestEdgeCases:
         )
         data = list_resp.json()
         assert data["total"] == 1
-        assert all(d["id"] != d1["id"] for d in data["items"]), (
-            "Soft-deleted address must not appear in list"
-        )
+        assert all(
+            d["id"] != d1["id"] for d in data["items"]
+        ), "Soft-deleted address must not appear in list"
 
     @pytest.mark.asyncio
-    async def test_list_direcciones_ordered_by_created_at_desc(
-        self, auth_client, token_cliente
-    ):
+    async def test_list_direcciones_ordered_by_created_at_desc(self, auth_client, token_cliente):
         """Listado ordenado por created_at DESC (más reciente primero)."""
-        d1 = await _crear_direccion_via_api(
-            auth_client, token_cliente, linea1="Primera"
-        )
-        d2 = await _crear_direccion_via_api(
-            auth_client, token_cliente, linea1="Segunda"
-        )
-        d3 = await _crear_direccion_via_api(
-            auth_client, token_cliente, linea1="Tercera"
-        )
+        d1 = await _crear_direccion_via_api(auth_client, token_cliente, linea1="Primera")
+        d2 = await _crear_direccion_via_api(auth_client, token_cliente, linea1="Segunda")
+        d3 = await _crear_direccion_via_api(auth_client, token_cliente, linea1="Tercera")
 
         list_resp = await auth_client.get(
             "/api/v1/direcciones",
@@ -756,6 +719,8 @@ class TestEdgeCases:
         assert data["total"] == 3
         ids = [d["id"] for d in data["items"]]
         # Most recent first: d3, d2, d1
-        assert ids == [d3["id"], d2["id"], d1["id"]], (
-            f"Expected order [{d3['id']}, {d2['id']}, {d1['id']}], got {ids}"
-        )
+        assert ids == [
+            d3["id"],
+            d2["id"],
+            d1["id"],
+        ], f"Expected order [{d3['id']}, {d2['id']}, {d1['id']}], got {ids}"

@@ -1,12 +1,13 @@
 """Custom exception classes for the application"""
 
-from typing import Optional, Any, Dict
+from typing import Any, Dict, Optional
+
 from fastapi import HTTPException, status
 
 
 class AppException(Exception):
     """Base exception for the application"""
-    
+
     def __init__(
         self,
         message: str,
@@ -23,7 +24,7 @@ class AppException(Exception):
 
 class ValidationError(AppException):
     """Raised when input validation fails"""
-    
+
     def __init__(self, message: str, detail: Optional[Dict[str, Any]] = None):
         super().__init__(
             message=message,
@@ -35,7 +36,7 @@ class ValidationError(AppException):
 
 class NotFoundError(AppException):
     """Raised when a resource is not found"""
-    
+
     def __init__(self, message: str, resource: str = "Resource"):
         super().__init__(
             message=message,
@@ -47,7 +48,7 @@ class NotFoundError(AppException):
 
 class ConflictError(AppException):
     """Raised when there's a conflict (e.g., duplicate unique field)"""
-    
+
     def __init__(self, message: str, detail: Optional[Dict[str, Any]] = None):
         super().__init__(
             message=message,
@@ -59,7 +60,7 @@ class ConflictError(AppException):
 
 class UnauthorizedError(AppException):
     """Raised when authentication fails"""
-    
+
     def __init__(self, message: str = "Unauthorized"):
         super().__init__(
             message=message,
@@ -70,7 +71,7 @@ class UnauthorizedError(AppException):
 
 class ForbiddenError(AppException):
     """Raised when user lacks permissions"""
-    
+
     def __init__(self, message: str = "Forbidden"):
         super().__init__(
             message=message,
@@ -81,7 +82,7 @@ class ForbiddenError(AppException):
 
 class DatabaseError(AppException):
     """Raised when a database operation fails"""
-    
+
     def __init__(self, message: str, detail: Optional[Dict[str, Any]] = None):
         super().__init__(
             message=message,
@@ -93,7 +94,7 @@ class DatabaseError(AppException):
 
 class RateLimitError(AppException):
     """Raised when rate limit is exceeded"""
-    
+
     def __init__(self, message: str = "Too many requests", retry_after: Optional[int] = None):
         super().__init__(
             message=message,

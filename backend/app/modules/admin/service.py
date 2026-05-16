@@ -10,18 +10,18 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional
 
-from app.exceptions import NotFoundError, ConflictError, ForbiddenError
-from app.security import create_access_token
-from app.uow import UnitOfWork
+from app.exceptions import ConflictError, ForbiddenError, NotFoundError
 from app.modules.admin.repository import AdminRepository
 from app.modules.admin.schemas import (
-    ResumenMetricasRead,
-    ProductoTopRead,
-    VentaPeriodoRead,
     PedidoEstadoRead,
-    UsuarioAdminRead,
+    ProductoTopRead,
+    ResumenMetricasRead,
     UsuarioAdminListResponse,
+    UsuarioAdminRead,
+    VentaPeriodoRead,
 )
+from app.security import create_access_token
+from app.uow import UnitOfWork
 
 logger = logging.getLogger(__name__)
 
@@ -123,15 +123,17 @@ class AdminService:
         items = []
         for u in users:
             roles = [ur.rol_codigo for ur in (u.usuario_roles or [])]
-            items.append({
-                "id": u.id,
-                "nombre": f"{u.nombre} {u.apellido}".strip(),
-                "email": u.email,
-                "roles": roles,
-                "activo": u.activo,
-                "creado_en": u.created_at.isoformat() if u.created_at else None,
-                "ultimo_login": None,
-            })
+            items.append(
+                {
+                    "id": u.id,
+                    "nombre": f"{u.nombre} {u.apellido}".strip(),
+                    "email": u.email,
+                    "roles": roles,
+                    "activo": u.activo,
+                    "creado_en": u.created_at.isoformat() if u.created_at else None,
+                    "ultimo_login": None,
+                }
+            )
 
         return {
             "items": items,

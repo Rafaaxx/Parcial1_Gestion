@@ -7,14 +7,15 @@ This service encapsulates:
 
 It is stateless: all dependencies are received as arguments.
 """
+
 from datetime import datetime, timedelta, timezone
 
 from app.config import settings
 from app.exceptions import UnauthorizedError
-from app.security import generate_refresh_token, hash_refresh_token
-from app.uow import UnitOfWork
 from app.modules.refreshtokens.model import RefreshToken
 from app.modules.refreshtokens.repository import RefreshTokenRepository
+from app.security import generate_refresh_token, hash_refresh_token
+from app.uow import UnitOfWork
 
 
 class RefreshTokenService:
@@ -86,9 +87,7 @@ class RefreshTokenService:
         if stored.is_revoked:
             usuario_id_from_token = stored.usuario_id
             await repo.revoke_all_for_user(usuario_id_from_token)
-            raise UnauthorizedError(
-                "Sesión comprometida — todos los tokens revocados"
-            )
+            raise UnauthorizedError("Sesión comprometida — todos los tokens revocados")
 
         # Valid token: revoke current, create new
         usuario_id_from_token = stored.usuario_id

@@ -1,21 +1,23 @@
 """Tests for app.security pure functions — hashing, JWT, refresh token."""
-import pytest
+
 import uuid
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch, ANY
+from unittest.mock import ANY, patch
 
+import pytest
+
+from app.config import settings
 from app.security import (
-    hash_password,
-    verify_password,
     create_access_token,
     decode_access_token,
     generate_refresh_token,
+    hash_password,
     hash_refresh_token,
+    verify_password,
 )
-from app.config import settings
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 def _future_exp(minutes: int = 30) -> datetime:
     return datetime.now(timezone.utc) + timedelta(minutes=minutes)

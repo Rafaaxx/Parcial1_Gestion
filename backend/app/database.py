@@ -1,14 +1,15 @@
 """Database configuration and session management"""
 
 import logging
+
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
+    AsyncEngine,
     AsyncSession,
     async_sessionmaker,
-    AsyncEngine,
+    create_async_engine,
 )
-from sqlmodel import SQLModel
 from sqlalchemy.pool import NullPool
+from sqlmodel import SQLModel
 
 from app.config import settings
 
@@ -32,10 +33,7 @@ else:
     engine_kwargs["pool_size"] = settings.database_pool_size
     engine_kwargs["max_overflow"] = settings.database_max_overflow
 
-engine: AsyncEngine = create_async_engine(
-    settings.database_url,
-    **engine_kwargs
-)
+engine: AsyncEngine = create_async_engine(settings.database_url, **engine_kwargs)
 
 # Create async session factory
 async_session_factory = async_sessionmaker(

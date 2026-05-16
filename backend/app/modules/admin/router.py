@@ -6,25 +6,24 @@ All endpoints require ADMIN role.
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.dependencies import get_uow, get_current_user, require_role
-from app.uow import UnitOfWork
+from app.dependencies import get_current_user, get_uow, require_role
+from app.exceptions import AppException, ConflictError, NotFoundError
 from app.models.usuario import Usuario
-from app.exceptions import AppException, NotFoundError, ConflictError
-
-from app.modules.admin.service import AdminService
 from app.modules.admin.repository import AdminRepository
 from app.modules.admin.schemas import (
-    ResumenMetricasRead,
-    VentaPeriodoRead,
     PedidoEstadoRead,
     ProductoTopRead,
-    UsuarioAdminRead,
+    ResumenMetricasRead,
     UsuarioAdminListResponse,
+    UsuarioAdminRead,
     UsuarioAdminUpdate,
     UsuarioEstadoUpdate,
+    VentaPeriodoRead,
 )
+from app.modules.admin.service import AdminService
+from app.uow import UnitOfWork
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +82,9 @@ async def get_ventas(
             },
         )
     async with uow:
-        result = await service.get_ventas(uow=uow, repo=repo, granularidad=granularidad, desde=desde, hasta=hasta)
+        result = await service.get_ventas(
+            uow=uow, repo=repo, granularidad=granularidad, desde=desde, hasta=hasta
+        )
     return result
 
 
@@ -98,7 +99,9 @@ async def get_productos_top(
 ):
     """Get top selling products."""
     async with uow:
-        result = await service.get_productos_top(uow=uow, repo=repo, top=top, desde=desde, hasta=hasta)
+        result = await service.get_productos_top(
+            uow=uow, repo=repo, top=top, desde=desde, hasta=hasta
+        )
     return result
 
 
@@ -126,7 +129,10 @@ async def list_usuarios(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=20, ge=1, le=100),
     busqueda: Optional[str] = Query(default=None, description="Búsqueda por nombre o email"),
-    rol: Optional[str] = Query(default=None, description="Filtrar por código de rol (ADMIN, STOCK, PEDIDOS, CLIENT)"),
+    rol: Optional[str] = Query(
+        default=None,
+        description="Filtrar por código de rol (ADMIN, STOCK, PEDIDOS, CLIENT)",
+    ),
     activo: Optional[bool] = Query(default=None, description="Filtrar por estado activo/inactivo"),
     uow: UnitOfWork = Depends(get_uow),
     repo: AdminRepository = Depends(_get_admin_repo),
@@ -170,10 +176,13 @@ async def update_usuario(
                 roles_codes=body.roles_codes,
             )
         except (NotFoundError, ConflictError) as e:
-            raise HTTPException(status_code=e.status_code, detail={
-                "detail": e.message,
-                "code": e.error_code,
-            })
+            raise HTTPException(
+                status_code=e.status_code,
+                detail={
+                    "detail": e.message,
+                    "code": e.error_code,
+                },
+            )
     return result
 
 
@@ -201,8 +210,11 @@ async def update_usuario_estado(
                 activo=body.activo,
             )
         except (NotFoundError, ConflictError) as e:
-            raise HTTPException(status_code=e.status_code, detail={
-                "detail": e.message,
-                "code": e.error_code,
-            })
+            raise HTTPException(
+                status_code=e.status_code,
+                detail={
+                    "detail": e.message,
+                    "code": e.error_code,
+                },
+            )
     return result

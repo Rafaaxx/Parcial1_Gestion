@@ -1,17 +1,18 @@
 """Business logic service for MercadoPago payments with idempotency and FSM integration"""
+
 import logging
 import os
 import uuid
-from typing import Optional
 from decimal import Decimal
+from typing import Optional
 
 import mercadopago
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.config import settings
 
-from app.uow import UnitOfWork
+from app.config import settings
+from app.models.pedido import Pedido
 from app.modules.pagos.model import Pago
 from app.modules.pagos.repository import PagoRepository
 from app.modules.pagos.schemas import (
@@ -21,7 +22,7 @@ from app.modules.pagos.schemas import (
     WebhookPayload,
 )
 from app.modules.pedidos.service import PedidoService
-from app.models.pedido import Pedido
+from app.uow import UnitOfWork
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +93,9 @@ class PagoService:
             print("Access_Token: ", access_token)
             if not access_token:
                 raise ValueError("MP_ACCESS_TOKEN not configured")
-            self._mp_client = mercadopago.SDK(access_token,)
+            self._mp_client = mercadopago.SDK(
+                access_token,
+            )
         return self._mp_client
 
     async def crear_pago(
@@ -184,7 +187,9 @@ class PagoService:
                 )
             else:
                 logger.error(f"MP API error: {result}")
-                raise MPConnectionError(f"Error al crear preferencia en MP: {result.get('message', 'Unknown')}")
+                raise MPConnectionError(
+                    f"Error al crear preferencia en MP: {result.get('message', 'Unknown')}"
+                )
 
         except Exception as e:
             logger.error(f"Error calling MP API: {e}")
@@ -227,7 +232,7 @@ class PagoService:
             if payment_info["status"] != 200:
                 logger.error(f"MP API error: {payment_info}")
                 return {"processed": False, "message": "Error fetching payment from MP"}
-            
+
             mp_payment = payment_info["response"]
             mp_status = mp_payment.get("status", "unknown")
             mp_status_detail = mp_payment.get("status_detail", "")
@@ -238,7 +243,7 @@ class PagoService:
 
         # 2. Find payment in our DB
         repo = PagoRepository(self.uow.session)
-        
+
         # Try by mp_payment_id first, then by external_reference
         pago = await repo.get_by_mp_payment_id(int(resource_id))
         if not pago and external_ref:
@@ -254,7 +259,12 @@ class PagoService:
             return {"processed": False, "message": "Payment not found in database"}
 
         # 3. Idempotency: if already processed, skip
-        if pago.mp_payment_id and pago.mp_status in ("approved", "rejected", "cancelled", "refunded"):
+        if pago.mp_payment_id and pago.mp_status in (
+            "approved",
+            "rejected",
+            "cancelled",
+            "refunded",
+        ):
             logger.info(f"Pago {pago.id} already processed with status {pago.mp_status}")
             return {"processed": True, "message": "Already processed"}
 

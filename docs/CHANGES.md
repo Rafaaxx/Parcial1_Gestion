@@ -551,7 +551,7 @@ PENDIENTE ──[pago aprobado]──→ CONFIRMADO ──[gestión]──→ EN
 
 ---
 
-#### CHANGE-16: Testing y CI/CD
+#### CHANGE-16: Testing y CI/CD ✅ ARCHIVADO
 
 | Campo | Valor |
 |-------|-------|
@@ -560,6 +560,8 @@ PENDIENTE ──[pago aprobado]──→ CONFIRMADO ──[gestión]──→ EN
 | **Funcionalidad** | pytest, coverage, GitHub Actions, README, docs |
 | **Dependencias** | Todos |
 | **Duración estimada** | 16h |
+| **Estado** | ✅ Hecho (archivado 2026-05-14) |
+| **Evidencia** | `openspec/changes/archive/2026-05-14-change-16-testing-cicd/` |
 
 **Testing**:
 - Unit tests: BaseRepository, Services, validation
@@ -629,6 +631,7 @@ Para marcar como **completado y archivado**:
 | 3 | CHANGE-12 | MercadoPago Checkout | 2026-05-12 | `openspec/changes/archive/2026-05-12-change-12-mercadopago-checkout/` |
 | 4 | CHANGE-14 | Admin Dashboard | 2026-05-14 | `openspec/changes/archive/2026-05-14-change-14-admin-dashboard/` |
 | 5 | CHANGE-15 | Validación Global y Manejo de Errores | 2026-05-13 | `openspec/changes/archive/2026-05-13-change-15-validation-error-handling/` |
+| 5 | CHANGE-16 | Testing y CI/CD | 2026-05-14 | `openspec/changes/archive/2026-05-14-change-16-testing-cicd/` |
 | 6 | CHANGE-17 | Pantalla de Perfil del Cliente | 2026-05-14 | `openspec/changes/archive/2026-05-14-change-17-pantalla-perfil/` |
 
 ---

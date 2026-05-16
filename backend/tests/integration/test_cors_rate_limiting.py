@@ -3,6 +3,7 @@
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+
 from app.main import app
 
 
@@ -39,9 +40,9 @@ def test_cors_preflight_request(client):
         headers={
             "Origin": "http://localhost:3000",
             "Access-Control-Request-Method": "GET",
-        }
+        },
     )
-    
+
     # Should handle preflight or return 405 (method not allowed)
     assert response.status_code in [200, 405, 404]
 
@@ -55,7 +56,7 @@ def test_cors_preflight_no_rate_limit(client):
             headers={
                 "Origin": "http://localhost:3000",
                 "Access-Control-Request-Method": "GET",
-            }
+            },
         )
         # Should all succeed (preflight doesn't count towards rate limit)
         assert response.status_code in [200, 405, 404, 429]
@@ -68,9 +69,9 @@ def test_cors_credentials_with_auth(client):
         headers={
             "Origin": "http://localhost:3000",
             "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        }
+        },
     )
-    
+
     # Request should succeed or be rate limited (not CORS blocked)
     assert response.status_code in [200, 429]
 
@@ -86,18 +87,15 @@ def test_app_starts_with_middleware(client):
     """Test that app starts with CORS and rate limiting configured"""
     # Make a simple request to verify middleware is working
     response = client.get("/health")
-    
+
     # Should get a response (either 200 or 429 if rate limited)
     assert response.status_code in [200, 429]
 
 
 def test_cors_headers_in_response(client):
     """Test CORS headers are present in API responses"""
-    response = client.get(
-        "/health",
-        headers={"Origin": "http://localhost:3000"}
-    )
-    
+    response = client.get("/health", headers={"Origin": "http://localhost:3000"})
+
     # Response should succeed
     assert response.status_code in [200, 429]
 

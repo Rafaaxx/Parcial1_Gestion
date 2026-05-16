@@ -1,7 +1,9 @@
 """Integration tests for Pagos API endpoints"""
-import pytest
-from unittest.mock import patch, AsyncMock
+
 from decimal import Decimal
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 
 class TestPagosCrearEndpoint:
@@ -10,7 +12,7 @@ class TestPagosCrearEndpoint:
     @pytest.mark.asyncio
     async def test_crear_pago_unauthorized(self, client):
         """Test: 401 when not authenticated"""
-        response = client.post(
+        response = await client.post(
             "/api/v1/pagos/crear",
             json={"pedido_id": 1},
         )
@@ -21,12 +23,10 @@ class TestPagosCrearEndpoint:
         """Test: 404 when order doesn't exist"""
         with patch("app.modules.pagos.service.PagoService") as mock_service:
             mock_instance = AsyncMock()
-            mock_instance.crear_pago.side_effect = Exception(
-                "404: Pedido no encontrado"
-            )
+            mock_instance.crear_pago.side_effect = Exception("404: Pedido no encontrado")
             mock_service.return_value = mock_instance
 
-            response = client.post(
+            response = await client.post(
                 "/api/v1/pagos/crear",
                 json={"pedido_id": 999},
                 headers={"Authorization": f"Bearer {user_token}"},
@@ -43,7 +43,7 @@ class TestPagosGetEndpoint:
     @pytest.mark.asyncio
     async def test_get_pago_not_found(self, client, user_token):
         """Test: 404 when no payment exists for order"""
-        response = client.get(
+        response = await client.get(
             "/api/v1/pagos/1",
             headers={"Authorization": f"Bearer {user_token}"},
         )
@@ -59,14 +59,14 @@ class TestPagosWebhookEndpoint:
     @pytest.mark.asyncio
     async def test_webhook_missing_params(self, client):
         """Test: 422 when topic or id missing"""
-        response = client.post("/api/v1/pagos/webhook")
+        response = await client.post("/api/v1/pagos/webhook")
         # FastAPI will return 422 for missing required query params
         assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_webhook_unsupported_topic(self, client):
         """Test: Returns processed: false for non-payment topics"""
-        response = client.post(
+        response = await client.post(
             "/api/v1/pagos/webhook",
             params={"topic": "plan", "id": "123"},
         )
@@ -83,8 +83,9 @@ class TestPagoModel:
 
     def test_pago_model_creation(self):
         """Test: Pago model can be instantiated"""
-        from app.modules.pagos.model import Pago
         from decimal import Decimal
+
+        from app.modules.pagos.model import Pago
 
         pago = Pago(
             pedido_id=1,

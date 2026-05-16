@@ -3,14 +3,18 @@
 Orchestrates authentication flows (register, login, refresh, logout, get_me)
 by delegating to specialized services and repositories.
 """
-from typing import Optional
 
-from app.exceptions import UnauthorizedError, ConflictError
-from app.security import hash_password, create_access_token, verify_password
-from app.uow import UnitOfWork
-from app.modules.auth.schemas import LoginRequest, RegisterRequest
+from typing import TYPE_CHECKING, Optional
+
+from app.exceptions import ConflictError, UnauthorizedError
 from app.modules.auth.repository import AuthRepository
+from app.modules.auth.schemas import LoginRequest, RegisterRequest
 from app.modules.refreshtokens.service import RefreshTokenService
+from app.security import create_access_token, hash_password, verify_password
+from app.uow import UnitOfWork
+
+if TYPE_CHECKING:
+    from app.models.usuario import Usuario
 
 
 class AuthService:

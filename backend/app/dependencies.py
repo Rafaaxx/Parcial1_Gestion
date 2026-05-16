@@ -9,16 +9,16 @@ Exports:
 import logging
 from typing import AsyncGenerator, Callable, List
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import async_session_factory, get_db
-from app.uow import UnitOfWork
-from app.security import decode_access_token
-from app.modules.auth.repository import AuthRepository
-from app.models.usuario import Usuario
 from app.exceptions import AppException, app_exception_to_http_exception
+from app.models.usuario import Usuario
+from app.modules.auth.repository import AuthRepository
+from app.security import decode_access_token
+from app.uow import UnitOfWork
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,9 @@ logger = logging.getLogger(__name__)
 oauth2_scheme = HTTPBearer()
 
 
-async def get_uow(session: AsyncSession = Depends(get_db)) -> AsyncGenerator[UnitOfWork, None]:
+async def get_uow(
+    session: AsyncSession = Depends(get_db),
+) -> AsyncGenerator[UnitOfWork, None]:
     """
     Dependency for FastAPI to inject Unit of Work
 
@@ -140,6 +142,7 @@ def require_role(roles: List[str]) -> Callable:
         A dependency function that returns None (pass) or raises
         HTTPException 403.
     """
+
     async def _role_checker(
         current_user: Usuario = Depends(get_current_user),
         credentials: HTTPAuthorizationCredentials | None = Depends(oauth2_scheme),
