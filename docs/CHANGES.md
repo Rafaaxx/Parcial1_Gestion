@@ -2,11 +2,11 @@
 
 ## Visión General
 
-Este documento describe el **orden de implementación completo** de Food Store, desglosado en **16 changes independientes pero secuencialmente dependientes**. Cada change corresponde a una funcionalidad atómica con sus artefactos SDD: `proposal.md`, `design.md` y `tasks.md`.
+Este documento describe el **orden de implementación completo** de Food Store, desglosado en **17 changes independientes pero secuencialmente dependientes**. Cada change corresponde a una funcionalidad atómica con sus artefactos SDD: `proposal.md`, `design.md` y `tasks.md`.
 
 El mapa respeta las dependencias arquitectónicas de las capas (Router→Service→UoW→Repository→Model en backend; FSD en frontend) y agrupa por dominio: Infraestructura, Autenticación, Gestión de Datos, Operacional y Pagos.
 
-**Total estimado**: ~250 horas de implementación (incluyendo testing y documentación).
+**Total estimado**: ~263 horas de implementación (incluyendo testing y documentación).
 
 ---
 
@@ -24,6 +24,8 @@ CHANGE-00 (Infraestructura Base) [4 sub-changes]
         │   ├→ CHANGE-02: Navegación y Layout (UI roles) ✓ Depende de CHANGE-01
         │   │
         │   ├→ CHANGE-05: Gestión de Direcciones ✓ Depende de CHANGE-01
+        │   │   │
+        │   │   └→ CHANGE-17: Perfil del Cliente ✓ Depende de CHANGE-05 + CHANGE-01
         │   │
         │   └→ CHANGE-03: Categorías (CRUD jerárquico) ✓ Depende de CHANGE-00b
         │       │
@@ -259,6 +261,29 @@ CHANGE-00 (Infraestructura Base) [4 sub-changes]
 - ✅ Usuario solo ve/edita sus direcciones
 - ✅ Una dirección principal por usuario
 - ✅ Al marcar nueva principal, la anterior se desmarca
+
+---
+
+#### CHANGE-17: Perfil del Cliente
+
+| Campo | Valor |
+|-------|-------|
+| **Nombre** | `change-17-customer-profile` |
+| **Historias US** | US-061, US-062, US-063 |
+| **Funcionalidad** | Pantalla de perfil, ver y editar datos personales, cambio de contraseña |
+| **Dependencias** | CHANGE-01, CHANGE-05 |
+| **Duración estimada** | 12h |
+
+**Endpoints**:
+- GET /api/v1/perfil
+- PUT /api/v1/perfil
+- PUT /api/v1/perfil/password
+
+**Criterios de éxito**:
+- ✅ Cliente puede ver sus datos personales y fecha de registro.
+- ✅ Cliente puede actualizar su nombre, teléfono u otros datos.
+- ✅ Cliente puede cambiar su contraseña con validación de la actual.
+- ✅ Integración en frontend con vista unificada de Perfil y Direcciones.
 
 ---
 
@@ -565,18 +590,19 @@ PENDIENTE ──[pago aprobado]──→ CONFIRMADO ──[gestión]──→ EN
 | 4 | CHANGE-03 | 12h | CHANGE-00 + CHANGE-01 |
 | 5 | CHANGE-04 | 8h | CHANGE-03 + CHANGE-01 |
 | 6 | CHANGE-05 | 10h | CHANGE-01 |
-| 7 | CHANGE-06 | 18h | CHANGE-04 + CHANGE-03 + CHANGE-01 |
-| 8 | CHANGE-07 | 12h | CHANGE-06 |
-| 9 | CHANGE-08 | 10h | CHANGE-07 + CHANGE-01 |
-| 10 | CHANGE-09 | 16h | CHANGE-08 + CHANGE-05 + CHANGE-00d |
-| 11 | CHANGE-10 | 18h | CHANGE-09 + CHANGE-01 |
-| 12 | CHANGE-11 | 14h | CHANGE-10 + CHANGE-01 |
-| 13 | CHANGE-12 | 16h | CHANGE-09 + CHANGE-01 + CHANGE-00 |
-| 14 | CHANGE-13 | 14h | CHANGE-12 + CHANGE-10 |
-| 15 | CHANGE-14 | 20h | CHANGE-10 + CHANGE-06 + CHANGE-02 |
-| 16 | CHANGE-15 | 12h | CHANGE-00 |
-| 17 | CHANGE-16 | 16h | Todos |
-| | **TOTAL** | **251h** | |
+| 7 | CHANGE-17 | 12h | CHANGE-05 + CHANGE-01 |
+| 8 | CHANGE-06 | 18h | CHANGE-04 + CHANGE-03 + CHANGE-01 |
+| 9 | CHANGE-07 | 12h | CHANGE-06 |
+| 10 | CHANGE-08 | 10h | CHANGE-07 + CHANGE-01 |
+| 11 | CHANGE-09 | 16h | CHANGE-08 + CHANGE-05 + CHANGE-00d |
+| 12 | CHANGE-10 | 18h | CHANGE-09 + CHANGE-01 |
+| 13 | CHANGE-11 | 14h | CHANGE-10 + CHANGE-01 |
+| 14 | CHANGE-12 | 16h | CHANGE-09 + CHANGE-01 + CHANGE-00 |
+| 15 | CHANGE-13 | 14h | CHANGE-12 + CHANGE-10 |
+| 16 | CHANGE-14 | 20h | CHANGE-10 + CHANGE-06 + CHANGE-02 |
+| 17 | CHANGE-15 | 12h | CHANGE-00 |
+| 18 | CHANGE-16 | 16h | Todos |
+| | **TOTAL** | **263h** | |
 
 ---
 

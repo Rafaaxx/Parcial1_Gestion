@@ -494,6 +494,7 @@ class ProductoService:
             nombre=producto.nombre,
             descripcion=producto.descripcion,
             precio_base=producto.precio_base,
+            stock_cantidad=producto.stock_cantidad if include_stock else None,
             disponible=producto.disponible,
             imagen=producto.imagen,
             categorias=categorias,

@@ -912,8 +912,8 @@ HISTORIAS DE USUARIO
 
  US-061: Ver perfil propio
 
-- **Titulo**: Visualizacion del perfil del cliente
-- **Historia**: Como **Cliente**, quiero ver los datos de mi perfil, para verificar que mi informacion sea correcta.
+- **Titulo**: Visualizacion de la Pantalla de Perfil del cliente
+- **Historia**: Como **Cliente**, quiero acceder a mi Pantalla de Perfil para ver mis datos personales, para verificar que mi informacion sea correcta y poder gestionarla en un solo lugar.
 - **Prioridad**: Media
 - **Dependencias**: US-002
 

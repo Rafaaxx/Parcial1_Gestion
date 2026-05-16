@@ -16,6 +16,7 @@ interface NavItemConfig {
 
 const PUBLIC_ITEMS: NavItemConfig[] = [
   { label: 'Catálogo', path: '/productos' },
+  { label: 'Registrarse', path: '/auth/register' },
 ]
 
 const AUTH_ITEMS: NavItemConfig[] = [
@@ -30,21 +31,19 @@ const ROLE_ITEMS: Record<Role, NavItemConfig[]> = {
     { label: 'Mi Perfil', path: '/perfil' },
   ],
   STOCK: [
-    { label: 'Productos', path: '/admin/productos' },
-    { label: 'Categorías', path: '/admin/categorias' },
-    { label: 'Ingredientes', path: '/admin/stock' },
-    { label: 'Stock', path: '/admin/stock' },
+    // STOCK ahora accede al admin por el sidebar, no por el navbar
+    { label: 'Catálogo', path: '/productos' },
   ],
   PEDIDOS: [
-    { label: 'Panel de Pedidos', path: '/admin/pedidos' },
+    // PEDIDOS ahora accede al admin por el sidebar, no por el navbar
+    { label: 'Catálogo', path: '/productos' },
   ],
   ADMIN: [
-    { label: 'Dashboard', path: '/admin' },
-    { label: 'Usuarios', path: '/admin/usuarios' },
-    { label: 'Productos', path: '/admin/productos' },
-    { label: 'Categorías', path: '/admin/categorias' },
-    { label: 'Pedidos', path: '/admin/pedidos' },
-    { label: 'Stock', path: '/admin/stock' },
+    // ADMIN ve los mismos items que CLIENT en el navbar
+    // El sidebar tiene los items de admin (Pedidos está en el sidebar)
+    { label: 'Catálogo', path: '/productos' },
+    { label: 'Mi Carrito', path: '/carrito' },
+    { label: 'Mi Perfil', path: '/perfil' },
   ],
 }
 
@@ -63,14 +62,8 @@ function getAllowedItems(user: { roles: Role[] } | null): NavItemConfig[] {
     }
   }
 
-  // Admin always gets all
-  if (user.roles.includes('ADMIN')) {
-    for (const items of Object.values(ROLE_ITEMS)) {
-      for (const item of items) {
-        allowed.set(item.path, item)
-      }
-    }
-  }
+  // NO agregar items de admin al navbar - ya están en el sidebar
+  // El sidebar tiene su propia navegación
 
   return Array.from(allowed.values())
 }

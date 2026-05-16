@@ -1,5 +1,9 @@
 /**
  * Application router configuration with lazy-loaded routes
+ *
+ * TODAS las rutas usan AppLayout. El sidebar se muestra condicionalmente
+ * en AppLayout cuando el usuario tiene roles ADMIN/STOCK/PEDIDOS.
+ * El AdminLayout se eliminó — el sidebar ahora vive en AppLayout.
  */
 
 import { createBrowserRouter } from 'react-router-dom'
@@ -27,10 +31,12 @@ const AdminStock = lazy(() => import('@/pages/AdminStock'))
 const AdminIngredients = lazy(() => import('@/pages/admin/IngredientsPage'))
 
 export const router = createBrowserRouter([
+  // ── Un único árbol de rutas — AppLayout maneja sidebar condicional ──
   {
     path: '/',
     element: <AppLayout />,
     children: [
+      // Públicas
       { index: true, element: <HomePage /> },
       { path: 'auth/login', element: <LoginPage /> },
       { path: 'auth/register', element: <RegisterPage /> },
@@ -38,26 +44,26 @@ export const router = createBrowserRouter([
       { path: 'productos/:id', element: <ProductDetailPage /> },
       { path: 'categorias/:id', element: <CategoryPage /> },
 
-      // Protected routes (any authenticated user)
+      // Protegidas de cliente
       {
         element: <ProtectedRoute />,
         children: [
           { path: 'carrito', element: <CartPage /> },
           { path: 'perfil', element: <ProfilePage /> },
+        ],
+      },
 
-          // Admin routes
-          {
-            element: <ProtectedRoute requiredRoles={['ADMIN']} />,
-            children: [
-              { path: 'admin', element: <AdminDashboard /> },
-              { path: 'admin/productos', element: <AdminProducts /> },
-              { path: 'admin/ingredientes', element: <AdminIngredients /> },
-              { path: 'admin/categorias', element: <AdminCategories /> },
-              { path: 'admin/pedidos', element: <AdminOrders /> },
-              { path: 'admin/usuarios', element: <AdminUsers /> },
-              { path: 'admin/stock', element: <AdminStock /> },
-            ],
-          },
+      // Admin (protegidas por rol)
+      {
+        element: <ProtectedRoute requiredRoles={['ADMIN', 'STOCK', 'PEDIDOS']} />,
+        children: [
+          { path: 'admin',              element: <AdminDashboard /> },
+          { path: 'admin/productos',    element: <AdminProducts /> },
+          { path: 'admin/ingredientes', element: <AdminIngredients /> },
+          { path: 'admin/categorias',   element: <AdminCategories /> },
+          { path: 'admin/pedidos',      element: <AdminOrders /> },
+          { path: 'admin/usuarios',     element: <AdminUsers /> },
+          { path: 'admin/stock',        element: <AdminStock /> },
         ],
       },
 

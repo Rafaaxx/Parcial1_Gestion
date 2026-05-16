@@ -59,7 +59,6 @@ async def register(
     "/login",
     response_model=TokenResponse,
 )
-@limiter.limit(settings.rate_limit_auth_limit)
 async def login(
     request: Request,
     login_data: LoginRequest,
@@ -67,7 +66,7 @@ async def login(
     auth_repo: AuthRepository = Depends(_get_auth_repo),
     auth_service: AuthService = Depends(_get_auth_service),
 ):
-    """Authenticate user and return tokens. Rate limited."""
+    """Authenticate user and return tokens."""
     async with uow:
         result = await auth_service.login(request=login_data, uow=uow, auth_repo=auth_repo)
     return result
@@ -80,7 +79,6 @@ async def login(
     "/refresh",
     response_model=TokenResponse,
 )
-@limiter.limit(settings.rate_limit_refresh_limit)
 async def refresh(
     request: Request,
     refresh_data: RefreshRequest,
@@ -88,7 +86,7 @@ async def refresh(
     auth_repo: AuthRepository = Depends(_get_auth_repo),
     auth_service: AuthService = Depends(_get_auth_service),
 ):
-    """Rotate a refresh token. Rate limited."""
+    """Rotate a refresh token."""
     async with uow:
         result = await auth_service.refresh(
             refresh_token=refresh_data.refresh_token,

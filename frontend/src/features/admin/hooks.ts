@@ -11,6 +11,19 @@ import {
   getUsuarios,
   updateUsuario,
   updateUsuarioEstado,
+  getProductos,
+  getProductoById,
+  createProducto,
+  updateProducto,
+  deleteProducto,
+  updateProductoStock,
+  getCategorias,
+  createCategoria,
+  updateCategoria,
+  deleteCategoria,
+  getPedidos,
+  updatePedidoEstado,
+  getIngredientes,
 } from './api'
 import type {
   UpdateUsuarioRequest,
@@ -146,5 +159,175 @@ export function useUpdateUsuarioEstado() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.usuarios() })
     },
+  })
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Products Hooks
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const adminProductsKeys = {
+  all: ['admin-products'] as const,
+  list: (params: Record<string, unknown>) => [...adminProductsKeys.all, 'list', params] as const,
+  detail: (id: number) => [...adminProductsKeys.all, 'detail', id] as const,
+}
+
+export function useProductos(
+  skip: number = 0,
+  limit: number = 50,
+  categoria_id?: number,
+  disponible?: boolean
+) {
+  return useQuery({
+    queryKey: adminProductsKeys.list({ skip, limit, categoria_id, disponible }),
+    queryFn: () => getProductos(skip, limit, categoria_id, disponible),
+  })
+}
+
+export function useProductoById(id: number) {
+  return useQuery({
+    queryKey: adminProductsKeys.detail(id),
+    queryFn: () => getProductoById(id),
+    enabled: !!id,
+  })
+}
+
+export function useCreateProducto() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: Parameters<typeof createProducto>[0]) => createProducto(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminProductsKeys.all })
+    },
+  })
+}
+
+export function useUpdateProducto() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof updateProducto>[1] }) =>
+      updateProducto(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminProductsKeys.all })
+    },
+  })
+}
+
+export function useDeleteProducto() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => deleteProducto(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminProductsKeys.all })
+    },
+  })
+}
+
+export function useUpdateProductoStock() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, stock_cantidad }: { id: number; stock_cantidad: number }) =>
+      updateProductoStock(id, stock_cantidad),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminProductsKeys.all })
+    },
+  })
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Categories Hooks
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const adminCategoriasKeys = {
+  all: ['admin-categorias'] as const,
+  list: () => [...adminCategoriasKeys.all, 'list'] as const,
+}
+
+export function useCategorias(skip: number = 0, limit: number = 100) {
+  return useQuery({
+    queryKey: adminCategoriasKeys.list(),
+    queryFn: () => getCategorias(skip, limit),
+  })
+}
+
+export function useCreateCategoria() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: Parameters<typeof createCategoria>[0]) => createCategoria(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminCategoriasKeys.all })
+    },
+  })
+}
+
+export function useUpdateCategoria() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof updateCategoria>[1] }) =>
+      updateCategoria(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminCategoriasKeys.all })
+    },
+  })
+}
+
+export function useDeleteCategoria() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => deleteCategoria(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminCategoriasKeys.all })
+    },
+  })
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Orders Hooks
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const adminPedidosKeys = {
+  all: ['admin-pedidos'] as const,
+  list: (params: Record<string, unknown>) => [...adminPedidosKeys.all, 'list', params] as const,
+}
+
+export function usePedidos(skip: number = 0, limit: number = 50, estado?: string) {
+  return useQuery({
+    queryKey: adminPedidosKeys.list({ skip, limit, estado }),
+    queryFn: () => getPedidos(skip, limit, estado),
+  })
+}
+
+export function useUpdatePedidoEstado() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, nuevo_estado }: { id: number; nuevo_estado: string }) =>
+      updatePedidoEstado(id, nuevo_estado),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminPedidosKeys.all })
+    },
+  })
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Ingredients Hooks
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const adminIngredientesKeys = {
+  all: ['admin-ingredientes'] as const,
+  list: () => [...adminIngredientesKeys.all, 'list'] as const,
+}
+
+export function useIngredientes() {
+  return useQuery({
+    queryKey: adminIngredientesKeys.list(),
+    queryFn: () => getIngredientes(),
   })
 }

@@ -1,0 +1,16 @@
+[tool.fastapi.reload]
+# Directories to watch for changes (default: current directory)
+dirs = ["app"]
+
+# Directories to exclude from watching
+exclude = [
+    "logs",
+    "logs/*",
+    "__pycache__",
+    "*.pyc",
+    ".git",
+    "node_modules",
+]
+
+# Watch delay in seconds (default: 0.25)
+delay = 0.5

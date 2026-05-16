@@ -3,12 +3,8 @@
  */
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore, userHasRole } from '@/features/auth/store';
-
-interface AdminLayoutProps {
-  children: React.ReactNode;
-}
 
 interface NavItem {
   label: string;
@@ -48,16 +44,27 @@ const NAV_ITEMS: NavItem[] = [
     requiredRoles: ['ADMIN'],
     icon: '👥',
   },
+  {
+    label: 'Stock',
+    href: '/admin/stock',
+    requiredRoles: ['STOCK', 'ADMIN'],
+    icon: '📋',
+  },
 ];
 
-export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
-  const { user } = useAuthStore();
+export const AdminLayout: React.FC = () => {
+  const { user, logout } = useAuthStore();
   const location = useLocation();
 
   // Filter nav items based on user roles
   const visibleNavItems = NAV_ITEMS.filter((item) => userHasRole(user, item.requiredRoles));
 
   const isActive = (href: string) => location.pathname === href;
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/auth/login';
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
@@ -66,8 +73,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <div className="h-full flex flex-col">
           {/* Header */}
           <div className="p-6 border-b border-gray-200 dark:border-gray-800">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Food Store</h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Admin Panel</p>
+            <Link to="/admin" className="block">
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Food Store</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Admin Panel</p>
+            </Link>
           </div>
 
           {/* User Info */}
@@ -106,18 +115,28 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 <span>{item.label}</span>
               </Link>
             ))}
+
+            {/* Link a Home */}
+            <Link
+              to="/"
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+                isActive('/')
+                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 font-medium'
+                  : 'text-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+              }`}
+            >
+              <span className="text-lg">🏠</span>
+              <span>Home</span>
+            </Link>
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+          <div className="p-4 border-t border-gray-200 dark:border-gray-800 space-y-2">
             <button
-              onClick={() => {
-                // Logout logic here
-                window.location.href = '/login';
-              }}
+              onClick={handleLogout}
               className="w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             >
-              Logout
+              Cerrar Sesión
             </button>
           </div>
         </div>
@@ -125,8 +144,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
-        <div className="bg-white dark:bg-gray-900 min-h-full">{children}</div>
+        <div className="bg-white dark:bg-gray-900 min-h-full">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
 };
+
+export default AdminLayout

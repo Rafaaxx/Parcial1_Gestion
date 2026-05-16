@@ -98,9 +98,20 @@ class SensitiveDataFilter(logging.Filter):
 
 def setup_logging():
     """Configure application-wide logging with rotation and structured output"""
-
+    
+    # Determine log file path
+    log_path = settings.log_file
+    if settings.debug:
+        # In development, move log file OUTSIDE the project directory
+        # to prevent watchfiles --reload infinite loop (the log file write
+        # triggers reload, which writes to log, which triggers reload...)
+        import tempfile
+        temp_dir = Path(tempfile.gettempdir()) / "food-store-logs"
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        log_path = str(temp_dir / "app.log")
+    
     # Create logs directory if it doesn't exist
-    log_dir = Path(settings.log_file).parent
+    log_dir = Path(log_path).parent
     log_dir.mkdir(parents=True, exist_ok=True)
 
     # Root logger
@@ -131,15 +142,15 @@ def setup_logging():
 
     # File handler with rotation (all levels in JSON format)
     file_handler = logging.handlers.RotatingFileHandler(
-        filename=settings.log_file,
+        filename=log_path,
         maxBytes=10 * 1024 * 1024,  # 10 MB
         backupCount=5,  # Keep 5 backup files
     )
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(JSONFormatter())
-    file_handler.addFilter(SensitiveDataFilter())
-    root_logger.addHandler(file_handler)
-
+    # file_handler.setLevel(logging.DEBUG)
+    # file_handler.setFormatter(JSONFormatter())
+    # file_handler.addFilter(SensitiveDataFilter())
+    # root_logger.addHandler(file_handler)
+    
     # Suppress verbose logs from third-party libraries
     logging.getLogger("sqlalchemy").setLevel(logging.WARNING)
     logging.getLogger("asyncio").setLevel(logging.WARNING)
@@ -147,6 +158,16 @@ def setup_logging():
     logging.getLogger("fastapi").setLevel(logging.WARNING)
 
     root_logger.info(f"Logging configured: {settings.log_level} level (debug={settings.debug})")
+    
+    # Ensure console handler uses UTF-8 to avoid UnicodeEncodeError on Windows
+    import io
+    for handler in root_logger.handlers:
+        if isinstance(handler, logging.StreamHandler) and handler.stream is sys.stdout:
+            if isinstance(handler.stream, io.TextIOWrapper):
+                try:
+                    handler.stream.reconfigure(encoding='utf-8')
+                except (AttributeError, ValueError):
+                    pass
     return root_logger
 
 

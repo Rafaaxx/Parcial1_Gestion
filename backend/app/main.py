@@ -20,6 +20,7 @@ from app.modules.ingredientes.router import router as ingredientes_router
 from app.modules.pagos.router import router as pagos_router
 from app.modules.pedidos.router import router as pedidos_router
 from app.modules.productos.router import router as productos_router
+from app.modules.admin.router import router as admin_router
 
 # Configure logging
 setup_logging()
@@ -40,17 +41,17 @@ async def lifespan(app: FastAPI):
 
     # Log rate limiting configuration
     if settings.rate_limit_enabled:
-        logger.info(f"⏱️  Rate limiting ENABLED")
-        logger.info(f"   - General limit: {settings.rate_limit_general_limit}")
-        logger.info(f"   - Auth limit: {settings.rate_limit_auth_limit}")
-        logger.info(f"   - Refresh limit: {settings.rate_limit_refresh_limit}")
+        logger.info(f"[STARTUP] Rate limiting ENABLED")
+        logger.info(f"[STARTUP]   - General limit: {settings.rate_limit_general_limit}")
+        logger.info(f"[STARTUP]   - Auth limit: {settings.rate_limit_auth_limit}")
+        logger.info(f"[STARTUP]   - Refresh limit: {settings.rate_limit_refresh_limit}")
     else:
         logger.info(f"⏱️  Rate limiting DISABLED")
 
     yield
 
     # Shutdown
-    logger.info("🛑 Application shutting down...")
+    logger.info("[SHUTDOWN] Application shutting down...")
     await engine.dispose()
 
 
@@ -119,6 +120,10 @@ app.include_router(pedidos_router, prefix="/api/v1")
 
 # ── Pagos Router ───────────────────────────────────────────────────────────────
 app.include_router(pagos_router, prefix="/api/v1")
+
+# ── Admin Router ───────────────────────────────────────────────────────────────
+# Note: admin_router already has prefix="/api/v1/admin" in its definition
+app.include_router(admin_router)
 
 
 if __name__ == "__main__":
