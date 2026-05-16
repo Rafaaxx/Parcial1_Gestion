@@ -86,6 +86,7 @@ class ProductoCreate(BaseModel):
     disponible: bool = Field(default=True, description="¿Está disponible para venta?")
     imagen: Optional[str] = Field(None, max_length=500, description="URL de la imagen del producto")
     categoria_id: Optional[int] = Field(None, description="ID de la categoría principal")
+    ingrediente_ids: Optional[List[int]] = Field(default=None, description="IDs de ingredientes a asociar")
 
     @field_validator("nombre")
     @classmethod
@@ -123,6 +124,7 @@ class ProductoUpdate(BaseModel):
     disponible: Optional[bool] = Field(None, description="¿Está disponible para venta?")
     imagen: Optional[str] = Field(None, max_length=500, description="URL de la imagen del producto")
     categoria_id: Optional[int] = Field(None, description="ID de la categoría principal")
+    ingrediente_ids: Optional[List[int]] = Field(default=None, description="IDs de ingredientes a asociar")
 
     @field_validator("nombre")
     @classmethod

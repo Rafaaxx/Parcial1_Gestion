@@ -85,6 +85,15 @@ class ProductoService:
                 # Category doesn't exist, ignore
                 pass
 
+        # Associate ingredients if provided
+        if data.ingrediente_ids:
+            for ing_id in data.ingrediente_ids:
+                try:
+                    await self.repository.add_ingrediente(producto.id, ing_id, True)
+                except ValueError:
+                    # Ingredient doesn't exist or already associated, ignore
+                    pass
+
         logger.info(f"Created producto id={producto.id} nombre='{producto.nombre}'")
         return ProductoRead.model_validate(producto)
 
@@ -184,6 +193,9 @@ class ProductoService:
         # Handle categoria_id separately (can be set to null to clear, or to a specific category)
         categoria_id = update_data.pop("categoria_id", None)
         
+        # Handle ingrediente_ids separately
+        ingrediente_ids = update_data.pop("ingrediente_ids", None)
+        
         if "nombre" in update_data and update_data["nombre"]:
             new_name = update_data["nombre"]
             if new_name != producto.nombre:
@@ -211,6 +223,15 @@ class ProductoService:
                     await self.repository.add_categoria(producto_id, categoria_id, True)
                 except ValueError:
                     # Category doesn't exist, ignore
+                    pass
+
+        # Handle ingredient associations
+        if ingrediente_ids is not None:
+            for ing_id in ingrediente_ids:
+                try:
+                    await self.repository.add_ingrediente(producto_id, ing_id, True)
+                except ValueError:
+                    # Ingredient doesn't exist or already associated, ignore
                     pass
 
         logger.info(f"Updated producto id={producto_id}")
