@@ -1,0 +1,36 @@
+// Copiá y pegá estos comandos en la consola del browser (F12 > Console)
+
+console.log("=== DEBUG INFO ===");
+
+// 1. Ver qué archivo está sirviendo el router para AdminProducts
+const routerEl = document.querySelector('[class*="space-y-6"]');
+if (routerEl) {
+  console.log("El componente se está renderizando");
+}
+
+// 2. Buscar el modal en el DOM
+const modal = document.querySelector('div[class*="fixed"]');
+if (modal) {
+  console.log("Modal encontrado");
+  const html = modal.innerHTML;
+  console.log("¿Tiene select?", html.includes('<select'));
+  console.log("¿Tiene checkbox de categoría?", html.includes('type="checkbox"'));
+  console.log("¿Tiene sección de ingredientes?", html.includes('Ingredientes'));
+}
+
+// 3. Buscar el sidebar
+const sidebar = document.querySelector('aside');
+if (sidebar) {
+  console.log("Sidebar contenido:");
+  console.log(sidebar.textContent);
+}
+
+// 4. Ver si hay ошибки (errores) en la consola
+console.log("Revisá si hay errores rojos arriba");
+
+// 5. Ver el HTML del modal completo (si existe)
+const modalContent = document.querySelector('.bg-white.dark\\:bg-gray-900.rounded-lg');
+if (modalContent) {
+  console.log("=== MODAL HTML (buscá 'Ingredientes' y 'checkbox') ===");
+  console.log(modalContent.innerHTML.substring(0, 2000));
+}

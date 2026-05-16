@@ -207,6 +207,14 @@ export interface ProductoAdmin {
   categoria_id: number
   categoria_nombre?: string
   categorias?: CategoriaBasica[] | CategoriaProducto[]
+  ingredientes?: Array<{
+    id: number
+    producto_id?: number
+    ingrediente_id: number
+    cantidad_requerida?: number
+    ingrediente?: { id: number; nombre: string; descripcion?: string }
+    nombre?: string
+  }>
   creado_en: string
   actualizado_en: string
 }

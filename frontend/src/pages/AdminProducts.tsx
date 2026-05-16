@@ -10,8 +10,9 @@ import {
   useDeleteProducto,
   useCategorias,
   useUpdateProductoStock,
+  useIngredientes,
 } from '@/features/admin'
-import type { ProductoAdmin, CategoriaAdmin } from '@/features/admin'
+import type { ProductoAdmin, CategoriaAdmin, IngredienteAdmin } from '@/features/admin'
 
 export const AdminProducts: React.FC = () => {
   const [showModal, setShowModal] = useState(false)
@@ -26,10 +27,12 @@ export const AdminProducts: React.FC = () => {
     stock_cantidad: 0,
     disponible: true,
     categoria_ids: [] as number[],
+    ingrediente_ids: [] as number[],
   })
 
   const { data: productos, isLoading, refetch } = useProductos()
   const { data: categorias } = useCategorias()
+  const { data: ingredientes } = useIngredientes()
   const createProducto = useCreateProducto()
   const updateProducto = useUpdateProducto()
   const deleteProducto = useDeleteProducto()
@@ -37,7 +40,7 @@ export const AdminProducts: React.FC = () => {
 
   const handleOpenCreate = () => {
     setEditingProduct(null)
-    setForm({ nombre: '', descripcion: '', precio_base: 0, stock_cantidad: 0, disponible: true, categoria_ids: [] })
+    setForm({ nombre: '', descripcion: '', precio_base: 0, stock_cantidad: 0, disponible: true, categoria_ids: [], ingrediente_ids: [] })
     setShowModal(true)
   }
 
@@ -50,6 +53,15 @@ export const AdminProducts: React.FC = () => {
       }
       return c.id
     }).filter((id: number) => id) || []
+
+    // Get existing ingredient IDs from the product
+    const existingIngIds = (product as any).ingredientes?.map((i: any) => {
+      // Handle both shape: { ingrediente_id } and { id } + { ingrediente: { id } }
+      if (i.ingrediente_id) return i.ingrediente_id
+      if (i.ingrediente?.id) return i.ingrediente.id
+      return i.id
+    }).filter((id: number) => id) || []
+
     setEditingProduct(product)
     setForm({
       nombre: product.nombre,
@@ -58,6 +70,7 @@ export const AdminProducts: React.FC = () => {
       stock_cantidad: product.stock_cantidad,
       disponible: product.disponible,
       categoria_ids: existingCatIds.length > 0 ? existingCatIds : [],
+      ingrediente_ids: existingIngIds.length > 0 ? existingIngIds : [],
     })
     setShowModal(true)
   }
@@ -69,6 +82,7 @@ export const AdminProducts: React.FC = () => {
       precio_base: form.precio_base,
       stock_cantidad: form.stock_cantidad,
       disponible: form.disponible,
+      ingrediente_ids: form.ingrediente_ids,
     }
 
     let productoId: number
@@ -290,6 +304,31 @@ export const AdminProducts: React.FC = () => {
                   ))}
                   {(!categorias || categorias.items.length === 0) && (
                     <p className="text-sm text-gray-500">No hay categorías disponibles</p>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ingredientes</label>
+                <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3">
+                  {ingredientes?.items.map((ing) => (
+                    <label key={ing.id} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.ingrediente_ids.includes(ing.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setForm({ ...form, ingrediente_ids: [...form.ingrediente_ids, ing.id] })
+                          } else {
+                            setForm({ ...form, ingrediente_ids: form.ingrediente_ids.filter(id => id !== ing.id) })
+                          }
+                        }}
+                        className="rounded text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{ing.nombre}</span>
+                    </label>
+                  ))}
+                  {(!ingredientes || ingredientes.items.length === 0) && (
+                    <p className="text-sm text-gray-500">No hay ingredientes disponibles</p>
                   )}
                 </div>
               </div>
