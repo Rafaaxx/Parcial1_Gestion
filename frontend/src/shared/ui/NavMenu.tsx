@@ -27,7 +27,7 @@ const ROLE_ITEMS: Record<Role, NavItemConfig[]> = {
   CLIENT: [
     { label: 'Catálogo', path: '/productos' },
     { label: 'Mi Carrito', path: '/carrito' },
-    { label: 'Mis Pedidos', path: '/pedidos' },
+    { label: 'Mis Pedidos', path: '/mis-pedidos' },
     { label: 'Mi Perfil', path: '/perfil' },
   ],
   STOCK: [

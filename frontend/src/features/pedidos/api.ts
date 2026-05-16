@@ -208,3 +208,49 @@ export async function getPedidoHistorial(pedidoId: number) {
     )
   }
 }
+
+/**
+ * Payment status types
+ */
+export type PaymentStatus = 'approved' | 'rejected' | 'in_process' | 'pending' | 'none'
+
+/**
+ * Payment info from MercadoPago
+ */
+export interface PagoInfo {
+  id: number
+  pedido_id: number
+  monto: number
+  mp_payment_id: string | null
+  mp_status: string | null
+  external_reference: string
+  idempotency_key: string
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * Get payment info by order ID
+ * GET /api/v1/pagos/{pedido_id}
+ */
+export async function getPagoByPedidoId(pedidoId: number): Promise<PagoInfo | null> {
+  try {
+    const response = await apiClient.get<PagoInfo>(
+      `${API_BASE}${API_VERSION}/pagos/${pedidoId}`,
+      { headers: getAuthHeaders() }
+    )
+    return response.data
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number; data?: { detail?: string } }; message?: string }
+    const status = err.response?.status
+
+    // 404 means no payment record exists (e.g., cash payment)
+    if (status === 404) {
+      return null
+    }
+
+    throw new Error(
+      err.response?.data?.detail || 'Error al obtener información de pago'
+    )
+  }
+}

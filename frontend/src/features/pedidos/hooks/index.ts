@@ -6,10 +6,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getPedidos,
   getPedidoDetail,
+  getPedidoHistorial,
+  getPagoByPedidoId,
   transicionarEstado,
   cancelarPedido,
 } from '../api'
-import { TransicionRequest, PedidoFilters } from '../types'
+import { TransicionRequest, PedidoFilters, HistorialEstado } from '../types'
 
 // Query keys
 export const pedidoKeys = {
@@ -38,6 +40,28 @@ export function usePedidoDetail(pedidoId: number) {
   return useQuery({
     queryKey: pedidoKeys.detail(pedidoId),
     queryFn: () => getPedidoDetail(pedidoId),
+    enabled: pedidoId > 0,
+  })
+}
+
+/**
+ * Hook to fetch order state transition history
+ */
+export function usePedidoHistorial(pedidoId: number) {
+  return useQuery<HistorialEstado[]>({
+    queryKey: [...pedidoKeys.details(), pedidoId, 'historial'] as const,
+    queryFn: () => getPedidoHistorial(pedidoId),
+    enabled: pedidoId > 0,
+  })
+}
+
+/**
+ * Hook to fetch payment info for an order
+ */
+export function usePedidoPago(pedidoId: number) {
+  return useQuery({
+    queryKey: [...pedidoKeys.details(), pedidoId, 'pago'] as const,
+    queryFn: () => getPagoByPedidoId(pedidoId),
     enabled: pedidoId > 0,
   })
 }

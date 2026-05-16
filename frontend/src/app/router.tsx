@@ -29,6 +29,8 @@ const AdminOrders = lazy(() => import('@/pages/AdminOrders'))
 const AdminUsers = lazy(() => import('@/pages/AdminUsers'))
 const AdminStock = lazy(() => import('@/pages/AdminStock'))
 const AdminIngredients = lazy(() => import('@/pages/admin/IngredientsPage'))
+const MisPedidosPage = lazy(() => import('@/pages/pedidos/MisPedidosPage'))
+const PedidoDetailPage = lazy(() => import('@/pages/pedidos/PedidoDetailPage'))
 
 export const router = createBrowserRouter([
   // ── Un único árbol de rutas — AppLayout maneja sidebar condicional ──
@@ -50,6 +52,8 @@ export const router = createBrowserRouter([
         children: [
           { path: 'carrito', element: <CartPage /> },
           { path: 'perfil', element: <ProfilePage /> },
+          { path: 'mis-pedidos', element: <MisPedidosPage /> },
+          { path: 'mis-pedidos/:pedidoId', element: <PedidoDetailPage /> },
         ],
       },
 
