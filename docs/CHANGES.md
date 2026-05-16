@@ -41,7 +41,9 @@ CHANGE-00 (Infraestructura Base) [4 sub-changes]
         │               │           │
         │               │           ├→ CHANGE-10: Máquina de Estados (FSM) ✓ Depende de CHANGE-09
         │               │           │   │
-        │               │           │   └→ CHANGE-11: Panel de Pedidos (Admin) ✓ Depende de CHANGE-10
+        │               │           │   ├→ CHANGE-11: Panel de Pedidos (Admin) ✓ Depende de CHANGE-10
+        │               │           │   │
+        │               │           │   └→ CHANGE-18: Mis Pedidos (Cliente) ✓ Depende de CHANGE-09 + CHANGE-10
         │               │           │
         │               │           └→ CHANGE-12: Integración MercadoPago ✓ Depende de CHANGE-09
         │               │               │
@@ -410,6 +412,60 @@ PENDIENTE ──[pago aprobado]──→ CONFIRMADO ──[gestión]──→ EN
 
 ---
 
+#### CHANGE-18: Pantalla "Mis Pedidos" (Vista del Cliente)
+
+| Campo | Valor |
+|-------|-------|
+| **Nombre** | `change-18-mis-pedidos-cliente` |
+| **Historias US** | US-049, US-050, US-043, US-047 |
+| **Funcionalidad** | Historial de pedidos del cliente, detalle, seguimiento de estado y cancelación desde PENDIENTE |
+| **Dependencias** | CHANGE-09, CHANGE-10, CHANGE-01 |
+| **Duración estimada** | 12h |
+
+> ⚠️ **Diferencia con CHANGE-11**: CHANGE-11 implementa el **Panel de Admin/Gestor** (todos los pedidos del sistema, acciones FSM, filtros avanzados). CHANGE-18 implementa la **vista del Cliente**: solo sus propios pedidos, solo cancelar desde PENDIENTE.
+
+**Endpoints involucrados** (backend ya disponible — solo integración frontend):
+- `GET /api/v1/pedidos` → lista propia del cliente (filtrado automático por `userId` del JWT)
+- `GET /api/v1/pedidos/{id}` → detalle completo (ownership: 403 si no es el propietario)
+- `GET /api/v1/pedidos/{id}/historial` → timeline de estados
+- `DELETE /api/v1/pedidos/{id}` → cancelar pedido propio (solo desde PENDIENTE)
+- `GET /api/v1/pagos/{pedido_id}` → estado de pago del pedido
+
+**Componentes Frontend** (feature/pedidos en FSD):
+- `MisPedidosPage` → página principal con listado paginado
+- `PedidoCard` → tarjeta resumen: número, fecha, estado badge, total, cantidad de ítems
+- `PedidoDetailPage` → vista de detalle con tabs: Resumen | Líneas | Historial | Pago
+- `HistorialTimeline` → timeline visual de transiciones de estado con timestamps
+- `EstadoBadge` → badge colorizado por estado (reutilizable en toda la app)
+- `CancelarPedidoModal` → confirmación + motivo (obligatorio según RN-FS08)
+
+**Hook TanStack Query**:
+- `useMisPedidos(filters, pagination)` → `GET /pedidos` con `estado`, `page`, `size`
+- `usePedidoDetalle(pedidoId)` → `GET /pedidos/{id}`
+- `usePedidoHistorial(pedidoId)` → `GET /pedidos/{id}/historial`
+- `usePedidoPago(pedidoId)` → `GET /pagos/{pedido_id}`
+- `useCancelarPedido()` → mutation `DELETE /pedidos/{id}` con invalidación automática
+
+**Reglas de negocio aplicadas**:
+- ✅ `RN-RB05`: Cliente solo ve sus propios pedidos (filtrado por JWT `userId`)
+- ✅ `RN-FS08`: Cancelación solo disponible si `estado_codigo === PENDIENTE`
+- ✅ `RN-DA07`: Paginación con `page` + `size` + `total` para controles de UI
+- ✅ `RN-FS06`: Botón cancelar oculto/deshabilitado para estados terminales (ENTREGADO, CANCELADO)
+- ✅ `RN-DA05`: Historial append-only: solo lectura en el cliente
+
+**Criterios de éxito**:
+- ✅ Cliente ve solo SUS pedidos, ordenados por fecha descendente (más reciente primero)
+- ✅ Filtro por estado funcional (`?estado=EN_CAMINO`)
+- ✅ Detalle muestra snapshots correctos (precio y nombre al momento de la compra)
+- ✅ Timeline de historial con timestamps y actor (SISTEMA / usuario)
+- ✅ Botón "Cancelar" visible solo para pedidos en PENDIENTE
+- ✅ Modal de cancelación solicita motivo antes de confirmar
+- ✅ Estado de pago visible (approved / rejected / pending)
+- ✅ Skeleton loaders durante fetch, toast de éxito/error en acciones
+- ✅ Estado vacío cuando el cliente no tiene pedidos (link al catálogo)
+
+---
+
 ### DOMINIO 4: Pagos e Integración
 
 #### CHANGE-12: Integración MercadoPago ✅ (archivado 2026-05-12)
@@ -599,12 +655,13 @@ PENDIENTE ──[pago aprobado]──→ CONFIRMADO ──[gestión]──→ EN
 | 11 | CHANGE-09 | 16h | CHANGE-08 + CHANGE-05 + CHANGE-00d |
 | 12 | CHANGE-10 | 18h | CHANGE-09 + CHANGE-01 |
 | 13 | CHANGE-11 | 14h | CHANGE-10 + CHANGE-01 |
-| 14 | CHANGE-12 | 16h | CHANGE-09 + CHANGE-01 + CHANGE-00 |
-| 15 | CHANGE-13 | 14h | CHANGE-12 + CHANGE-10 |
-| 16 | CHANGE-14 | 20h | CHANGE-10 + CHANGE-06 + CHANGE-02 |
-| 17 | CHANGE-15 | 12h | CHANGE-00 |
-| 18 | CHANGE-16 | 16h | Todos |
-| | **TOTAL** | **263h** | |
+| 14 | CHANGE-18 | 12h | CHANGE-09 + CHANGE-10 + CHANGE-01 |
+| 15 | CHANGE-12 | 16h | CHANGE-09 + CHANGE-01 + CHANGE-00 |
+| 16 | CHANGE-13 | 14h | CHANGE-12 + CHANGE-10 |
+| 17 | CHANGE-14 | 20h | CHANGE-10 + CHANGE-06 + CHANGE-02 |
+| 18 | CHANGE-15 | 12h | CHANGE-00 |
+| 19 | CHANGE-16 | 16h | Todos |
+| | **TOTAL** | **275h** | |
 
 ---
 
@@ -644,5 +701,5 @@ Para marcar como **completado y archivado**:
 
 ---
 
-**Última actualización**: 2026-05-14 (archive CHANGE-14 + CHANGE-17)
+**Última actualización**: 2026-05-16 (add CHANGE-18 Mis Pedidos — Vista Cliente)
 **Generado**: 2026-03-31 | **Especificación**: Food Store v5.0 | **Metodología**: SDD
