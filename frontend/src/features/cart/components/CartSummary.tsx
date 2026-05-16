@@ -3,10 +3,11 @@
  *
  * Shows:
  * - Subtotal, costo de envío ($50), divider, total
- * - Checkout button: disabled with tooltip "Próximamente" (CHANGE-09 not implemented)
+ * - Checkout button: redirects to /checkout
  */
 
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useCartStore } from '../store'
 
 interface CartSummaryProps {
@@ -15,12 +16,17 @@ interface CartSummaryProps {
 }
 
 export const CartSummary: React.FC<CartSummaryProps> = ({ hideCheckoutButton = false }) => {
+  const navigate = useNavigate()
   const subtotal = useCartStore((s) => s.subtotal())
   const costoEnvio = useCartStore((s) => s.costoEnvio())
   const total = useCartStore((s) => s.total())
   const items = useCartStore((s) => s.items)
 
   if (items.length === 0) return null
+
+  const handleCheckout = () => {
+    navigate('/carrito')
+  }
 
   return (
     <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
@@ -52,21 +58,12 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ hideCheckoutButton = f
 
       {/* Checkout button */}
       {!hideCheckoutButton && (
-        <div className="relative group pt-2">
-          <button
-            disabled
-            className="w-full py-3 px-4 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-semibold rounded-lg cursor-not-allowed text-sm"
-          >
-            Ir a pagar
-          </button>
-          {/* Tooltip */}
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block">
-            <div className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs rounded py-1 px-2 whitespace-nowrap shadow-lg">
-              Próximamente
-              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-100" />
-            </div>
-          </div>
-        </div>
+        <button
+          onClick={handleCheckout}
+          className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors text-sm mt-2"
+        >
+          Ir a pagar
+        </button>
       )}
     </div>
   )
