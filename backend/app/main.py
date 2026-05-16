@@ -21,6 +21,7 @@ from app.modules.pagos.router import router as pagos_router
 from app.modules.pedidos.router import router as pedidos_router
 from app.modules.productos.router import router as productos_router
 from app.modules.admin.router import router as admin_router
+from app.modules.perfil.router import router as perfil_router
 
 # Configure logging
 setup_logging()
@@ -124,6 +125,9 @@ app.include_router(pagos_router, prefix="/api/v1")
 # ── Admin Router ───────────────────────────────────────────────────────────────
 # Note: admin_router already has prefix="/api/v1/admin" in its definition
 app.include_router(admin_router)
+
+# ── Perfil Router ─────────────────────────────────────────────────────────────
+app.include_router(perfil_router)
 
 
 if __name__ == "__main__":

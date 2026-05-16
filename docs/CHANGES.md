@@ -264,15 +264,17 @@ CHANGE-00 (Infraestructura Base) [4 sub-changes]
 
 ---
 
-#### CHANGE-17: Perfil del Cliente
+#### CHANGE-17: Pantalla de Perfil del Cliente ✅ ARCHIVADO
 
 | Campo | Valor |
 |-------|-------|
-| **Nombre** | `change-17-customer-profile` |
+| **Nombre** | `change-17-pantalla-perfil` |
 | **Historias US** | US-061, US-062, US-063 |
 | **Funcionalidad** | Pantalla de perfil, ver y editar datos personales, cambio de contraseña |
 | **Dependencias** | CHANGE-01, CHANGE-05 |
 | **Duración estimada** | 12h |
+| **Estado** | ✅ Hecho (archivado 2026-05-14) |
+| **Evidencia** | `openspec/changes/archive/2026-05-14-change-17-pantalla-perfil/` |
 
 **Endpoints**:
 - GET /api/v1/perfil
@@ -478,7 +480,7 @@ PENDIENTE ──[pago aprobado]──→ CONFIRMADO ──[gestión]──→ EN
 
 ### DOMINIO 5: Panel Administrativo
 
-#### CHANGE-14: Panel de Administración (Dashboard)
+#### CHANGE-14: Panel de Administración (Dashboard) ✅ ARCHIVADO
 
 | Campo | Valor |
 |-------|-------|
@@ -627,8 +629,10 @@ Para marcar como **completado y archivado**:
 | 1 | CHANGE-07 | Catálogo Público | 2026-05-12 | `openspec/changes/archive/2026-05-12-change-07-catalog-listing-search/` |
 | 2 | CHANGE-10 | Máquina de Estados (FSM) | 2026-05-13 | `openspec/changes/archive/2026-05-13-change-10-maquina-de-estados-fsm/` |
 | 3 | CHANGE-12 | MercadoPago Checkout | 2026-05-12 | `openspec/changes/archive/2026-05-12-change-12-mercadopago-checkout/` |
-| 4 | CHANGE-15 | Validación Global y Manejo de Errores | 2026-05-13 | `openspec/changes/archive/2026-05-13-change-15-validation-error-handling/` |
+| 4 | CHANGE-14 | Admin Dashboard | 2026-05-14 | `openspec/changes/archive/2026-05-14-change-14-admin-dashboard/` |
+| 5 | CHANGE-15 | Validación Global y Manejo de Errores | 2026-05-13 | `openspec/changes/archive/2026-05-13-change-15-validation-error-handling/` |
 | 5 | CHANGE-16 | Testing y CI/CD | 2026-05-14 | `openspec/changes/archive/2026-05-14-change-16-testing-cicd/` |
+| 6 | CHANGE-17 | Pantalla de Perfil del Cliente | 2026-05-14 | `openspec/changes/archive/2026-05-14-change-17-pantalla-perfil/` |
 
 ---
 
@@ -640,5 +644,5 @@ Para marcar como **completado y archivado**:
 
 ---
 
-**Última actualización**: 2026-05-14
+**Última actualización**: 2026-05-14 (archive CHANGE-14 + CHANGE-17)
 **Generado**: 2026-03-31 | **Especificación**: Food Store v5.0 | **Metodología**: SDD

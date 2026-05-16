@@ -273,17 +273,26 @@ async def starlette_http_exception_handler(
     """Handler for Starlette native HTTP exceptions"""
     request_id = get_request_id(request)
 
+    # Sanitize exc.detail: can be str or dict (e.g. {"code": "UNAUTHORIZED", "detail": "..."})
+    raw_detail = exc.detail
+    if isinstance(raw_detail, dict):
+        title = raw_detail.get("detail", str(raw_detail))
+        detail = raw_detail.get("detail", str(raw_detail))
+    else:
+        title = raw_detail or "Error"
+        detail = raw_detail or f"HTTP {exc.status_code}"
+
     logger.warning(
-        f"HTTP exception: {exc.status_code} - {exc.detail}",
+        f"HTTP exception: {exc.status_code} - {detail}",
         extra={"request_id": request_id, "status_code": exc.status_code},
     )
 
     return JSONResponse(
         status_code=exc.status_code,
         content=format_rfc7807_error(
-            title=exc.detail or "Error",
+            title=title,
             status=exc.status_code,
-            detail=exc.detail or f"HTTP {exc.status_code}",
+            detail=detail,
             request=request,
             request_id=request_id,
         ),
