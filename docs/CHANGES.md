@@ -412,7 +412,7 @@ PENDIENTE ──[pago aprobado]──→ CONFIRMADO ──[gestión]──→ EN
 
 ---
 
-#### CHANGE-18: Pantalla "Mis Pedidos" (Vista del Cliente)
+#### CHANGE-18: Pantalla "Mis Pedidos" (Vista del Cliente) ✅ ARCHIVADO
 
 | Campo | Valor |
 |-------|-------|
@@ -421,6 +421,8 @@ PENDIENTE ──[pago aprobado]──→ CONFIRMADO ──[gestión]──→ EN
 | **Funcionalidad** | Historial de pedidos del cliente, detalle, seguimiento de estado y cancelación desde PENDIENTE |
 | **Dependencias** | CHANGE-09, CHANGE-10, CHANGE-01 |
 | **Duración estimada** | 12h |
+| **Estado** | ✅ Hecho (archivado 2026-05-16) |
+| **Evidencia** | `openspec/changes/archive/2026-05-16-change-18-mis-pedidos-cliente/` |
 
 > ⚠️ **Diferencia con CHANGE-11**: CHANGE-11 implementa el **Panel de Admin/Gestor** (todos los pedidos del sistema, acciones FSM, filtros avanzados). CHANGE-18 implementa la **vista del Cliente**: solo sus propios pedidos, solo cancelar desde PENDIENTE.
 
@@ -690,6 +692,7 @@ Para marcar como **completado y archivado**:
 | 5 | CHANGE-15 | Validación Global y Manejo de Errores | 2026-05-13 | `openspec/changes/archive/2026-05-13-change-15-validation-error-handling/` |
 | 5 | CHANGE-16 | Testing y CI/CD | 2026-05-14 | `openspec/changes/archive/2026-05-14-change-16-testing-cicd/` |
 | 6 | CHANGE-17 | Pantalla de Perfil del Cliente | 2026-05-14 | `openspec/changes/archive/2026-05-14-change-17-pantalla-perfil/` |
+| 8 | CHANGE-18 | Mis Pedidos (Vista Cliente) | 2026-05-16 | `openspec/changes/archive/2026-05-16-change-18-mis-pedidos-cliente/` |
 
 ---
 
