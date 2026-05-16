@@ -2,12 +2,13 @@
 
 Pure functions only — no state, no side effects beyond what the functions return.
 """
-import uuid
+
 import hashlib
+import uuid
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 
 from app.config import settings
 
@@ -57,10 +58,12 @@ def create_access_token(data: dict) -> str:
     """
     to_encode = data.copy()
     now = datetime.now(timezone.utc)
-    to_encode.update({
-        "iat": int(now.timestamp()),
-        "exp": int((now + timedelta(minutes=settings.access_token_expire_minutes)).timestamp()),
-    })
+    to_encode.update(
+        {
+            "iat": int(now.timestamp()),
+            "exp": int((now + timedelta(minutes=settings.access_token_expire_minutes)).timestamp()),
+        }
+    )
     return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 

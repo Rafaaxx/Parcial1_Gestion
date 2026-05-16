@@ -5,15 +5,15 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import select, func, and_, text, case
+from sqlalchemy import and_, case, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.usuario import Usuario
-from app.models.usuario_rol import UsuarioRol
-from app.models.pedido import Pedido, DetallePedido
+from app.models.pedido import DetallePedido, Pedido
 from app.models.producto import Producto
 from app.models.rol import Rol
+from app.models.usuario import Usuario
+from app.models.usuario_rol import UsuarioRol
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,9 @@ class AdminRepository:
     # Metrics Queries
     # ═══════════════════════════════════════════════════════════════════════════
 
-    async def get_total_ventas(self, desde: Optional[str] = None, hasta: Optional[str] = None) -> Decimal:
+    async def get_total_ventas(
+        self, desde: Optional[str] = None, hasta: Optional[str] = None
+    ) -> Decimal:
         """SUM of total from ENTREGADO orders."""
         query = select(func.coalesce(func.sum(Pedido.total), 0)).where(
             Pedido.estado_codigo == "ENTREGADO",
@@ -46,7 +48,9 @@ class AdminRepository:
         val = result.scalar()
         return Decimal(str(val)) if val is not None else Decimal("0.00")
 
-    async def get_cantidad_pedidos(self, desde: Optional[str] = None, hasta: Optional[str] = None) -> int:
+    async def get_cantidad_pedidos(
+        self, desde: Optional[str] = None, hasta: Optional[str] = None
+    ) -> int:
         """Count total orders in period."""
         query = select(func.count(Pedido.id)).where(Pedido.deleted_at.is_(None))
         if desde:
@@ -89,7 +93,7 @@ class AdminRepository:
             {
                 "estado": row.estado_codigo,
                 "cantidad": row.cantidad,
-                "porcentaje": round((row.cantidad / total * 100), 2) if total > 0 else 0.0,
+                "porcentaje": (round((row.cantidad / total * 100), 2) if total > 0 else 0.0),
             }
             for row in rows
         ]
@@ -109,9 +113,9 @@ class AdminRepository:
                 DetallePedido.producto_id,
                 Producto.nombre,
                 func.sum(DetallePedido.cantidad).label("cantidad_total"),
-                func.sum(
-                    DetallePedido.precio_snapshot * DetallePedido.cantidad
-                ).label("ingreso_total"),
+                func.sum(DetallePedido.precio_snapshot * DetallePedido.cantidad).label(
+                    "ingreso_total"
+                ),
             )
             .join(Pedido, DetallePedido.pedido_id == Pedido.id)
             .join(Producto, DetallePedido.producto_id == Producto.id)
@@ -137,7 +141,9 @@ class AdminRepository:
                 "producto_id": row.producto_id,
                 "nombre": row.nombre,
                 "cantidad_total": int(row.cantidad_total),
-                "ingreso_total": Decimal(str(row.ingreso_total)) if row.ingreso_total else Decimal("0.00"),
+                "ingreso_total": (
+                    Decimal(str(row.ingreso_total)) if row.ingreso_total else Decimal("0.00")
+                ),
             }
             for row in rows
         ]
@@ -195,7 +201,9 @@ class AdminRepository:
         return [
             {
                 "periodo": str(row.periodo),
-                "monto_total": Decimal(str(row.monto_total)) if row.monto_total else Decimal("0.00"),
+                "monto_total": (
+                    Decimal(str(row.monto_total)) if row.monto_total else Decimal("0.00")
+                ),
                 "cantidad_pedidos": int(row.cantidad_pedidos),
             }
             for row in rows
@@ -233,6 +241,7 @@ class AdminRepository:
         # Filter by role code — use EXISTS subquery to avoid row duplication
         if rol:
             from sqlalchemy import exists
+
             role_subq = (
                 select(UsuarioRol.usuario_id)
                 .where(UsuarioRol.rol_codigo == rol)
@@ -251,7 +260,12 @@ class AdminRepository:
         total = count_result.scalar() or 0
 
         # Add ordering and pagination
-        base_query = base_query.options(selectinload(Usuario.usuario_roles)).order_by(Usuario.id).offset(skip).limit(limit)
+        base_query = (
+            base_query.options(selectinload(Usuario.usuario_roles))
+            .order_by(Usuario.id)
+            .offset(skip)
+            .limit(limit)
+        )
 
         result = await self.session.execute(base_query)
         # Use unique() to handle joined loading
@@ -307,12 +321,9 @@ class AdminRepository:
         from app.modules.refreshtokens.model import RefreshToken
 
         now = datetime.now(timezone.utc)
-        stmt = (
-            select(RefreshToken)
-            .where(
-                RefreshToken.usuario_id == usuario_id,
-                RefreshToken.revoked_at.is_(None),
-            )
+        stmt = select(RefreshToken).where(
+            RefreshToken.usuario_id == usuario_id,
+            RefreshToken.revoked_at.is_(None),
         )
         result = await self.session.execute(stmt)
         tokens = result.scalars().all()

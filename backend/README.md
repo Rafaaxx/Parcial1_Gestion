@@ -613,13 +613,51 @@ pytest backend/tests/test_error_handling/ -v
 6. Register routes in `app/main.py`
 7. **Apply rate limiting decorators** if needed
 
-### Run Tests
+### Testing
+
+El proyecto usa **pytest** con **pytest-asyncio** y **pytest-cov** para testing.
+
+#### Coverage
+
+El objetivo de coverage es **60%** mínimo en módulos críticos (auth, pedidos, pagos).
+
+```bash
+# Run all tests with coverage
+pytest tests/ -v
+
+# Coverage mínimo 60% está configurado en pytest.ini
+# Si coverage baja de 60%, los tests fallarán
+
+# Generar reporte HTML
+pytest --cov=app --cov-report=html
+# Ver reporte en: htmlcov/index.html
+
+# Generar reporte XML (para CI/CD)
+pytest --cov=app --cov-report=xml
+```
+
+#### Estructura de Tests
+
+```
+tests/
+├── unit/                    # Tests unitarios (rápidos)
+│   ├── test_auth_service.py
+│   ├── test_repository.py
+│   └── middleware/
+├── integration/             # Tests de integración (más lentos)
+│   ├── test_auth_api.py
+│   ├── test_pedidos_api.py
+│   └── test_pagos_webhook.py
+└── conftest.py              # Fixtures compartidos
+```
+
+#### Comandos de Testing
 
 ```bash
 # Run all tests
 pytest tests/ -v
 
-# Run with coverage
+# Run with coverage (60% mínimo)
 pytest tests/ -v --cov=app
 
 # Run specific test file
@@ -631,7 +669,27 @@ pytest tests/ -v -s
 # Run middleware tests specifically
 pytest tests/unit/middleware/ -v
 pytest tests/integration/test_cors_rate_limiting.py -v
+
+# Run unit tests only (más rápido)
+pytest tests/unit/ -v
+
+# Run integration tests only
+pytest tests/integration/ -v
 ```
+
+#### CI/CD
+
+El proyecto tiene GitHub Actions configurado en `.github/workflows/ci.yml`:
+
+- **Lint**: flake8, black, isort
+- **Test**: pytest con coverage
+- **Coverage Gate**: 60% mínimo
+
+El workflow corre en cada push y pull request a main.
+
+#### Badge de Coverage
+
+[![Coverage](./coverage-badge.svg)](./htmlcov/index.html)
 
 ### Generate Database Migration
 

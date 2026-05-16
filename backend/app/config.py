@@ -1,8 +1,9 @@
 """Application configuration using Pydantic Settings"""
 
-from pydantic_settings import BaseSettings
-from typing import List
 import os
+from typing import List
+
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -34,11 +35,11 @@ class Settings(BaseSettings):
     # Headers exposed to the frontend (must be explicitly listed for CORS)
     # Includes rate limit headers and pagination metadata
     cors_expose_headers: List[str] = [
-        "X-RateLimit-Limit", 
-        "X-RateLimit-Remaining", 
-        "X-RateLimit-Reset", 
-        "X-Total-Count", 
-        "X-Page-Number"
+        "X-RateLimit-Limit",
+        "X-RateLimit-Remaining",
+        "X-RateLimit-Reset",
+        "X-Total-Count",
+        "X-Page-Number",
     ]
 
     # Mercado Pago Integration
@@ -81,4 +82,3 @@ class Settings(BaseSettings):
 
 # Instantiate settings (loaded once at app startup)
 settings = Settings()
-

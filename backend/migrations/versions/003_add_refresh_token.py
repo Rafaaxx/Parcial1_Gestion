@@ -5,10 +5,11 @@ Revises: 002_add_seed_models
 Create Date: 2026-05-08 00:00:00.000000
 
 """
+
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "003_add_refresh_token"
@@ -24,12 +25,8 @@ def upgrade() -> None:
         sa.Column("id", sa.BigInteger(), autoincrement=True, nullable=False),
         sa.Column("token_hash", sa.CHAR(length=64), nullable=False),
         sa.Column("usuario_id", sa.BigInteger(), nullable=False),
-        sa.Column(
-            "expires_at", sa.DateTime(timezone=True), nullable=False
-        ),
-        sa.Column(
-            "revoked_at", sa.DateTime(timezone=True), nullable=True
-        ),
+        sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("revoked_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
@@ -60,7 +57,5 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Drop refresh_tokens table and its index."""
-    op.drop_index(
-        op.f("ix_refresh_tokens_usuario_id"), table_name="refresh_tokens"
-    )
+    op.drop_index(op.f("ix_refresh_tokens_usuario_id"), table_name="refresh_tokens")
     op.drop_table("refresh_tokens")

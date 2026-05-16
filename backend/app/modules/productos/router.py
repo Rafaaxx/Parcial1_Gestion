@@ -20,26 +20,28 @@ All endpoints:
   - Use role-based access control (require_role dependency)
   - Include OpenAPI documentation with docstrings and response models
 """
-from decimal import Decimal
-from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, status, Query
 
+from decimal import Decimal
+from typing import List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from app.dependencies import get_uow, require_role
 from app.modules.productos.schemas import (
-    ProductoCreate,
-    ProductoUpdate,
-    ProductoRead,
-    ProductoDetail,
-    ProductoListResponse,
-    StockUpdate,
     DisponibilidadUpdate,
     ProductoCategoriaCreate,
     ProductoCategoriaRead,
+    ProductoCreate,
+    ProductoDetail,
     ProductoIngredienteCreate,
     ProductoIngredienteRead,
+    ProductoListResponse,
+    ProductoRead,
+    ProductoUpdate,
+    StockUpdate,
 )
 from app.modules.productos.service import ProductoService
 from app.uow import UnitOfWork
-from app.dependencies import get_uow, require_role
 
 # Create router with prefix and tag for Swagger grouping
 router = APIRouter(prefix="/api/v1/productos", tags=["productos"])
@@ -48,6 +50,7 @@ router = APIRouter(prefix="/api/v1/productos", tags=["productos"])
 # ============================================================================
 # CRUD Endpoints
 # ============================================================================
+
 
 @router.post(
     "",
@@ -68,9 +71,9 @@ async def create_producto(
 ) -> ProductoRead:
     """
     Create a new product.
-    
+
     **Requires**: ADMIN or STOCK role
-    
+
     **Parameters**:
     - `nombre` (required): Product name (max 200 chars, unique among active)
     - `descripcion` (optional): Product description
@@ -78,7 +81,7 @@ async def create_producto(
     - `stock_cantidad` (optional): Initial stock (default: 0, >= 0)
     - `disponible` (optional): Availability flag (default: true)
     - `imagen` (optional): Image URL (max 500 chars)
-    
+
     **Responses**:
     - 201: Product created (returns ProductoRead)
     - 409: Duplicate name
@@ -148,7 +151,9 @@ async def list_productos(
     allergen_ids = []
     if excluirAlergenos:
         try:
-            allergen_ids = [int(id_str.strip()) for id_str in excluirAlergenos.split(",") if id_str.strip()]
+            allergen_ids = [
+                int(id_str.strip()) for id_str in excluirAlergenos.split(",") if id_str.strip()
+            ]
         except ValueError:
             # Silently ignore invalid IDs
             allergen_ids = []
@@ -187,13 +192,13 @@ async def get_producto(
 ) -> ProductoDetail:
     """
     Get a single active product by ID.
-    
+
     **Public endpoint** — no authentication required.
     Shows stock_cantidad for transparency.
-    
+
     **Path Parameters**:
     - `producto_id`: Product ID
-    
+
     **Responses**:
     - 200: Product found (returns ProductoDetail with categories & ingredients)
     - 404: Product not found or soft-deleted
@@ -226,19 +231,19 @@ async def update_producto(
 ) -> ProductoRead:
     """
     Update an active product (ADMIN/STOCK only).
-    
+
     **Requires**: ADMIN or STOCK role
-    
+
     **Path Parameters**:
     - `producto_id`: Product ID
-    
+
     **Request Body** (all fields optional):
     - `nombre`: New product name
     - `descripcion`: New description
     - `precio_base`: New base price (>= 0)
     - `disponible`: New availability flag
     - `imagen`: New image URL
-    
+
     **Responses**:
     - 200: Product updated (returns ProductoRead)
     - 404: Product not found or soft-deleted
@@ -276,17 +281,17 @@ async def delete_producto(
 ) -> None:
     """
     Soft delete a product (ADMIN only).
-    
+
     **Requires**: ADMIN role
-    
+
     **Business Logic**:
     - Sets `deleted_at` timestamp instead of physical deletion
     - Product no longer appears in list queries
     - Historical associations with categories/ingredients preserved
-    
+
     **Path Parameters**:
     - `producto_id`: Product ID
-    
+
     **Responses**:
     - 204: Product soft-deleted (no response body)
     - 404: Product not found or already deleted
@@ -303,6 +308,7 @@ async def delete_producto(
 # ============================================================================
 # Stock Management Endpoints
 # ============================================================================
+
 
 @router.patch(
     "/{producto_id}/stock",
@@ -324,19 +330,19 @@ async def update_stock(
 ) -> ProductoDetail:
     """
     Update product stock atomically (ADMIN/STOCK only).
-    
+
     **Requires**: ADMIN or STOCK role
-    
+
     **Business Logic**:
     - Uses SELECT FOR UPDATE to prevent race conditions
     - Stock cannot be negative (returns 422 if attempted)
-    
+
     **Path Parameters**:
     - `producto_id`: Product ID
-    
+
     **Request Body**:
     - `stock_cantidad` (required): New stock quantity (>= 0)
-    
+
     **Responses**:
     - 200: Stock updated (returns ProductoDetail)
     - 404: Product not found
@@ -375,19 +381,19 @@ async def toggle_disponibilidad(
 ) -> ProductoDetail:
     """
     Toggle product availability (ADMIN/STOCK only).
-    
+
     **Requires**: ADMIN or STOCK role
-    
+
     **Note**: `disponible` is independent of `stock_cantidad`:
     - A product can be disponible=true but stock=0 (out of stock but visible)
     - A product can be disponible=false but stock>0 (hidden from catalog)
-    
+
     **Path Parameters**:
     - `producto_id`: Product ID
-    
+
     **Request Body**:
     - `disponible` (required): New availability value (true/false)
-    
+
     **Responses**:
     - 200: Availability toggled (returns ProductoDetail)
     - 404: Product not found
@@ -405,6 +411,7 @@ async def toggle_disponibilidad(
 # ============================================================================
 # Category Association Endpoints
 # ============================================================================
+
 
 @router.post(
     "/{producto_id}/categorias",
@@ -426,16 +433,16 @@ async def add_categoria(
 ) -> ProductoCategoriaRead:
     """
     Associate a category with a product (ADMIN/STOCK only).
-    
+
     **Requires**: ADMIN or STOCK role
-    
+
     **Path Parameters**:
     - `producto_id`: Product ID
-    
+
     **Request Body**:
     - `categoria_id` (required): Category ID to associate
     - `es_principal` (optional): Set as main category (default: false)
-    
+
     **Responses**:
     - 201: Association created (returns ProductoCategoriaRead)
     - 404: Product or category not found
@@ -473,13 +480,13 @@ async def remove_categoria(
 ) -> None:
     """
     Remove a category association from a product (ADMIN/STOCK only).
-    
+
     **Requires**: ADMIN or STOCK role
-    
+
     **Path Parameters**:
     - `producto_id`: Product ID
     - `categoria_id`: Category ID to remove
-    
+
     **Responses**:
     - 204: Association removed (no response body)
     - 404: Association not found
@@ -497,6 +504,7 @@ async def remove_categoria(
 # Ingredient Association Endpoints
 # ============================================================================
 
+
 @router.get(
     "/{producto_id}/ingredientes",
     response_model=List[ProductoIngredienteRead],
@@ -512,13 +520,13 @@ async def list_ingredientes(
 ) -> List[ProductoIngredienteRead]:
     """
     List all ingredients associated with a product.
-    
+
     **Public endpoint** — no authentication required.
     Useful for displaying allergen information in the catalog.
-    
+
     **Path Parameters**:
     - `producto_id`: Product ID
-    
+
     **Responses**:
     - 200: List of ProductoIngredienteRead with ingredient details
     """
@@ -549,16 +557,16 @@ async def add_ingrediente(
 ) -> ProductoIngredienteRead:
     """
     Associate an ingredient with a product (ADMIN/STOCK only).
-    
+
     **Requires**: ADMIN or STOCK role
-    
+
     **Path Parameters**:
     - `producto_id`: Product ID
-    
+
     **Request Body**:
     - `ingrediente_id` (required): Ingredient ID to associate
     - `es_removible` (optional): Can customer remove from order? (default: true)
-    
+
     **Responses**:
     - 201: Association created (returns ProductoIngredienteRead)
     - 404: Product or ingredient not found
@@ -596,13 +604,13 @@ async def remove_ingrediente(
 ) -> None:
     """
     Remove an ingredient association from a product (ADMIN/STOCK only).
-    
+
     **Requires**: ADMIN or STOCK role
-    
+
     **Path Parameters**:
     - `producto_id`: Product ID
     - `ingrediente_id`: Ingredient ID to remove
-    
+
     **Responses**:
     - 204: Association removed (no response body)
     - 404: Association not found

@@ -1,14 +1,15 @@
 """Unit of Work pattern implementation for atomic transactions"""
 
 import logging
-from typing import Type, Optional
+from typing import Optional, Type
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories.base import BaseRepository
 from app.repositories.categoria_repository import CategoriaRepository
 from app.repositories.direccion_repository import DireccionRepository
-from app.repositories.pedido_repository import PedidoRepository, DetallePedidoRepository
 from app.repositories.historial_repository import HistorialEstadoPedidoRepository
+from app.repositories.pedido_repository import DetallePedidoRepository, PedidoRepository
 from app.repositories.producto_repository import ProductoRepository
 
 logger = logging.getLogger(__name__)

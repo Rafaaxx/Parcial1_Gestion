@@ -1,14 +1,16 @@
 """Business logic service for ingredient management"""
 
 from typing import Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.repositories.ingrediente_repository import IngredienteRepository
+
 from app.modules.ingredientes.schemas import (
     IngredienteCreate,
-    IngredienteUpdate,
-    IngredienteRead,
     IngredienteListResponse,
+    IngredienteRead,
+    IngredienteUpdate,
 )
+from app.repositories.ingrediente_repository import IngredienteRepository
 
 
 class IngredienteService:
@@ -121,9 +123,7 @@ class IngredienteService:
         if data.nombre and data.nombre != ingrediente.nombre:
             existing = await self.repository.find_by_nombre(data.nombre)
             if existing:
-                raise ValueError(
-                    f"Ingrediente with nombre '{data.nombre}' already exists"
-                )
+                raise ValueError(f"Ingrediente with nombre '{data.nombre}' already exists")
 
         # Update
         update_data = data.model_dump(exclude_unset=True)

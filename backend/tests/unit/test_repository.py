@@ -1,6 +1,8 @@
 """Tests for BaseRepository[T] generic CRUD operations."""
+
 import pytest
-from sqlalchemy import select, func
+from sqlalchemy import func, select
+
 from app.repositories.base import BaseRepository
 from tests.models import TestModel
 

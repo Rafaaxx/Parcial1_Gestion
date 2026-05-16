@@ -1,4 +1,5 @@
 """MercadoPago client utilities for webhook validation and API queries"""
+
 import hashlib
 import hmac
 import logging

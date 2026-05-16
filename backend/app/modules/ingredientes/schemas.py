@@ -1,16 +1,15 @@
 """Pydantic schemas for ingredient validation and API responses"""
 
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
+
 from pydantic import BaseModel, Field, field_validator
 
 
 class IngredienteCreate(BaseModel):
     """Schema for creating a new ingredient"""
 
-    nombre: str = Field(
-        ..., min_length=1, max_length=255, description="Nombre del ingrediente"
-    )
+    nombre: str = Field(..., min_length=1, max_length=255, description="Nombre del ingrediente")
     es_alergeno: bool = Field(default=False, description="¿Es un alérgeno?")
 
     @field_validator("nombre")
@@ -51,9 +50,7 @@ class IngredienteRead(BaseModel):
     es_alergeno: bool = Field(..., description="¿Es un alérgeno?")
     created_at: datetime = Field(..., description="Fecha de creación")
     updated_at: datetime = Field(..., description="Fecha de última actualización")
-    deleted_at: Optional[datetime] = Field(
-        None, description="Fecha de eliminación (soft delete)"
-    )
+    deleted_at: Optional[datetime] = Field(None, description="Fecha de eliminación (soft delete)")
 
     class Config:
         from_attributes = True

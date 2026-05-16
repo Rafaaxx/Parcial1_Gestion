@@ -13,16 +13,21 @@ All endpoints:
   - Use role-based access control (require_role dependency)
   - Include OpenAPI documentation with docstrings and response models
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+
 from typing import List
 
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from app.dependencies import get_uow, require_role
+from app.exceptions import AppException, ValidationError
 from app.modules.categorias.schemas import (
-    CategoriaCreate, CategoriaUpdate, CategoriaRead, CategoriaTreeNode
+    CategoriaCreate,
+    CategoriaRead,
+    CategoriaTreeNode,
+    CategoriaUpdate,
 )
 from app.modules.categorias.service import CategoriaService
 from app.uow import UnitOfWork
-from app.dependencies import get_uow, require_role
-from app.exceptions import AppException, ValidationError
 
 # Create router with prefix and tag for Swagger grouping
 router = APIRouter(prefix="/api/v1/categorias", tags=["categorias"])
@@ -48,20 +53,20 @@ async def create_categoria(
 ) -> CategoriaRead:
     """
     Create a new category (root or subcategory).
-    
+
     **Requires**: ADMIN or STOCK role
-    
+
     **Business Logic**:
     - Root categories have `parent_id = None`
     - Subcategories must have a valid parent_id
     - Self-reference prevention: cannot set `parent_id == id`
     - Cycle detection: recursive hierarchy limited to 20 levels
-    
+
     **Parameters**:
     - `nombre` (required): Category name (max 100 chars)
     - `descripcion` (optional): Category description
     - `parent_id` (optional): Parent category ID (None for root)
-    
+
     **Responses**:
     - 201: Category created (returns CategoriaRead)
     - 400: Self-reference or invalid parent
@@ -81,6 +86,7 @@ async def create_categoria(
     except Exception as e:
         await uow.rollback()
         import logging
+
         logger = logging.getLogger(__name__)
         logger.error(f"POST /categorias failed: {type(e).__name__}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {type(e).__name__}")
@@ -99,18 +105,18 @@ async def get_categorias_tree(
 ) -> List[CategoriaTreeNode]:
     """
     Retrieve all categories organized as a nested tree.
-    
+
     **Access**: Public (no authentication required)
-    
+
     **Returns**: List of root categories with all descendants populated recursively.
     Automatically excludes soft-deleted categories.
-    
+
     **Business Logic**:
     - Only root categories (parent_id IS NULL) appear at top level
     - Each category includes its children in `subcategorias` array
     - Soft-deleted categories (deleted_at IS NOT NULL) are excluded
     - Empty response if no categories exist
-    
+
     **Response Format**:
     ```json
     [
@@ -155,18 +161,18 @@ async def get_categoria(
 ) -> CategoriaRead:
     """
     Retrieve a single category by ID.
-    
+
     **Access**: Public (no authentication required)
-    
+
     **Parameters**:
     - `categoria_id`: Category ID (path parameter)
-    
+
     **Returns**: Category details (CategoriaRead)
-    
+
     **Business Logic**:
     - Soft-deleted categories return 404
     - Only active (non-deleted) categories are returned
-    
+
     **Response Example**:
     ```json
     {
@@ -210,21 +216,21 @@ async def update_categoria(
 ) -> CategoriaRead:
     """
     Update an existing category.
-    
+
     **Requires**: ADMIN or STOCK role
-    
+
     **Parameters**:
     - `categoria_id`: Category ID to update (path parameter)
     - `nombre` (optional): New category name
     - `descripcion` (optional): New description
     - `parent_id` (optional): New parent category ID
-    
+
     **Business Logic**:
     - Cannot set `parent_id` to self (self-reference prevention)
     - Cannot set `parent_id` to a descendant (cycle prevention)
     - Only provided fields are updated
     - All validation rules from create apply here
-    
+
     **Responses**:
     - 200: Category updated (returns updated CategoriaRead)
     - 400: Self-reference detected
@@ -244,6 +250,7 @@ async def update_categoria(
     except Exception as e:
         await uow.rollback()
         import logging
+
         logger = logging.getLogger(__name__)
         logger.error(f"PUT /categorias/{categoria_id} failed: {type(e).__name__}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {type(e).__name__}")
@@ -267,24 +274,24 @@ async def delete_categoria(
 ) -> None:
     """
     Soft-delete a category (set deleted_at timestamp).
-    
+
     **Requires**: ADMIN role (more restrictive than create/update)
-    
+
     **Parameters**:
     - `categoria_id`: Category ID to delete (path parameter)
-    
+
     **Business Logic**:
     - Soft-delete pattern: sets `deleted_at` timestamp instead of hard delete
     - Cannot delete if category has children (returns 409 Conflict)
     - Cannot delete if category has products (future validation)
     - Preserves audit trail and enables recovery
-    
+
     **Responses**:
     - 204: Category deleted successfully (no response body)
     - 404: Category not found
     - 409: Category has children (cannot delete leaf categories only)
     - 403: Insufficient permissions (ADMIN only)
-    
+
     **Note**: Returns 204 No Content on success (empty body per HTTP standard).
     """
     try:
@@ -299,6 +306,7 @@ async def delete_categoria(
     except Exception as e:
         await uow.rollback()
         import logging
+
         logger = logging.getLogger(__name__)
         logger.error(f"DELETE /categorias/{categoria_id} failed: {type(e).__name__}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {type(e).__name__}")

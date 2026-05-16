@@ -1,30 +1,32 @@
 """Business logic service for Pedido creation and retrieval with atomic UoW semantics"""
+
 import logging
-from typing import Optional, List, Tuple, Dict, Any
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+from typing import Any, Dict, List, Optional, Tuple
+
 from fastapi import HTTPException
 from sqlalchemy import select
 
-from app.uow import UnitOfWork
-from app.models.pedido import Pedido, DetallePedido, HistorialEstadoPedido
-from app.models.usuario import Usuario
+from app.models.pedido import DetallePedido, HistorialEstadoPedido, Pedido
 from app.models.producto import Producto
-from app.modules.pedidos.schemas import (
-    CrearPedidoRequest,
-    PedidoRead,
-    PedidoDetail,
-    DetallePedidoRead,
-    HistorialEstadoPedidoRead,
-    ClienteInfo,
-)
+from app.models.usuario import Usuario
 from app.modules.pedidos.fsm import (
     FSM_TRANSITION_MAP,
     Transition,
     es_estado_terminal,
-    is_valid_state,
     get_valid_transitions,
+    is_valid_state,
 )
+from app.modules.pedidos.schemas import (
+    ClienteInfo,
+    CrearPedidoRequest,
+    DetallePedidoRead,
+    HistorialEstadoPedidoRead,
+    PedidoDetail,
+    PedidoRead,
+)
+from app.uow import UnitOfWork
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +147,7 @@ class PedidoService:
             Tuple of (list of Pedido with cliente info, total count)
         """
         filtros = filtros or {}
-        
+
         if "CLIENT" in roles:
             # Client can only see their own orders, but can filter
             return await self.uow.pedidos.get_for_user_with_filters(
@@ -180,9 +182,7 @@ class PedidoService:
             return None
         return pedido
 
-    async def obtener_historial(
-        self, pedido_id: int
-    ) -> List[HistorialEstadoPedido]:
+    async def obtener_historial(self, pedido_id: int) -> List[HistorialEstadoPedido]:
         """
         Get state transition history for an order.
 
@@ -196,9 +196,7 @@ class PedidoService:
 
     # ── Internal helpers ────────────────────────────────────────────────────────
 
-    async def _validar_direccion(
-        self, usuario_id: int, direccion_id: Optional[int]
-    ) -> None:
+    async def _validar_direccion(self, usuario_id: int, direccion_id: Optional[int]) -> None:
         """
         Validate that the address exists, is active, and belongs to the user.
 
@@ -209,6 +207,7 @@ class PedidoService:
             return
 
         from app.models.direccion_entrega import DireccionEntrega
+
         query = select(DireccionEntrega).where(
             DireccionEntrega.id == direccion_id,
             DireccionEntrega.deleted_at.is_(None),
@@ -235,6 +234,7 @@ class PedidoService:
             PaymentMethodNotFoundError: Payment method invalid or disabled
         """
         from app.models.forma_pago import FormaPago
+
         query = select(FormaPago).where(FormaPago.codigo == forma_pago_codigo)
         result = await self.uow.session.execute(query)
         forma_pago = result.scalar_one_or_none()
@@ -242,9 +242,7 @@ class PedidoService:
         if forma_pago is None or not forma_pago.habilitado:
             raise PaymentMethodNotFoundError(forma_pago_codigo)
 
-    async def _validar_stock_items(
-        self, items: List
-    ) -> List[Tuple]:
+    async def _validar_stock_items(self, items: List) -> List[Tuple]:
         """
         Validate stock for all items using SELECT FOR UPDATE.
 
@@ -322,9 +320,7 @@ class PedidoService:
         await self.uow.session.refresh(pedido)
         return pedido
 
-    async def _crear_detalles_pedido(
-        self, pedido_id: int, items_validados: List[Tuple]
-    ) -> None:
+    async def _crear_detalles_pedido(self, pedido_id: int, items_validados: List[Tuple]) -> None:
         """
         Create DetallePedido records for each item with snapshots.
 
@@ -346,9 +342,7 @@ class PedidoService:
             )
             self.uow.session.add(detalle)
 
-    async def _crear_historial_inicial(
-        self, pedido_id: int, usuario_id: int
-    ) -> None:
+    async def _crear_historial_inicial(self, pedido_id: int, usuario_id: int) -> None:
         """
         Create the initial HistorialEstadoPedido record with estado_desde=NULL.
 
@@ -420,7 +414,10 @@ class PedidoService:
             # Handle stock operations
             if nuevo_estado == "CONFIRMADO":
                 await self._decrementar_stock_en_pedido(pedido_id)
-            elif nuevo_estado == "CANCELADO" and pedido.estado_codigo in ("CONFIRMADO", "EN_PREP"):
+            elif nuevo_estado == "CANCELADO" and pedido.estado_codigo in (
+                "CONFIRMADO",
+                "EN_PREP",
+            ):
                 await self._restaurar_stock_en_pedido(pedido_id)
 
             # Update order state
@@ -472,7 +469,10 @@ class PedidoService:
 
         # Check terminal state (FSM-TRANS-02)
         if es_estado_terminal(estado_actual):
-            return False, f"Estado terminal '{estado_actual}': no se permiten transiciones"
+            return (
+                False,
+                f"Estado terminal '{estado_actual}': no se permiten transiciones",
+            )
 
         # Get valid transitions for current state
         valid_transitions = get_valid_transitions(estado_actual)

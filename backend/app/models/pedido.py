@@ -1,19 +1,21 @@
 """Pedido, DetallePedido, HistorialEstadoPedido models — order domain with snapshot pattern and audit trail"""
+
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Optional, List, TYPE_CHECKING
-from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import DateTime, func, JSON
+from typing import TYPE_CHECKING, List, Optional
+
+from sqlalchemy import JSON, DateTime, func
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.mixins import BaseModel
 
 if TYPE_CHECKING:
-    from app.models.usuario import Usuario
-    from app.models.producto import Producto
+    from app.models.direccion_entrega import DireccionEntrega
     from app.models.estado_pedido import EstadoPedido
     from app.models.forma_pago import FormaPago
-    from app.models.direccion_entrega import DireccionEntrega
+    from app.models.producto import Producto
+    from app.models.usuario import Usuario
 
 
 class Pedido(BaseModel, table=True):
@@ -36,6 +38,7 @@ class Pedido(BaseModel, table=True):
     - costo_envio is captured at creation time and never changes
     - DetallePedido records hold nombre_snapshot and precio_snapshot
     """
+
     __tablename__ = "pedidos"
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -144,6 +147,7 @@ class DetallePedido(SQLModel, table=True):
     - personalizacion: JSON array of ingredient IDs removed by customer
     - Timestamps (created_at only, no updated_at)
     """
+
     __tablename__ = "detalles_pedido"
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -220,6 +224,7 @@ class HistorialEstadoPedido(SQLModel, table=True):
     - RN-02: First record has estado_desde = NULL
     - RN-03: Append-only (no UPDATE/DELETE)
     """
+
     __tablename__ = "historial_estado_pedido"
 
     id: Optional[int] = Field(default=None, primary_key=True)

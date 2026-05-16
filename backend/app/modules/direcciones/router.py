@@ -13,21 +13,23 @@ All endpoints:
   - Use current_user from JWT for ownership validation
   - Return appropriate HTTP status codes (201, 200, 204, 404, 409, 422)
 """
+
 import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 
+from app.dependencies import get_current_user, get_uow, require_role
+from app.exceptions import AppException, ConflictError
+from app.models.usuario import Usuario
 from app.modules.direcciones.schemas import (
     DireccionCreate,
-    DireccionUpdate,
-    DireccionRead,
     DireccionListResponse,
+    DireccionRead,
+    DireccionUpdate,
 )
 from app.modules.direcciones.service import DireccionService
 from app.uow import UnitOfWork
-from app.dependencies import get_uow, require_role, get_current_user
-from app.models.usuario import Usuario
-from app.exceptions import AppException, ConflictError
 
 logger = logging.getLogger(__name__)
 
@@ -55,14 +57,14 @@ async def create_direccion(
 ) -> DireccionRead:
     """
     Crear una nueva dirección de entrega.
-    
+
     **Requiere**: CLIENT o ADMIN role
-    
+
     **Reglas de negocio**:
     - La primera dirección del usuario se marca como predeterminada automáticamente
     - El alias es opcional (max 50 caracteres)
     - linea1 es requerido (min 1, max 500 caracteres)
-    
+
     **Responses**:
     - 201: Dirección creada exitosamente
     - 422: Error de validación
@@ -100,13 +102,13 @@ async def list_direcciones(
 ) -> DireccionListResponse:
     """
     Listar direcciones del usuario autenticado.
-    
+
     **Requiere**: CLIENT o ADMIN role
-    
+
     **Parámetros de consulta**:
     - `skip` (opcional, default 0): Registros a omitir (paginación)
     - `limit` (opcional, default 100): Registros por página (max 100)
-    
+
     **Reglas de negocio**:
     - Solo devuelve direcciones del usuario autenticado
     - Excluye direcciones soft-deleted
@@ -144,14 +146,14 @@ async def update_direccion(
 ) -> DireccionRead:
     """
     Actualizar una dirección de entrega existente.
-    
+
     **Requiere**: CLIENT o ADMIN role
-    
+
     **Parámetros**:
     - `direccion_id`: ID de la dirección a actualizar (path)
     - `alias` (opcional): Nuevo alias
     - `linea1` (opcional): Nueva dirección
-    
+
     **Reglas de negocio**:
     - Validación de ownership: 404 si la dirección no pertenece al usuario
     - Solo alias y linea1 pueden actualizarse (no es_principal)
@@ -190,12 +192,12 @@ async def delete_direccion(
 ) -> None:
     """
     Eliminar (soft delete) una dirección de entrega.
-    
+
     **Requiere**: CLIENT o ADMIN role
-    
+
     **Parámetros**:
     - `direccion_id`: ID de la dirección a eliminar (path)
-    
+
     **Reglas de negocio**:
     - Soft delete: marca deleted_at, no borra físicamente
     - Validación de ownership: 404 si no pertenece al usuario
@@ -233,12 +235,12 @@ async def set_predeterminada(
 ) -> DireccionRead:
     """
     Establecer una dirección como predeterminada.
-    
+
     **Requiere**: CLIENT o ADMIN role
-    
+
     **Parámetros**:
     - `direccion_id`: ID de la dirección a establecer como predeterminada (path)
-    
+
     **Reglas de negocio**:
     - Operación atómica: desmarca la anterior y marca la nueva en la misma transacción
     - Idempotente: si ya es la predeterminada, devuelve 200 sin cambios
@@ -263,7 +265,6 @@ async def set_predeterminada(
     except Exception as e:
         await uow.rollback()
         logger.error(
-            f"PATCH /direcciones/{direccion_id}/predeterminada failed: "
-            f"{type(e).__name__}: {e}"
+            f"PATCH /direcciones/{direccion_id}/predeterminada failed: " f"{type(e).__name__}: {e}"
         )
         raise HTTPException(status_code=500, detail="Error interno del servidor")

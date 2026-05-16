@@ -1,12 +1,15 @@
 """Pydantic schemas for Pedido module — request/response validation"""
+
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, List
-from sqlmodel import SQLModel, Field
+from typing import List, Optional
+
+from sqlmodel import Field, SQLModel
 
 
 class ItemPedidoRequest(SQLModel):
     """Line item for creating an order."""
+
     producto_id: int = Field(description="Product ID to order")
     cantidad: int = Field(ge=1, description="Quantity to order (>= 1)")
     personalizacion: Optional[List[int]] = Field(
@@ -17,6 +20,7 @@ class ItemPedidoRequest(SQLModel):
 
 class CrearPedidoRequest(SQLModel):
     """Request body for POST /api/v1/pedidos."""
+
     items: List[ItemPedidoRequest] = Field(
         min_length=1,
         description="At least one item required",
@@ -37,6 +41,7 @@ class CrearPedidoRequest(SQLModel):
 
 class DetallePedidoRead(SQLModel):
     """Order line item response with immutable snapshots."""
+
     id: int
     producto_id: int
     nombre_snapshot: str
@@ -48,6 +53,7 @@ class DetallePedidoRead(SQLModel):
 
 class ClienteInfo(SQLModel):
     """Customer info for order list endpoints."""
+
     id: int
     nombre: Optional[str]
     email: str
@@ -55,6 +61,7 @@ class ClienteInfo(SQLModel):
 
 class HistorialEstadoPedidoRead(SQLModel):
     """State transition history record."""
+
     id: int
     estado_desde: Optional[str]
     estado_hacia: str
@@ -65,6 +72,7 @@ class HistorialEstadoPedidoRead(SQLModel):
 
 class PedidoRead(SQLModel):
     """Compact order response for list endpoints."""
+
     id: int
     usuario_id: int
     estado_codigo: str
@@ -76,6 +84,7 @@ class PedidoRead(SQLModel):
 
 class PedidoDetail(SQLModel):
     """Full order response with line items, history, and address."""
+
     id: int
     usuario_id: int
     estado_codigo: str
@@ -93,6 +102,7 @@ class PedidoDetail(SQLModel):
 
 class PedidoListResponse(SQLModel):
     """Paginated order list response."""
+
     items: List[PedidoRead]
     total: int
     skip: int
@@ -105,19 +115,21 @@ class AvanzarEstadoRequest(SQLModel):
 
     Required for PATCH /pedidos/{id}/estado
     """
+
     nuevo_estado: str = Field(
         max_length=20,
-        description="Target state code (e.g., CONFIRMADO, EN_PREP, EN_CAMINO, ENTREGADO, CANCELADO)"
+        description="Target state code (e.g., CONFIRMADO, EN_PREP, EN_CAMINO, ENTREGADO, CANCELADO)",
     )
     motivo: Optional[str] = Field(
         default=None,
         max_length=500,
-        description="Explanation for the transition (required for CANCELADO)"
+        description="Explanation for the transition (required for CANCELADO)",
     )
 
 
 class TransicionResponse(SQLModel):
     """Response for state transition."""
+
     id: int
     estado_codigo: str
     mensaje: str = "Estado actualizado correctamente"

@@ -6,16 +6,19 @@ SELECT FOR UPDATE, which is not supported by SQLite.
 Use @pytest.mark.postgres to mark tests that require PostgreSQL.
 These tests will be skipped if PostgreSQL is not available.
 """
+
 import os
 import sys
 from pathlib import Path
+
 import pytest
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from httpx import AsyncClient, ASGITransport
 
 # Load .env BEFORE importing app config
 from dotenv import load_dotenv
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
 env_file = Path(__file__).parent.parent / "backend" / ".env"
 if env_file.exists():
     load_dotenv(env_file, override=True)
@@ -24,12 +27,14 @@ else:
 
 # Disable rate limiting for tests
 from app.config import settings
+
 settings.rate_limit_enabled = False
 
-from app.main import app
 from app.database import Base, get_db
 from app.dependencies import get_uow
+from app.main import app
 from app.middleware.rate_limiter import limiter
+
 limiter.enabled = False
 
 from tests.models import TestModel, UoWTestModel
@@ -39,7 +44,7 @@ def pytest_configure(config):
     """Register custom markers."""
     config.addinivalue_line(
         "markers",
-        "postgres: marks tests that require PostgreSQL (SELECT FOR UPDATE not supported by SQLite)"
+        "postgres: marks tests that require PostgreSQL (SELECT FOR UPDATE not supported by SQLite)",
     )
 
 
@@ -52,10 +57,12 @@ def skip_if_no_postgres():
 # ── SQLite (memory) fixtures ────────────────────────────────────────────────────
 # Used for unit tests and integration tests that don't need SELECT FOR UPDATE
 
+
 @pytest.fixture(scope="session")
 def event_loop():
     """Create event loop for async tests."""
     import asyncio
+
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
@@ -98,6 +105,7 @@ async def test_db_session(test_engine):
 @pytest.fixture
 async def override_get_db(test_db_session):
     """Override get_db dependency for testing."""
+
     async def _override_get_db():
         yield test_db_session
 
@@ -120,6 +128,7 @@ async def client(override_get_db):
 # ── PostgreSQL fixtures ─────────────────────────────────────────────────────────
 # REQUIRED for tests that use SELECT FOR UPDATE (pedidos module)
 
+
 @pytest.fixture
 async def pg_engine():
     """
@@ -128,7 +137,8 @@ async def pg_engine():
     This fixture is SESSION-scoped to reuse the same test database
     across all postgres-marked tests.
     """
-    db_url = os.environ.get("DATABASE_URL", "")
+    # Use TEST_DATABASE_URL if available, otherwise fall back to DATABASE_URL
+    db_url = os.environ.get("TEST_DATABASE_URL", "") or os.environ.get("DATABASE_URL", "")
 
     # Check if DATABASE_URL is PostgreSQL
     if "postgresql" not in db_url and "postgres" not in db_url:
@@ -176,32 +186,72 @@ async def pg_session(pg_engine):
     )
 
     # Clean up test data using a dedicated connection
+    # Order matters: child tables first, then parent tables (respecting FK constraints)
     async with pg_engine.begin() as conn:
-        await conn.execute(text("""
-            DELETE FROM historial_estado_pedido
-            WHERE pedido_id IN (
-                SELECT p.id FROM pedidos p
-                WHERE p.usuario_id IN (
-                    SELECT id FROM usuarios WHERE email LIKE '%@test.com'
+        # First get user IDs for cleanup
+        user_ids_result = await conn.execute(
+            text("SELECT id FROM usuarios WHERE email LIKE '%@test.com'")
+        )
+        user_ids = [row[0] for row in user_ids_result.fetchall()]
+
+        if user_ids:
+            # Delete related records in proper order
+            # 1. Historial estado pedido (child of pedidos)
+            await conn.execute(
+                text("""
+                DELETE FROM historial_estado_pedido
+                WHERE pedido_id IN (
+                    SELECT id FROM pedidos WHERE usuario_id = ANY(:user_ids)
                 )
+            """),
+                {"user_ids": user_ids},
             )
-        """))
-        await conn.execute(text("""
-            DELETE FROM detalles_pedido
-            WHERE pedido_id IN (
-                SELECT id FROM pedidos
-                WHERE usuario_id IN (
-                    SELECT id FROM usuarios WHERE email LIKE '%@test.com'
+
+            # 2. Detalles pedido (child of pedidos)
+            await conn.execute(
+                text("""
+                DELETE FROM detalles_pedido
+                WHERE pedido_id IN (
+                    SELECT id FROM pedidos WHERE usuario_id = ANY(:user_ids)
                 )
+            """),
+                {"user_ids": user_ids},
             )
-        """))
-        await conn.execute(text("""
-            DELETE FROM pedidos
-            WHERE usuario_id IN (
-                SELECT id FROM usuarios WHERE email LIKE '%@test.com'
+
+            # 3. Pedidos (child of usuarios)
+            await conn.execute(
+                text("""
+                DELETE FROM pedidos WHERE usuario_id = ANY(:user_ids)
+            """),
+                {"user_ids": user_ids},
             )
-        """))
-        await conn.execute(text("DELETE FROM usuarios WHERE email LIKE '%@test.com'"))
+
+            # 4. Refresh tokens (child of usuarios) - ADDED THIS
+            await conn.execute(
+                text("""
+                DELETE FROM refresh_tokens WHERE usuario_id = ANY(:user_ids)
+            """),
+                {"user_ids": user_ids},
+            )
+
+            # 5. Direcciones (child of usuarios)
+            await conn.execute(
+                text("""
+                DELETE FROM direcciones_entrega WHERE usuario_id = ANY(:user_ids)
+            """),
+                {"user_ids": user_ids},
+            )
+
+            # 6. Usuario roles (child of usuarios)
+            await conn.execute(
+                text("""
+                DELETE FROM usuarios_roles WHERE usuario_id = ANY(:user_ids)
+            """),
+                {"user_ids": user_ids},
+            )
+
+            # 7. Finally users
+            await conn.execute(text("DELETE FROM usuarios WHERE email LIKE '%@test.com'"))
 
     async with async_session_maker() as session:
         yield session
@@ -216,6 +266,7 @@ async def pg_client(pg_session):
     and the HTTP client. Test data should be committed in the session
     before the client is used.
     """
+
     async def _override_get_db():
         yield pg_session
 
@@ -231,6 +282,7 @@ async def pg_client(pg_session):
 
 # ── Auth helper fixtures ──────────────────────────────────────────────────────────
 
+
 @pytest.fixture
 def user_token():
     """
@@ -240,7 +292,9 @@ def user_token():
     Used for authenticated endpoint tests.
     """
     from datetime import datetime, timedelta
+
     from jose import jwt
+
     from app.config import settings
 
     payload = {
@@ -258,7 +312,9 @@ def user_token():
 def admin_token():
     """Generate admin JWT token for testing admin endpoints."""
     from datetime import datetime, timedelta
+
     from jose import jwt
+
     from app.config import settings
 
     payload = {

@@ -1,8 +1,10 @@
 """Pydantic schemas for Pagos module — MercadoPago integration"""
+
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
-from sqlmodel import SQLModel, Field
+
+from sqlmodel import Field, SQLModel
 
 
 class PagoCreate(SQLModel):
@@ -11,6 +13,7 @@ class PagoCreate(SQLModel):
 
     Used by POST /api/v1/pagos/crear
     """
+
     pedido_id: int = Field(description="ID del pedido a pagar")
     card_token: Optional[str] = Field(
         default=None,
@@ -24,6 +27,7 @@ class PagoCreateResponse(SQLModel):
 
     Returns init_point for redirect to MP checkout or status directly.
     """
+
     mp_payment_id: Optional[int] = Field(
         default=None,
         description="ID del pago en MercadoPago (null si es checkout redirect)",
@@ -43,6 +47,7 @@ class PagoResponse(SQLModel):
 
     Used by GET /api/v1/pagos/{pedido_id}
     """
+
     id: int
     pedido_id: int
     mp_payment_id: Optional[int]
@@ -63,6 +68,7 @@ class WebhookPayload(SQLModel):
     The real validation happens by querying MP API with this topic/resource.
     This schema is for documentation and optional initial validation.
     """
+
     topic: str = Field(description="Tipo de notificación (payment, plan, etc.)")
     resource: Optional[str] = Field(
         default=None,
@@ -76,5 +82,6 @@ class WebhookPayload(SQLModel):
 
 class WebhookResponse(SQLModel):
     """Response from webhook endpoint."""
+
     message: str = Field(description="Mensaje de procesamiento")
     processed: bool = Field(description="Si el webhook fue procesado correctamente")

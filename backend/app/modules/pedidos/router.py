@@ -1,24 +1,26 @@
 """FastAPI router for Pedido endpoints"""
+
 import logging
 from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.dependencies import get_uow, get_current_user
-from app.uow import UnitOfWork
+from app.dependencies import get_current_user, get_uow
 from app.modules.pedidos.schemas import (
+    AvanzarEstadoRequest,
+    ClienteInfo,
     CrearPedidoRequest,
-    PedidoRead,
-    PedidoDetail,
-    PedidoListResponse,
     DetallePedidoRead,
     HistorialEstadoPedidoRead,
-    AvanzarEstadoRequest,
+    PedidoDetail,
+    PedidoListResponse,
+    PedidoRead,
     TransicionResponse,
-    ClienteInfo,
 )
 from app.modules.pedidos.service import PedidoService
+from app.uow import UnitOfWork
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ async def get_uow() -> UnitOfWork:
 @router.post("", response_model=PedidoRead, status_code=201)
 async def crear_pedido(
     body: CrearPedidoRequest,
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     uow: UnitOfWork = Depends(get_uow),
 ):
     """
@@ -71,10 +73,11 @@ async def crear_pedido(
 
 
 def _check_pedidos_role(
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ) -> dict:
     """Allow CLIENT, ADMIN, or PEDIDOS to access orders."""
     from app.models.usuario_rol import UsuarioRol
+
     allowed_roles = {"CLIENT", "ADMIN", "PEDIDOS"}
     user_roles = {ur.rol_codigo for ur in (current_user.usuario_roles or [])}
     if not user_roles.intersection(allowed_roles):
@@ -96,10 +99,19 @@ def _check_pedidos_role(
 async def listar_pedidos(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=20, ge=1, le=100),
-    estado: Optional[str] = Query(default=None, description="Filter by state code (e.g., PENDIENTE, CONFIRMADO, EN_PREP, EN_CAMINO, ENTREGADO, CANCELADO)"),
-    desde: Optional[str] = Query(default=None, description="Filter by creation date (start) - YYYY-MM-DD"),
-    hasta: Optional[str] = Query(default=None, description="Filter by creation date (end) - YYYY-MM-DD"),
-    busqueda: Optional[str] = Query(default=None, description="Search by order ID or customer name/email"),
+    estado: Optional[str] = Query(
+        default=None,
+        description="Filter by state code (e.g., PENDIENTE, CONFIRMADO, EN_PREP, EN_CAMINO, ENTREGADO, CANCELADO)",
+    ),
+    desde: Optional[str] = Query(
+        default=None, description="Filter by creation date (start) - YYYY-MM-DD"
+    ),
+    hasta: Optional[str] = Query(
+        default=None, description="Filter by creation date (end) - YYYY-MM-DD"
+    ),
+    busqueda: Optional[str] = Query(
+        default=None, description="Search by order ID or customer name/email"
+    ),
     current_user: dict = Depends(_check_pedidos_role),
     uow: UnitOfWork = Depends(get_uow),
 ):
@@ -149,7 +161,7 @@ async def listar_pedidos(
             cliente=cliente,
         )
         items.append(pedido_read)
-    
+
     return PedidoListResponse(
         items=items,
         total=total,
@@ -183,13 +195,10 @@ async def obtener_pedido(
     if pedido is None:
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
 
-    detalles = [
-        DetallePedidoRead.model_validate(d) for d in pedido.detalles
-    ]
+    detalles = [DetallePedidoRead.model_validate(d) for d in pedido.detalles]
     historial = [
-        HistorialEstadoPedidoRead.model_validate(h) for h in sorted(
-            pedido.historial, key=lambda x: x.created_at
-        )
+        HistorialEstadoPedidoRead.model_validate(h)
+        for h in sorted(pedido.historial, key=lambda x: x.created_at)
     ]
 
     # Build client info
@@ -323,7 +332,7 @@ async def cancelar_pedido(
     """
     # Get user roles
     user_roles = set()
-    if hasattr(current_user, 'usuario_roles') and current_user.usuario_roles:
+    if hasattr(current_user, "usuario_roles") and current_user.usuario_roles:
         user_roles = {ur.rol_codigo for ur in current_user.usuario_roles}
 
     service = PedidoService(uow)

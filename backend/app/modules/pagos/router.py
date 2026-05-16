@@ -1,14 +1,16 @@
 """FastAPI router for Pagos endpoints — MercadoPago integration with webhook support"""
+
 import asyncio
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.background import BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.dependencies import get_current_user
-from app.uow import UnitOfWork
 from app.models.usuario import Usuario
+from app.modules.pagos import mp_client
 from app.modules.pagos.schemas import (
     PagoCreate,
     PagoCreateResponse,
@@ -17,7 +19,7 @@ from app.modules.pagos.schemas import (
     WebhookResponse,
 )
 from app.modules.pagos.service import PagoService
-from app.modules.pagos import mp_client
+from app.uow import UnitOfWork
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +153,9 @@ async def webhook(
     Returns:
         HTTP 200 with status "ok" immediately (processing happens in background)
     """
-    logger.info(f"[WEBHOOK] Received: topic={topic}, id={id}, signature={x_signature[:40] if x_signature else 'None'}...")
+    logger.info(
+        f"[WEBHOOK] Received: topic={topic}, id={id}, signature={x_signature[:40] if x_signature else 'None'}..."
+    )
 
     # Validate signature (security)
     if x_signature:

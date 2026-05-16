@@ -7,23 +7,25 @@ Implements:
   - Reassign default on delete of current default (REQ-DI-26)
   - Trimming/cleaning input fields
 """
+
 from typing import Optional
 
+from sqlalchemy.exc import IntegrityError
+
+from app.exceptions import AppException, ConflictError, NotFoundError, ValidationError
+from app.models.direccion_entrega import DireccionEntrega
 from app.modules.direcciones.schemas import (
     DireccionCreate,
-    DireccionUpdate,
-    DireccionRead,
     DireccionListResponse,
+    DireccionRead,
+    DireccionUpdate,
 )
-from app.exceptions import AppException, ValidationError, NotFoundError, ConflictError
-from app.models.direccion_entrega import DireccionEntrega
-from sqlalchemy.exc import IntegrityError
 
 
 class DireccionService:
     """
     Business logic for address management.
-    
+
     Key responsibilities:
     - Ownership validation (usuario_id from JWT vs direccion.usuario_id)
     - Auto-assign es_principal on first address (RN-DI01)
@@ -35,7 +37,7 @@ class DireccionService:
     def __init__(self, uow):
         """
         Initialize service with UnitOfWork.
-        
+
         Args:
             uow: UnitOfWork instance providing access to repositories
         """
@@ -46,17 +48,17 @@ class DireccionService:
     def _trim_fields(self, data) -> tuple[Optional[str], str]:
         """
         Trim whitespace from alias and linea1.
-        
+
         Rules:
         - alias: if empty after trim → None
         - linea1: if empty after trim → raise ValidationError(422)
-        
+
         Args:
             data: Schema with alias and/or linea1 fields
-            
+
         Returns:
             Tuple of (alias_trimmed, linea1_trimmed)
-            
+
         Raises:
             ValidationError: If linea1 is empty after trim
         """
@@ -76,10 +78,10 @@ class DireccionService:
     def _validate_update_has_fields(self, data: DireccionUpdate) -> None:
         """
         Validate that at least one field is provided for update.
-        
+
         Args:
             data: DireccionUpdate schema
-            
+
         Raises:
             ValidationError: If no fields to update
         """
@@ -89,26 +91,24 @@ class DireccionService:
 
     # ── CRUD Operations ───────────────────────────────────────────────────────
 
-    async def create_direccion(
-        self, usuario_id: int, data: DireccionCreate
-    ) -> DireccionRead:
+    async def create_direccion(self, usuario_id: int, data: DireccionCreate) -> DireccionRead:
         """
         Create a new delivery address.
-        
+
         Business rules:
         1. Trim alias and linea1
         2. If alias empty after trim → treat as None
         3. If linea1 empty after trim → 422
         4. If user has 0 addresses → set es_principal=True (RN-DI01)
         5. Create via repository
-        
+
         Args:
             usuario_id: Authenticated user's ID (from JWT)
             data: DireccionCreate schema
-            
+
         Returns:
             DireccionRead response
-            
+
         Raises:
             ValidationError: If linea1 is empty after trim
         """
@@ -119,7 +119,7 @@ class DireccionService:
         count = await self.uow.direcciones.count_by_usuario(usuario_id)
 
         # First address → auto-assign as default (RN-DI01)
-        es_principal = (count == 0)
+        es_principal = count == 0
 
         # Build model instance
         direccion_model = DireccionEntrega(
@@ -139,12 +139,12 @@ class DireccionService:
     ) -> DireccionListResponse:
         """
         List active addresses for the authenticated user.
-        
+
         Args:
             usuario_id: Authenticated user's ID (from JWT)
             skip: Pagination offset
             limit: Page size
-            
+
         Returns:
             DireccionListResponse with paginated results
         """
@@ -164,21 +164,21 @@ class DireccionService:
     ) -> DireccionRead:
         """
         Update an existing delivery address.
-        
+
         Business rules:
         1. Trim fields
         2. Validate at least one field to update (422 if empty)
         3. Verify ownership + existence → 404 if not found
         4. Update only provided fields
-        
+
         Args:
             direccion_id: Address ID to update
             usuario_id: Authenticated user's ID (from JWT)
             data: DireccionUpdate schema
-            
+
         Returns:
             Updated DireccionRead
-            
+
         Raises:
             NotFoundError: If address not found, not owned, or soft-deleted
             ValidationError: If no fields provided or linea1 is empty after trim
@@ -187,9 +187,7 @@ class DireccionService:
         self._validate_update_has_fields(data)
 
         # Verify ownership + existence
-        direccion = await self.uow.direcciones.find_user_direccion(
-            direccion_id, usuario_id
-        )
+        direccion = await self.uow.direcciones.find_user_direccion(direccion_id, usuario_id)
         if not direccion:
             raise NotFoundError("Dirección no encontrada")
 
@@ -216,32 +214,28 @@ class DireccionService:
 
         return DireccionRead.model_validate(updated)
 
-    async def delete_direccion(
-        self, direccion_id: int, usuario_id: int
-    ) -> None:
+    async def delete_direccion(self, direccion_id: int, usuario_id: int) -> None:
         """
         Soft-delete a delivery address.
-        
+
         Business rules:
         1. Verify ownership + existence → 404 if not found
         2. If deleting the default address:
            a. Find most recent active address
            b. If found → reassign es_principal=True
         3. Soft-delete the address
-        
+
         All within the same transaction (commit in router).
-        
+
         Args:
             direccion_id: Address ID to delete
             usuario_id: Authenticated user's ID (from JWT)
-            
+
         Raises:
             NotFoundError: If address not found, not owned, or soft-deleted
         """
         # Verify ownership + existence
-        direccion = await self.uow.direcciones.find_user_direccion(
-            direccion_id, usuario_id
-        )
+        direccion = await self.uow.direcciones.find_user_direccion(direccion_id, usuario_id)
         if not direccion:
             raise NotFoundError("Dirección no encontrada")
 
@@ -256,37 +250,33 @@ class DireccionService:
         # Soft-delete
         await self.uow.direcciones.soft_delete(direccion_id)
 
-    async def set_predeterminada(
-        self, direccion_id: int, usuario_id: int
-    ) -> DireccionRead:
+    async def set_predeterminada(self, direccion_id: int, usuario_id: int) -> DireccionRead:
         """
         Set an address as the default (predeterminada) — ATOMIC transaction.
-        
+
         Business rules:
         1. Verify ownership + existence → 404 if not found
         2. If already es_principal=True → return current (idempotent, REQ-DI-30)
         3. Unset previous default
         4. Set new default
         5. Reload and return updated address
-        
+
         All within the same transaction (atomic via UoW).
-        
+
         Args:
             direccion_id: Address ID to set as default
             usuario_id: Authenticated user's ID (from JWT)
-            
+
         Returns:
             Updated DireccionRead with es_principal=True
-            
+
         Raises:
             NotFoundError: If address not found, not owned, or soft-deleted
             ConflictError: If unique partial index violation (race condition)
         """
         try:
             # Verify ownership + existence
-            direccion = await self.uow.direcciones.find_user_direccion(
-                direccion_id, usuario_id
-            )
+            direccion = await self.uow.direcciones.find_user_direccion(direccion_id, usuario_id)
             if not direccion:
                 raise NotFoundError("Dirección no encontrada")
 

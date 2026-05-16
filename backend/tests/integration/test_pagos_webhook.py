@@ -2,17 +2,19 @@
 
 These tests verify the webhook processing flow:
 - Signature validation
-- Immediate HTTP 200 response  
+- Immediate HTTP 200 response
 - Idempotency (duplicate webhooks ignored)
 - Payment status updates
 - Order state transitions on approval
 """
-import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
-from decimal import Decimal
 
+from decimal import Decimal
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 # ── Fixtures ────────────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def webhook_payload_approved():
@@ -80,6 +82,7 @@ def mp_payment_rejected_response():
 
 # ── Webhook Endpoint Tests ──────────────────────────────────────────────────────
 
+
 class TestWebhookEndpoint:
     """Tests for POST /api/v1/pagos/webhook"""
 
@@ -122,9 +125,7 @@ class TestWebhookEndpoint:
             assert "signature" in data["detail"].lower()
 
     @pytest.mark.asyncio
-    async def test_webhook_valid_signature_responds_200(
-        self, client, webhook_payload_approved
-    ):
+    async def test_webhook_valid_signature_responds_200(self, client, webhook_payload_approved):
         """Test: Returns 200 immediately even when processing fails (MP requirement)."""
         with patch("app.modules.pagos.mp_client.validar_firma_webhook") as mock_validate:
             mock_validate.return_value = True  # Valid signature
@@ -143,6 +144,7 @@ class TestWebhookEndpoint:
 
 # ── Signature Validation Tests ──────────────────────────────────────────────────
 
+
 class TestWebhookSignatureValidation:
     """Tests for X-Signature validation in mp_client.py"""
 
@@ -155,9 +157,10 @@ class TestWebhookSignatureValidation:
 
     def test_validar_firma_webhook_generates_correct_signature(self):
         """Test: Signature generation matches expected format."""
-        from app.modules.pagos import mp_client
-        import hmac
         import hashlib
+        import hmac
+
+        from app.modules.pagos import mp_client
 
         # Mock settings for test
         with patch("app.modules.pagos.mp_client.settings") as mock_settings:
@@ -188,9 +191,10 @@ class TestWebhookSignatureValidation:
 
     def test_validar_firma_webhook_multiple_sigs_one_valid(self):
         """Test: Handles comma-separated signatures (MP can send multiple)."""
-        from app.modules.pagos import mp_client
-        import hmac
         import hashlib
+        import hmac
+
+        from app.modules.pagos import mp_client
 
         with patch("app.modules.pagos.mp_client.settings") as mock_settings:
             mock_settings.mp_access_token = "TEST_TOKEN_123"
@@ -211,6 +215,7 @@ class TestWebhookSignatureValidation:
 
 
 # ── MP Client Tests ──────────────────────────────────────────────────────────────
+
 
 class TestMercadoPagoClient:
     """Tests for MP client utility functions"""
@@ -240,6 +245,7 @@ class TestMercadoPagoClient:
 
 # ── Webhook Processing Service Tests ────────────────────────────────────────────
 
+
 class TestWebhookProcessing:
     """Tests for PagoService.procesar_webhook() method"""
 
@@ -263,9 +269,7 @@ class TestWebhookProcessing:
         assert "Unsupported topic" in result["message"]
 
     @pytest.mark.asyncio
-    async def test_procesar_webhook_payment_not_found_returns_error(
-        self, test_db_session
-    ):
+    async def test_procesar_webhook_payment_not_found_returns_error(self, test_db_session):
         """Test: Returns error when payment not found in database."""
         from app.modules.pagos.service import PagoService
         from app.uow import UnitOfWork
@@ -290,7 +294,7 @@ class TestWebhookProcessing:
         # Access the _mp_client directly and set it
         original_client = service._mp_client
         service._mp_client = mock_mp_client
-        
+
         try:
             result = await service.procesar_webhook(
                 topic="payment",
@@ -304,6 +308,7 @@ class TestWebhookProcessing:
 
 
 # ── Legacy Webhook Tests ───────────────────────────────────────────────────────
+
 
 class TestWebhookLegacyEndpoint:
     """Tests for POST /api/v1/pagos/webhook-legacy (form-encoded body)"""
@@ -349,13 +354,15 @@ class TestWebhookLegacyEndpoint:
 
 # ── Unit Tests for Service Logic ────────────────────────────────────────────────
 
+
 class TestWebhookIdempotencyLogic:
     """Test the idempotency logic in PagoService"""
 
     def test_idempotency_check_approved_already_processed(self):
         """Test: Service returns 'already processed' when payment is already approved."""
-        from app.modules.pagos.model import Pago
         from decimal import Decimal
+
+        from app.modules.pagos.model import Pago
 
         # Simulate a payment that's already approved
         pago = Pago(
@@ -368,7 +375,12 @@ class TestWebhookIdempotencyLogic:
         )
 
         # Idempotency check: if mp_status is already 'approved', don't reprocess
-        if pago.mp_payment_id and pago.mp_status in ("approved", "rejected", "cancelled", "refunded"):
+        if pago.mp_payment_id and pago.mp_status in (
+            "approved",
+            "rejected",
+            "cancelled",
+            "refunded",
+        ):
             is_duplicate = True
         else:
             is_duplicate = False
@@ -377,8 +389,9 @@ class TestWebhookIdempotencyLogic:
 
     def test_idempotency_check_pending_not_processed(self):
         """Test: Payment with 'pending' status should be processed."""
-        from app.modules.pagos.model import Pago
         from decimal import Decimal
+
+        from app.modules.pagos.model import Pago
 
         pago = Pago(
             pedido_id=1,
@@ -390,7 +403,12 @@ class TestWebhookIdempotencyLogic:
         )
 
         # Idempotency check
-        if pago.mp_payment_id and pago.mp_status in ("approved", "rejected", "cancelled", "refunded"):
+        if pago.mp_payment_id and pago.mp_status in (
+            "approved",
+            "rejected",
+            "cancelled",
+            "refunded",
+        ):
             is_duplicate = True
         else:
             is_duplicate = False

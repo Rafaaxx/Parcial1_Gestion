@@ -3,10 +3,11 @@
 Does NOT inherit from BaseRepository because RefreshToken does not use
 SoftDeleteMixin. The queries use direct SELECT with no ``deleted_at`` filter.
 """
-from typing import Optional
-from datetime import datetime, timezone
 
-from sqlalchemy import select, update, delete, func
+from datetime import datetime, timezone
+from typing import Optional
+
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.refreshtokens.model import RefreshToken
@@ -59,11 +60,7 @@ class RefreshTokenRepository:
             token_id: Primary key of the token to revoke.
         """
         now = datetime.now(timezone.utc)
-        stmt = (
-            update(RefreshToken)
-            .where(RefreshToken.id == token_id)
-            .values(revoked_at=now)
-        )
+        stmt = update(RefreshToken).where(RefreshToken.id == token_id).values(revoked_at=now)
         await self.session.execute(stmt)
         await self.session.flush()
 
