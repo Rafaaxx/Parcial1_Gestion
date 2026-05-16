@@ -47,10 +47,23 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     )
   }
 
-  // Not authenticated or no user data yet → redirect to login with return URL
-  if (!isAuthenticated || !user) {
+  // Not authenticated → redirect to login with return URL
+  if (!isAuthenticated) {
     const redirectParam = encodeURIComponent(location.pathname + location.search)
     return <Navigate to={`/auth/login?redirect=${redirectParam}`} replace />
+  }
+
+  // Authenticated but user profile still loading (restoreSession in progress)
+  // Wait instead of redirecting — avoids premature redirect loop
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="space-y-4 w-full max-w-md">
+          <Skeleton height="2rem" width="40%" />
+          <Skeleton height="1rem" count={2} />
+        </div>
+      </div>
+    )
   }
 
   // Authenticated but missing required role → show 403

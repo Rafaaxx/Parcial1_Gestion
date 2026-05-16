@@ -32,13 +32,16 @@ export const LoginPage: React.FC = () => {
   const redirect = searchParams.get('redirect') || '/'
   const { isAuthenticated, rehydrated, setTokens, setUser, logout } = useAuthStore()
 
-  // If already authenticated, force logout so the user can log in fresh
-  // This prevents stale sessions (e.g., old admin JWT) from silently persisting.
-  // IMPORTANT: Only run ONCE on mount (ref guard). Without it, this effect also
-  // fires after login (isAuthenticated → true) and immediately calls logout()
-  // again, clearing the token before /auth/me can use it → 403 Forbidden.
+  // Guard: tracks if we already cleared the stale pre-existing session on mount.
+  // Also tracks if a login flow is in progress — prevents the effect from calling
+  // logout() after setTokens() flips isAuthenticated to true during login.
   const hasClearedSession = React.useRef(false)
+  const isLoggingIn = React.useRef(false)
+
   useEffect(() => {
+    // Never interfere while login mutation is running
+    if (isLoggingIn.current) return
+    // Only clear a pre-existing stale session once, on mount
     if (hasClearedSession.current) return
     if (rehydrated && isAuthenticated) {
       hasClearedSession.current = true
@@ -94,6 +97,7 @@ export const LoginPage: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    isLoggingIn.current = true
     loginMutation.mutate({ email, password })
   }
 
