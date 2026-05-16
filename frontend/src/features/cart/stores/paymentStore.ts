@@ -92,16 +92,15 @@ export const usePaymentStore = create<PaymentState>()(
       createPayment: async (pedidoId: number) => {
         const { setProcessing, setInitPoint, setError } = get()
         const token = localStorage.getItem('access_token')
-        const authHeader = token ? { Authorization: `Bearer ${token}` } : {}
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+        if (token) headers['Authorization'] = `Bearer ${token}`
+        
         try {
           setProcessing(pedidoId)
 
           const response = await fetch('http://localhost:8000/api/v1/pagos/crear', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...authHeader,
-            },
+            headers,
             body: JSON.stringify({ pedido_id: pedidoId }),
           })
 
@@ -133,13 +132,13 @@ export const usePaymentStore = create<PaymentState>()(
 
       checkPaymentStatus: async (pedidoId: number) => {
         const { setApproved, setRejected, setError } = get()
-        const authHeader = token ? { Authorization: `Bearer ${token}` } : {}
+        const token = localStorage.getItem('access_token')
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+        if (token) headers['Authorization'] = `Bearer ${token}`
 
         try {
           const response = await fetch(`http://localhost:8000/api/v1/pagos/${pedidoId}`, {
-            headers: {
-              ...authHeader,
-            },
+            headers,
           })
 
           if (!response.ok) {
@@ -177,7 +176,9 @@ export const usePaymentStore = create<PaymentState>()(
 
         // Get auth token from localStorage
         const token = localStorage.getItem('access_token')
-        const authHeader = token ? { Authorization: `Bearer ${token}` } : {}
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+        if (token) headers['Authorization'] = `Bearer ${token}`
+        
         try {
           setProcessing(0)
 
@@ -196,10 +197,7 @@ export const usePaymentStore = create<PaymentState>()(
 
           const pedidoResponse = await fetch('http://localhost:8000/api/v1/pedidos', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...authHeader,
-            },
+            headers,
             body: JSON.stringify(pedidoRequest),
           })
 
@@ -219,10 +217,7 @@ export const usePaymentStore = create<PaymentState>()(
           // Step 2: Create the payment
           const pagoResponse = await fetch('http://localhost:8000/api/v1/pagos/crear', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...authHeader,
-            },
+            headers,
             body: JSON.stringify({ pedido_id: pedidoId }),
           })
 

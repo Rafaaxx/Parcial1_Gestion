@@ -26,12 +26,13 @@ interface SidebarItem {
 }
 
 const SIDEBAR_ITEMS: SidebarItem[] = [
-  { label: 'Dashboard',  href: '/admin',              requiredRoles: ['ADMIN', 'STOCK', 'PEDIDOS'] },
-  { label: 'Usuarios',   href: '/admin/usuarios',     requiredRoles: ['ADMIN'] },
-  { label: 'Productos',  href: '/admin/productos',    requiredRoles: ['STOCK', 'ADMIN'] },
-  { label: 'Categorías', href: '/admin/categorias',   requiredRoles: ['STOCK', 'ADMIN'] },
-  { label: 'Pedidos',    href: '/admin/pedidos',      requiredRoles: ['ADMIN', 'PEDIDOS', 'STOCK'] },
-  { label: 'Stock',      href: '/admin/stock',        requiredRoles: ['STOCK', 'ADMIN'] },
+  { label: 'Dashboard',    href: '/admin',              requiredRoles: ['ADMIN', 'STOCK', 'PEDIDOS'] },
+  { label: 'Usuarios',     href: '/admin/usuarios',     requiredRoles: ['ADMIN'] },
+  { label: 'Productos',    href: '/admin/productos',    requiredRoles: ['STOCK', 'ADMIN'] },
+  { label: 'Categorías',   href: '/admin/categorias',   requiredRoles: ['STOCK', 'ADMIN'] },
+  { label: 'Ingredientes', href: '/admin/ingredientes', requiredRoles: ['STOCK', 'ADMIN'] },
+  { label: 'Pedidos',      href: '/admin/pedidos',      requiredRoles: ['ADMIN', 'PEDIDOS', 'STOCK'] },
+  { label: 'Stock',        href: '/admin/stock',        requiredRoles: ['STOCK', 'ADMIN'] },
 ]
 
 // ── AppLayout ─────────────────────────────────────────────────────────────

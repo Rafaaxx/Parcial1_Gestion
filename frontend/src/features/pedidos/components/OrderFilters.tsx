@@ -121,7 +121,7 @@ export const OrderFilters: React.FC<OrderFiltersProps> = ({ filtros, onChange })
         {/* Botón limpiar */}
         <div className="flex items-end">
           <Button
-            variant="outline"
+            variant="secondary"
             onClick={handleLimpiar}
             disabled={!tieneFiltros}
             className="w-full"

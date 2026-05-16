@@ -10,8 +10,9 @@ import {
   useDeleteProducto,
   useCategorias,
   useUpdateProductoStock,
+  useIngredientes,
 } from '@/features/admin'
-import type { ProductoAdmin, CategoriaAdmin } from '@/features/admin'
+import type { ProductoAdmin, CategoriaAdmin, IngredienteAdmin } from '@/features/admin'
 
 export const AdminProducts: React.FC = () => {
   const [showModal, setShowModal] = useState(false)
@@ -26,10 +27,12 @@ export const AdminProducts: React.FC = () => {
     stock_cantidad: 0,
     disponible: true,
     categoria_ids: [] as number[],
+    ingrediente_ids: [] as number[],
   })
 
   const { data: productos, isLoading, refetch } = useProductos()
   const { data: categorias } = useCategorias()
+  const { data: ingredientes } = useIngredientes()
   const createProducto = useCreateProducto()
   const updateProducto = useUpdateProducto()
   const deleteProducto = useDeleteProducto()
@@ -37,7 +40,7 @@ export const AdminProducts: React.FC = () => {
 
   const handleOpenCreate = () => {
     setEditingProduct(null)
-    setForm({ nombre: '', descripcion: '', precio_base: 0, stock_cantidad: 0, disponible: true, categoria_ids: [] })
+    setForm({ nombre: '', descripcion: '', precio_base: 0, stock_cantidad: 0, disponible: true, categoria_ids: [], ingrediente_ids: [] })
     setShowModal(true)
   }
 
@@ -50,6 +53,15 @@ export const AdminProducts: React.FC = () => {
       }
       return c.id
     }).filter((id: number) => id) || []
+
+    // Get existing ingredient IDs from the product
+    const existingIngIds = (product as any).ingredientes?.map((i: any) => {
+      // Handle both shape: { ingrediente_id } and { id } + { ingrediente: { id } }
+      if (i.ingrediente_id) return i.ingrediente_id
+      if (i.ingrediente?.id) return i.ingrediente.id
+      return i.id
+    }).filter((id: number) => id) || []
+
     setEditingProduct(product)
     setForm({
       nombre: product.nombre,
@@ -58,6 +70,7 @@ export const AdminProducts: React.FC = () => {
       stock_cantidad: product.stock_cantidad,
       disponible: product.disponible,
       categoria_ids: existingCatIds.length > 0 ? existingCatIds : [],
+      ingrediente_ids: existingIngIds.length > 0 ? existingIngIds : [],
     })
     setShowModal(true)
   }
@@ -69,6 +82,7 @@ export const AdminProducts: React.FC = () => {
       precio_base: form.precio_base,
       stock_cantidad: form.stock_cantidad,
       disponible: form.disponible,
+      ingrediente_ids: form.ingrediente_ids,
     }
 
     let productoId: number
@@ -223,56 +237,58 @@ export const AdminProducts: React.FC = () => {
 
       {/* Modal Create/Edit */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 w-full max-w-lg">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-4">
-              {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
-            </h2>
-            <div className="space-y-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl w-full max-w-md my-8 max-h-[28rem] flex flex-col">
+            <div className="p-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
+              </h2>
+            </div>
+            <div className="p-3 overflow-y-auto flex-1 space-y-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
                 <input
                   type="text"
                   value={form.nombre}
                   onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descripción</label>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Descripción</label>
                 <textarea
                   value={form.descripcion}
                   onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
-                  rows={3}
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+                  rows={2}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Precio</label>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Precio</label>
                   <input
                     type="number"
                     step="0.01"
                     value={form.precio_base}
                     onChange={(e) => setForm({ ...form, precio_base: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock</label>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Stock</label>
                   <input
                     type="number"
                     value={form.stock_cantidad}
                     onChange={(e) => setForm({ ...form, stock_cantidad: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Categorías</label>
-                <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3">
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Categorías</label>
+                <div className="space-y-1 max-h-16 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded p-1.5 text-xs">
                   {categorias?.items.map((cat) => (
-                    <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
+                    <label key={cat.id} className="flex items-center gap-1 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={form.categoria_ids.includes(cat.id)}
@@ -285,11 +301,36 @@ export const AdminProducts: React.FC = () => {
                         }}
                         className="rounded text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{cat.nombre}</span>
+                      <span className="text-gray-700 dark:text-gray-300">{cat.nombre}</span>
                     </label>
                   ))}
                   {(!categorias || categorias.items.length === 0) && (
-                    <p className="text-sm text-gray-500">No hay categorías disponibles</p>
+                    <p className="text-xs text-gray-500">Sin categorías</p>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Ingredientes</label>
+                <div className="space-y-1 max-h-16 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded p-1.5 text-xs">
+                  {ingredientes?.items.map((ing) => (
+                    <label key={ing.id} className="flex items-center gap-2 cursor-pointer text-sm">
+                      <input
+                        type="checkbox"
+                        checked={form.ingrediente_ids.includes(ing.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setForm({ ...form, ingrediente_ids: [...form.ingrediente_ids, ing.id] })
+                          } else {
+                            setForm({ ...form, ingrediente_ids: form.ingrediente_ids.filter(id => id !== ing.id) })
+                          }
+                        }}
+                        className="rounded text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-gray-700 dark:text-gray-300">{ing.nombre}</span>
+                    </label>
+                  ))}
+                  {(!ingredientes || ingredientes.items.length === 0) && (
+                    <p className="text-xs text-gray-500">No hay ingredientes disponibles</p>
                   )}
                 </div>
               </div>
@@ -304,12 +345,12 @@ export const AdminProducts: React.FC = () => {
                 <label htmlFor="disponible" className="text-sm text-gray-700 dark:text-gray-300">Disponible para venta</label>
               </div>
             </div>
-            <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">Cancelar</button>
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 flex justify-end gap-2">
+              <button onClick={() => setShowModal(false)} className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">Cancelar</button>
               <button
                 onClick={handleSave}
                 disabled={createProducto.isPending || updateProducto.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
                 {createProducto.isPending || updateProducto.isPending ? 'Guardando...' : 'Guardar'}
               </button>
