@@ -182,6 +182,21 @@ export async function updateUsuarioEstado(
 // Products (Catalogo)
 // ═══════════════════════════════════════════════════════════════════════════
 
+export interface CategoriaBasica {
+  id: number
+  nombre: string
+}
+
+export interface CategoriaProducto {
+  id: number
+  categoria_id: number
+  es_principal: boolean
+  categoria: {
+    id: number
+    nombre: string
+  }
+}
+
 export interface ProductoAdmin {
   id: number
   nombre: string
@@ -191,6 +206,7 @@ export interface ProductoAdmin {
   stock_cantidad: number
   categoria_id: number
   categoria_nombre?: string
+  categorias?: CategoriaBasica[] | CategoriaProducto[]
   creado_en: string
   actualizado_en: string
 }
@@ -208,7 +224,7 @@ export interface CreateProductoRequest {
   precio_base: number
   stock_cantidad: number
   disponible: boolean
-  categoria_id: number
+  categoria_id?: number
   ingrediente_ids?: number[]
 }
 
