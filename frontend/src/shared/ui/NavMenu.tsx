@@ -43,6 +43,7 @@ const ROLE_ITEMS: Record<Role, NavItemConfig[]> = {
     // El sidebar tiene los items de admin (Pedidos está en el sidebar)
     { label: 'Catálogo', path: '/productos' },
     { label: 'Mi Carrito', path: '/carrito' },
+    { label: 'Mis Pedidos', path: '/mis-pedidos' },
     { label: 'Mi Perfil', path: '/perfil' },
   ],
 }
