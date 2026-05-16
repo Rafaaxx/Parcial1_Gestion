@@ -36,12 +36,14 @@ export interface ProductoParaCarrito {
 
 export interface CartState {
   items: CartItem[]
+  userId?: number | null
 
   // Actions
   addItem: (producto: ProductoParaCarrito, cantidad?: number, personalizacion?: number[]) => void
   removeItem: (productoId: number, personalizacion?: number[]) => void
   updateQuantity: (productoId: number, cantidad: number, personalizacion?: number[]) => void
   clearCart: () => void
+  _init?: () => void
 
   // Selectors (computed)
   totalItems: () => number
