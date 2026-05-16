@@ -77,6 +77,14 @@ class ProductoService:
         await self.session.flush()
         await self.session.refresh(producto)
 
+        # Associate category if provided
+        if data.categoria_id:
+            try:
+                await self.repository.add_categoria(producto.id, data.categoria_id, True)
+            except ValueError:
+                # Category doesn't exist, ignore
+                pass
+
         logger.info(f"Created producto id={producto.id} nombre='{producto.nombre}'")
         return ProductoRead.model_validate(producto)
 
@@ -172,6 +180,10 @@ class ProductoService:
 
         # If name is being updated, check uniqueness
         update_data = data.model_dump(exclude_unset=True)
+        
+        # Handle categoria_id separately (can be set to null to clear, or to a specific category)
+        categoria_id = update_data.pop("categoria_id", None)
+        
         if "nombre" in update_data and update_data["nombre"]:
             new_name = update_data["nombre"]
             if new_name != producto.nombre:
@@ -190,6 +202,16 @@ class ProductoService:
         self.session.add(producto)
         await self.session.flush()
         await self.session.refresh(producto)
+
+        # Handle category association
+        if categoria_id is not None:
+            if categoria_id > 0:
+                # Set as principal category
+                try:
+                    await self.repository.add_categoria(producto_id, categoria_id, True)
+                except ValueError:
+                    # Category doesn't exist, ignore
+                    pass
 
         logger.info(f"Updated producto id={producto_id}")
         return ProductoRead.model_validate(producto)

@@ -85,6 +85,7 @@ class ProductoCreate(BaseModel):
     stock_cantidad: int = Field(default=0, ge=0, description="Cantidad en stock inicial (>= 0)")
     disponible: bool = Field(default=True, description="¿Está disponible para venta?")
     imagen: Optional[str] = Field(None, max_length=500, description="URL de la imagen del producto")
+    categoria_id: Optional[int] = Field(None, description="ID de la categoría principal")
 
     @field_validator("nombre")
     @classmethod
@@ -121,6 +122,7 @@ class ProductoUpdate(BaseModel):
     stock_cantidad: Optional[int] = Field(None, description="Cantidad en stock (solo para admin)")
     disponible: Optional[bool] = Field(None, description="¿Está disponible para venta?")
     imagen: Optional[str] = Field(None, max_length=500, description="URL de la imagen del producto")
+    categoria_id: Optional[int] = Field(None, description="ID de la categoría principal")
 
     @field_validator("nombre")
     @classmethod

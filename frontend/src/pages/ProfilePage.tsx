@@ -7,11 +7,12 @@
  * - Mis Direcciones: List delivery addresses
  */
 
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/shared/hooks/useAuth'
 import { usePerfil, useUpdatePerfil, useChangePassword } from '@/features/perfil/hooks'
 import type { PerfilUpdate, PasswordChange } from '@/features/perfil/types'
+import { DireccionModal } from '@/features/direcciones/components/DireccionModal'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Data Section
@@ -376,49 +377,166 @@ interface DireccionListResponse {
   limit: number
 }
 
+interface DireccionFormData {
+  alias: string
+  linea1: string
+}
+
+// Helper to get auth headers
+function getAuthHeaders(): Record<string, string> {
+  const stored = localStorage.getItem('food-store-auth')
+  let headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (stored) {
+    const parsed = JSON.parse(stored)
+    const token = parsed.state?.token
+    if (token) {
+      headers = { ...headers, Authorization: `Bearer ${token}` }
+    }
+  }
+  return headers
+}
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 function MisDireccionesSection() {
   const [direcciones, setDirecciones] = useState<DireccionItem[] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isError, setIsError] = useState(false)
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingDireccion, setEditingDireccion] = useState<DireccionItem | null>(null)
+  const [formData, setFormData] = useState<DireccionFormData>({ alias: '', linea1: '' })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
-  // Fetch addresses on mount
-  React.useEffect(() => {
-    const fetchDirecciones = async () => {
-      setIsLoading(true)
-      setIsError(false)
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; direccion: DireccionItem | null }>({
+    isOpen: false,
+    direccion: null,
+  })
 
-      try {
-        const stored = localStorage.getItem('food-store-auth')
-        let headers: Record<string, string> = {}
-        if (stored) {
-          const parsed = JSON.parse(stored)
-          const token = parsed.state?.token
-          if (token) {
-            headers = { Authorization: `Bearer ${token}` }
-          }
-        }
-
-        const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-        const response = await fetch(
-          `${API_BASE}/api/v1/direcciones?skip=0&limit=100`,
-          { headers }
-        )
-
-        if (!response.ok) {
-          throw new Error(`Error ${response.status}`)
-        }
-
-        const data: DireccionListResponse = await response.json()
-        setDirecciones(data.items ?? [])
-      } catch {
-        setIsError(true)
-      } finally {
-        setIsLoading(false)
-      }
+  const fetchDirecciones = useCallback(async () => {
+    setIsLoading(true)
+    setIsError(false)
+    try {
+      const response = await fetch(`${API_BASE}/api/v1/direcciones?skip=0&limit=100`, {
+        headers: getAuthHeaders(),
+      })
+      if (!response.ok) throw new Error(`Error ${response.status}`)
+      const data: DireccionListResponse = await response.json()
+      setDirecciones(data.items ?? [])
+    } catch {
+      setIsError(true)
+    } finally {
+      setIsLoading(false)
     }
-
-    fetchDirecciones()
   }, [])
+
+  React.useEffect(() => {
+    fetchDirecciones()
+  }, [fetchDirecciones])
+
+  // Open create modal
+  const openCreateModal = () => {
+    setEditingDireccion(null)
+    setFormData({ alias: '', linea1: '' })
+    setSubmitError(null)
+    setIsModalOpen(true)
+  }
+
+  // Open edit modal
+  const openEditModal = (dir: DireccionItem) => {
+    setEditingDireccion(dir)
+    setFormData({
+      alias: dir.alias ?? '',
+      linea1: dir.linea1,
+    })
+    setSubmitError(null)
+    setIsModalOpen(true)
+  }
+
+  // Close modal
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setEditingDireccion(null)
+    setFormData({ alias: '', linea1: '' })
+    setSubmitError(null)
+  }
+
+  // Handle submit (create or update)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setSubmitError(null)
+
+    try {
+      const url = editingDireccion
+        ? `${API_BASE}/api/v1/direcciones/${editingDireccion.id}`
+        : `${API_BASE}/api/v1/direcciones`
+      
+      const method = editingDireccion ? 'PUT' : 'POST'
+      
+      const response = await fetch(url, {
+        method,
+        headers: getAuthHeaders(),
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.detail || `Error ${response.status}`)
+      }
+
+      await fetchDirecciones()
+      closeModal()
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Error al guardar')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Set as principal
+  const handleSetPrincipal = async (dir: DireccionItem) => {
+    try {
+      const response = await fetch(`${API_BASE}/api/v1/direcciones/${dir.id}/predeterminada`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+      })
+      if (!response.ok) throw new Error(`Error ${response.status}`)
+      await fetchDirecciones()
+    } catch (err) {
+      console.error('Error setting principal:', err)
+    }
+  }
+
+  // Open delete confirmation
+  const openDeleteConfirm = (dir: DireccionItem) => {
+    setDeleteConfirm({ isOpen: true, direccion: dir })
+  }
+
+  // Confirm delete
+  const handleDelete = async () => {
+    if (!deleteConfirm.direccion) return
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/v1/direcciones/${deleteConfirm.direccion.id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      })
+      if (!response.ok) throw new Error(`Error ${response.status}`)
+      await fetchDirecciones()
+    } catch (err) {
+      console.error('Error deleting:', err)
+    } finally {
+      setDeleteConfirm({ isOpen: false, direccion: null })
+    }
+  }
+
+  const closeDeleteConfirm = () => {
+    setDeleteConfirm({ isOpen: false, direccion: null })
+  }
 
   if (isLoading) {
     return (
@@ -450,53 +568,128 @@ function MisDireccionesSection() {
   const hasDirecciones = direcciones && direcciones.length > 0
 
   return (
-    <div className="card-base p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-          Mis Direcciones
-        </h2>
-        <span className="text-sm text-gray-500 dark:text-gray-400">
-          {hasDirecciones ? `${direcciones!.length} direccion${direcciones!.length === 1 ? '' : 'es'}` : ''}
-        </span>
+    <>
+      <div className="card-base p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+            Mis Direcciones
+          </h2>
+          <button
+            onClick={openCreateModal}
+            className="px-3 py-1.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors flex items-center gap-1"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Agregar
+          </button>
+        </div>
+
+        {!hasDirecciones ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
+            No tenés direcciones guardadas.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {direcciones!.map((dir) => (
+              <div
+                key={dir.id}
+                className={`p-4 border rounded-lg ${
+                  dir.es_principal
+                    ? 'border-primary-300 dark:border-primary-600 bg-primary-50 dark:bg-primary-900/10'
+                    : 'border-gray-200 dark:border-gray-700'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    {dir.alias && (
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {dir.alias}
+                      </p>
+                    )}
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {dir.linea1}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 ml-2">
+                    {dir.es_principal ? (
+                      <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300">
+                        Principal
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleSetPrincipal(dir)}
+                        className="p-1.5 text-xs text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400"
+                        title="Hacer principal"
+                      >
+                        Marcar principal
+                      </button>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Action buttons */}
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                  <button
+                    onClick={() => openEditModal(dir)}
+                    className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                  >
+                    Editar
+                  </button>
+                  <span className="text-gray-300 dark:text-gray-600">|</span>
+                  <button
+                    onClick={() => openDeleteConfirm(dir)}
+                    className="text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {!hasDirecciones ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
-          No tenés direcciones guardadas.
-        </p>
-      ) : (
-        <div className="space-y-3">
-          {direcciones!.map((dir) => (
-            <div
-              key={dir.id}
-              className={`p-4 border rounded-lg ${
-                dir.es_principal
-                  ? 'border-primary-300 dark:border-primary-600 bg-primary-50 dark:bg-primary-900/10'
-                  : 'border-gray-200 dark:border-gray-700'
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  {dir.alias && (
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {dir.alias}
-                    </p>
-                  )}
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {dir.linea1}
-                  </p>
-                </div>
-                {dir.es_principal && (
-                  <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 shrink-0">
-                    Principal
-                  </span>
-                )}
-              </div>
+      {/* Create/Edit Modal */}
+      <DireccionModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onSubmit={handleSubmit}
+        formData={formData}
+        setFormData={setFormData}
+        isEditing={!!editingDireccion}
+        isSubmitting={isSubmitting}
+        error={submitError}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirm.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-2">
+              Eliminar Dirección
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              ¿Estás seguro de eliminar esta dirección? Esta acción no se puede deshacer.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={closeDeleteConfirm}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg"
+              >
+                Eliminar
+              </button>
             </div>
-          ))}
+          </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
 
