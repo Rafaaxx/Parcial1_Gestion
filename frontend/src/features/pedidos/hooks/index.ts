@@ -2,6 +2,7 @@
  * Custom hooks for Pedidos (Orders) module
  */
 
+import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getPedidos,
@@ -13,11 +14,25 @@ import {
 } from '../api'
 import { TransicionRequest, PedidoFilters, HistorialEstado } from '../types'
 
+// Get current user ID from auth storage
+function getCurrentUserIdFromStorage(): number | null {
+  try {
+    const stored = localStorage.getItem('food-store-auth')
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      return parsed.state?.user?.id || null
+    }
+  } catch {
+    // Ignore
+  }
+  return null
+}
+
 // Query keys
 export const pedidoKeys = {
   all: ['pedidos'] as const,
   lists: () => [...pedidoKeys.all, 'list'] as const,
-  list: (params: { skip?: number; limit?: number; filtros?: PedidoFilters }) =>
+  list: (params: { skip?: number; limit?: number; filtros?: PedidoFilters; userId?: number | null }) =>
     [...pedidoKeys.lists(), params] as const,
   details: () => [...pedidoKeys.all, 'detail'] as const,
   detail: (id: number) => [...pedidoKeys.details(), id] as const,
@@ -25,11 +40,22 @@ export const pedidoKeys = {
 
 /**
  * Hook to fetch list of orders with optional filters
+ * Includes userId in queryKey to refetch when user changes
  */
 export function usePedidos(skip = 0, limit = 20, filtros?: PedidoFilters) {
+  const userId = getCurrentUserIdFromStorage()
+  const queryClient = useQueryClient()
+  
+  // Effect to clear query cache when userId changes
+  React.useEffect(() => {
+    // Invalidate all pedido queries when userId changes
+    queryClient.invalidateQueries({ queryKey: pedidoKeys.all })
+  }, [userId, queryClient])
+  
   return useQuery({
-    queryKey: pedidoKeys.list({ skip, limit, filtros }),
+    queryKey: pedidoKeys.list({ skip, limit, filtros, userId }),
     queryFn: () => getPedidos(skip, limit, filtros),
+    staleTime: 0,
   })
 }
 

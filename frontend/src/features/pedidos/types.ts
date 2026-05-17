@@ -74,6 +74,7 @@ export interface PedidoFilters {
   desde?: string
   hasta?: string
   busqueda?: string
+  solo_mios?: boolean
 }
 
 export interface TransicionRequest {

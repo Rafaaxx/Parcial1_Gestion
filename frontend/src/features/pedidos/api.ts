@@ -56,6 +56,7 @@ export async function getPedidos(
       if (filtros.desde) params.desde = filtros.desde
       if (filtros.hasta) params.hasta = filtros.hasta
       if (filtros.busqueda) params.busqueda = filtros.busqueda
+      if (filtros.solo_mios) params.solo_mios = String(filtros.solo_mios)
     }
 
     const response = await apiClient.get<PedidosResponse>(

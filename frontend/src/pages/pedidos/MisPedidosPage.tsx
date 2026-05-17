@@ -30,6 +30,7 @@ export function MisPedidosPage() {
 
   const { data, isLoading, error } = usePedidos(page * limit, limit, {
     estado: estadoFilter || undefined,
+    solo_mios: true,  // Force to show only my orders (ignores ADMIN role)
   })
 
   const totalPages = data ? Math.ceil(data.total / limit) : 0
