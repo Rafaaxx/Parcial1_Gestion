@@ -100,8 +100,10 @@ export function ProductDetailPage() {
     )
   }
 
+  console.log("Producto: ",product);
+  
   // Check for allergens in ingredients
-  const hasAllergens = product.ingredientes?.some((ing) => ing.es_alergeno) ?? false
+  const hasAllergens = product.ingredientes?.some((ing) => ing.ingrediente.es_alergeno) ?? false
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -185,10 +187,10 @@ export function ProductDetailPage() {
                   <div className="flex flex-wrap gap-2">
                     {product.categorias.map((cat) => (
                       <span
-                        key={cat.id}
+                        key={cat.categoria.id}
                         className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full font-medium text-sm"
                       >
-                        {cat.nombre}
+                        {cat.categoria.nombre}
                       </span>
                     ))}
                   </div>
@@ -287,14 +289,14 @@ export function ProductDetailPage() {
                     <div
                       key={ingredient.id}
                       className={`p-4 rounded-lg border-2 ${
-                        ingredient.es_alergeno
+                        ingredient.ingrediente.es_alergeno
                           ? 'bg-red-50 border-red-200'
                           : 'bg-white border-gray-200'
                       }`}
                     >
                       <div className="flex items-start justify-between">
-                        <span className="font-medium text-gray-900">{ingredient.nombre}</span>
-                        {ingredient.es_alergeno && (
+                        <span className="font-medium text-gray-900">{ingredient.ingrediente.nombre}</span>
+                        {ingredient.ingrediente.es_alergeno && (
                           <span className="inline-block px-2 py-1 bg-red-500 text-white text-xs font-bold rounded">
                             ALLERGEN
                           </span>

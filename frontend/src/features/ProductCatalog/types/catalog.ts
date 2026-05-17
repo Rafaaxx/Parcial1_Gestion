@@ -12,9 +12,12 @@ export interface AllergenInfo {
 /** Ingredient information with allergen and removable flags */
 export interface IngredientInfo {
   id: number
-  nombre: string
-  es_alergeno: boolean
-  es_removible?: boolean
+  es_removible?: boolean,
+  ingrediente: {
+    id: number,
+    nombre: string,
+    es_alergeno: boolean
+  }
 }
 
 /** Category information */
@@ -22,6 +25,11 @@ export interface CategoryInfo {
   id: number
   nombre: string
   descripcion?: string
+  es_principal: boolean
+  categoria: {
+    id: number,
+    nombre: string
+  }
 }
 
 /** Product card display format (for listing) */
