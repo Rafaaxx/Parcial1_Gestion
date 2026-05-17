@@ -178,6 +178,7 @@ export const AdminProducts: React.FC = () => {
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Precio</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Stock</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Categoría</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Ingredientes</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Estado</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Acciones</th>
                 </tr>
@@ -206,6 +207,16 @@ export const AdminProducts: React.FC = () => {
                             return (c as any).nombre || ''
                           }).filter(n => n).join(', ') || '-'
                         : (product.categoria_nombre || '-')}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 max-w-[150px]">
+                      {(product as any).ingredientes && (product as any).ingredientes.length > 0
+                        ? (product as any).ingredientes.map((i: any) => {
+                            if ('ingrediente' in i) {
+                              return i.ingrediente?.nombre || ''
+                            }
+                            return i.nombre || ''
+                          }).filter((n: string) => n).join(', ') || '-'
+                        : '-'}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 text-xs font-medium rounded ${product.disponible ? 'bg-green-100 dark:bg-green-900 text-green-800' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'}`}>
