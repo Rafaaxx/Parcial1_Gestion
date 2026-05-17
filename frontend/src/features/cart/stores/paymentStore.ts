@@ -34,12 +34,18 @@ interface PaymentState {
   createPayment: (pedidoId: number) => Promise<void>
   checkPaymentStatus: (pedidoId: number) => Promise<void>
 
+  // Selected delivery address ID
+  direccionId: number | null
+
+  // Actions
+  setDireccion: (direccionId: number | null) => void
+
   // Create order + payment in one flow
   crearPedidoYPagar: (items: Array<{
     productoId: number
     cantidad: number
     personalizacion: number[]
-  }>) => Promise<number>
+  }>, direccionId?: number | null) => Promise<number>
 }
 
 export const usePaymentStore = create<PaymentState>()(
@@ -51,6 +57,7 @@ export const usePaymentStore = create<PaymentState>()(
       mpPaymentId: null,
       initPoint: null,
       errorMessage: null,
+      direccionId: null,
 
       setProcessing: (pedidoId: number) => set({
         status: 'processing',
@@ -87,7 +94,10 @@ export const usePaymentStore = create<PaymentState>()(
         mpPaymentId: null,
         initPoint: null,
         errorMessage: null,
+        direccionId: null,
       }),
+
+      setDireccion: (direccionId: number | null) => set({ direccionId }),
 
       createPayment: async (pedidoId: number) => {
         const { setProcessing, setInitPoint, setError } = get()
@@ -171,7 +181,7 @@ export const usePaymentStore = create<PaymentState>()(
         }
       },
 
-      crearPedidoYPagar: async (items) => {
+      crearPedidoYPagar: async (items, direccionId = null) => {
         const { setProcessing, setInitPoint, setError } = get()
 
         // Get auth token from localStorage
@@ -183,13 +193,18 @@ export const usePaymentStore = create<PaymentState>()(
           setProcessing(0)
 
           // Step 1: Create the order
-          const pedidoRequest = {
+          const pedidoRequest: Record<string, unknown> = {
             items: items.map(item => ({
               producto_id: item.productoId,
               cantidad: item.cantidad,
               personalizacion: item.personalizacion || null,
             })),
             forma_pago_codigo: 'MERCADOPAGO',
+          }
+
+          // Add delivery address if selected
+          if (direccionId) {
+            pedidoRequest.direccion_id = direccionId
           }
 
           console.log(pedidoRequest);
@@ -254,6 +269,7 @@ export const usePaymentStore = create<PaymentState>()(
         status: state.status,
         pedidoId: state.pedidoId,
         mpPaymentId: state.mpPaymentId,
+        direccionId: state.direccionId,
       }),
     }
   )

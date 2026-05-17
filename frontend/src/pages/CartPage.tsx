@@ -6,11 +6,12 @@
  * - Mobile: stacked card layout
  */
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCartStore } from '@/features/cart/store'
 import { CartSummary } from '@/features/cart/components/CartSummary'
 import { CheckoutForm } from '@/features/cart/components/CheckoutForm'
+import { AddressSelector } from '@/features/cart/components/AddressSelector'
 import { useToast } from '@/features/cart/components/ToastNotifier'
 
 export const CartPage: React.FC = () => {
@@ -20,6 +21,12 @@ export const CartPage: React.FC = () => {
   const clearCart = useCartStore((s) => s.clearCart)
   const totalItems = useCartStore((s) => s.totalItems())
   const { showToast } = useToast()
+
+  // Selected delivery address
+  const [selectedDireccionId, setSelectedDireccionId] = useState<number | null>(null)
+
+  // Debug: log when component renders
+  console.log('CartPage render - items:', items.length, 'selectedDireccionId:', selectedDireccionId)
 
   const handleClearCart = () => {
     clearCart()
@@ -303,6 +310,11 @@ export const CartPage: React.FC = () => {
             </h2>
             <CartSummary hideCheckoutButton />
 
+            {/* Address Selector */}
+            <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+              <AddressSelector onAddressChange={setSelectedDireccionId} />
+            </div>
+
             {/* Checkout button - using CheckoutForm */}
             <div className="mt-4">
               <CheckoutForm
@@ -311,6 +323,7 @@ export const CartPage: React.FC = () => {
                   cantidad: item.cantidad,
                   personalizacion: item.personalizacion,
                 }))}
+                direccionId={selectedDireccionId}
                 onPaymentStart={() => showToast('info', 'Creando pedido...')}
                 onError={(error) => showToast('error', error)}
               />
