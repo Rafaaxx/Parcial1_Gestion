@@ -25,7 +25,7 @@ export async function getProducts(filters: ProductsQueryParams): Promise<Product
     }
 
     if (filters.categoria) {
-      params.append('categoria', String(filters.categoria))
+      params.append('categoria_id', String(filters.categoria))
     }
 
     if (filters.precio_desde !== undefined && filters.precio_desde !== null) {
@@ -118,12 +118,30 @@ export async function getAllergens() {
 /**
  * Get list of categories
  * GET /api/v1/categorias
+ * Returns a tree structure, so we flatten it to show all categories (including children)
  */
 export async function getCategories() {
   try {
     const response = await axios.get(`${API_BASE}${API_VERSION}/categorias`)
+    const data = response.data.items || response.data || []
 
-    return response.data.items || response.data || []
+    // Flatten the tree structure to show all categories including subcategories
+    const flattenCategories = (categories: any[]): any[] => {
+      let result: any[] = []
+      for (const cat of categories) {
+        result.push({
+          id: cat.id,
+          nombre: cat.nombre,
+          descripcion: cat.descripcion,
+        })
+        if (cat.subcategorias && cat.subcategorias.length > 0) {
+          result = result.concat(flattenCategories(cat.subcategorias))
+        }
+      }
+      return result
+    }
+
+    return flattenCategories(data)
   } catch (error) {
     if (axios.isAxiosError(error)) {
       throw new Error(error.response?.data?.detail || 'Failed to fetch categories')

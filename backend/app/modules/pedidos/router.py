@@ -112,6 +112,10 @@ async def listar_pedidos(
     busqueda: Optional[str] = Query(
         default=None, description="Search by order ID or customer name/email"
     ),
+    solo_mios: bool = Query(
+        default=False,
+        description="If true, only return orders belonging to current user (ignores ADMIN role)",
+    ),
     current_user: dict = Depends(_check_pedidos_role),
     uow: UnitOfWork = Depends(get_uow),
 ):
@@ -119,13 +123,14 @@ async def listar_pedidos(
     List orders.
 
     CLIENT role: only returns orders owned by the current user.
-    ADMIN/PEDIDOS roles: returns all orders in the system.
+    ADMIN/PEDIDOS roles: returns all orders in the system (unless solo_mios=true).
 
     Supports:
     - Pagination with skip and limit query parameters
     - Filter by state (estado)
     - Filter by date range (desde, hasta)
     - Search by order ID or customer name/email (busqueda)
+    - solo_mios: Force only own orders (ignores ADMIN/PEDIDOS role)
     """
     service = PedidoService(uow)
     filtros = {
@@ -134,9 +139,15 @@ async def listar_pedidos(
         "hasta": hasta,
         "busqueda": busqueda,
     }
+    
+    # If solo_mios is true, force roles to only include CLIENT behavior
+    roles = current_user["roles"]
+    if solo_mios:
+        roles = ["CLIENT"]  # Force to behave as CLIENT only
+    
     pedidos, total = await service.listar_pedidos(
         usuario_id=current_user["id"],
-        roles=current_user["roles"],
+        roles=roles,
         skip=skip,
         limit=limit,
         filtros=filtros,
