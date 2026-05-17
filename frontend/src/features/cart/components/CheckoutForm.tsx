@@ -20,6 +20,8 @@ interface CheckoutFormProps {
     cantidad: number
     personalizacion: number[]
   }>
+  /** Selected delivery address ID (null = pickup at location) */
+  direccionId?: number | null
   /** Called when payment is initiated (before redirect) */
   onPaymentStart?: () => void
   /** Called when there's an error */
@@ -28,6 +30,7 @@ interface CheckoutFormProps {
 
 export const CheckoutForm: React.FC<CheckoutFormProps> = ({
   items,
+  direccionId,
   onPaymentStart,
   onError,
 }) => {
@@ -55,7 +58,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({
 
     try {
       onPaymentStart?.()
-      await crearPedidoYPagar(items)
+      await crearPedidoYPagar(items, direccionId)
       // Redirect happens inside crearPedidoYPagar
     } catch (error) {
       console.log(error);
