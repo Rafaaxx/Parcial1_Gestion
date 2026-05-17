@@ -42,7 +42,7 @@ export const CartItemRow: React.FC<CartItemRowProps> = ({ item }) => {
   const excludedIngredientNames = item.personalizacion
     .map((id) => {
       const ing = item.ingredientes?.find((i) => i.id === id)
-      return ing?.nombre
+      return ing?.ingrediente?.nombre
     })
     .filter(Boolean) as string[]
 

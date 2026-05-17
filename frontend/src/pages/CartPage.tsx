@@ -119,7 +119,7 @@ export const CartPage: React.FC = () => {
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {items.map((item, idx) => {
                     const excludedNames = item.personalizacion
-                      .map((id) => item.ingredientes?.find((i) => i.id === id)?.nombre)
+                      .map((id) => item.ingredientes?.find((i) => i.id === id)?.ingrediente?.nombre)
                       .filter(Boolean) as string[]
 
                     return (
@@ -210,7 +210,7 @@ export const CartPage: React.FC = () => {
           <div className="lg:hidden space-y-3">
             {items.map((item, idx) => {
               const excludedNames = item.personalizacion
-                .map((id) => item.ingredientes?.find((i) => i.id === id)?.nombre)
+                .map((id) => item.ingredientes?.find((i) => i.id === id)?.ingrediente?.nombre)
                 .filter(Boolean) as string[]
 
               return (

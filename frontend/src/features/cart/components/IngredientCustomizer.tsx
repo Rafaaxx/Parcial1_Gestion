@@ -71,7 +71,7 @@ export const IngredientCustomizer: React.FC<IngredientCustomizerProps> = ({
                     : 'text-gray-900 dark:text-gray-100'
                 }`}
               >
-                {ing.nombre}
+                {ing.ingrediente.nombre}
               </span>
               {isExcluded && (
                 <span className="ml-auto text-xs text-red-500 font-medium">Excluido</span>
